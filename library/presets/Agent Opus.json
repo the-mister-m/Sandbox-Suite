@@ -1,0 +1,151 @@
+{
+  "model": "opus",
+  "claude_md_excludes": [
+    "/Users/moth3rship/.claude/CLAUDE.md",
+    "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/CLAUDE.md",
+    "/Users/moth3rship/Desktop/AI Design/CLAUDE.md"
+  ],
+  "claude_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Glob",
+    "Grep",
+    "NotebookRead",
+    "NotebookEdit",
+    "WebFetch",
+    "WebSearch"
+  ],
+  "name": "Agent Opus",
+  "overlay_rows": [
+    {
+      "edge": "check_read",
+      "driver": "model",
+      "scope": "inside",
+      "hook": "open"
+    },
+    {
+      "edge": "fetch_url",
+      "driver": "model",
+      "scope": "any",
+      "hook": "open"
+    },
+    {
+      "edge": "screen_capture",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "write_file",
+      "driver": "model",
+      "scope": "any",
+      "hook": "open"
+    },
+    {
+      "edge": "run_command",
+      "driver": "model",
+      "scope": "any",
+      "hook": "open"
+    },
+    {
+      "edge": "remember",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "recall",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "send_message",
+      "driver": "model",
+      "scope": "any",
+      "hook": "open"
+    },
+    {
+      "edge": "request_messages",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "reset_self",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "reset_region",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "logic_status",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "logic_open",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "logic_transport",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "logic_command",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "web_open",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "web_read",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "web_screenshot",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "web_act",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "web_eval",
+      "driver": "model",
+      "scope": "any",
+      "hook": "ask"
+    },
+    {
+      "edge": "check_read",
+      "driver": "model",
+      "scope": "outside",
+      "hook": "open"
+    }
+  ]
+}

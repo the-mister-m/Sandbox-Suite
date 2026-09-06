@@ -41,15 +41,12 @@ def _region_row(track):
 
 def _track_row(track):
     return {
-        "id":         track.id,
-        "name":       track.name,
-        "regions":    list(track.regions),
-        "root":       track.root,
-        "overlay":    track.overlay_rows,
-        "provider":   track.provider,
-        "loop_class": track.loop_class,
-        "mechanism":  track.mechanism,
-        "created":    track.created,
+        "id":      track.id,
+        "name":    track.name,
+        "regions": list(track.regions),
+        "root":    track.root,
+        "order":   track.order,
+        "created": track.created,
     }
 
 

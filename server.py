@@ -20,7 +20,7 @@ from engine import policy
 from engine import daemon_queue as dq
 from engine import ledger
 from engine import read_tool as rt
-from engine import settings_stack
+from engine import settings as engine_settings
 from engine import waypoint
 from engine.providers import Router
 from engine.web_io import WebIO
@@ -396,97 +396,17 @@ class AdeMemberWebIO(AdeSenders, MonitoredWebIO):
 
 
 
-GLOBAL_PATH = os.path.join(SUITE_ROOT, "global.json")
-
-CONFIRM_KEYS = (
-    "editor_save", "file_delete", "file_move", "terminal_run", "setroot",
-    "session_new", "session_load", "delete_saved_session", "delete_voice",
-    "room_remove", "room_load", "gate_matrix_save",
-)
-CONFIRM_STATES = ("ask", "silent")
-
-MODAL_MODES = ("fullscreen", "window", "corner", "off")
-
-ADE_MODAL_MODES = ("inherit",) + MODAL_MODES
-
-GLOBAL_DEFAULTS = {
-    "skin": "og",
-    "modal_mode": "fullscreen",
-    "modal_mode_ade": "inherit",
-    "gate_keyboard": True,
-    "approve_hold": False,
-    "confirm": {k: "ask" for k in CONFIRM_KEYS},
-    "killswitch": {"scope": "models", "hold_to_fire": True},
-    "kill_holds": {"end_all_turns": False, "unload_weights": False,
-                   "kill_hosts": True, "end_all_sessions": True,
-                   "shutdown_suite": True},
-}
-
-KILL_ROW_KEYS = ("end_all_turns", "unload_weights", "kill_hosts",
-                 "end_all_sessions", "shutdown_suite")
-
-KILLSWITCH_SCOPES = ("models", "hosts", "suite")
+from engine.settings import (CONFIRM_KEYS, CONFIRM_STATES, MODAL_MODES,
+                             ADE_MODAL_MODES, GLOBAL_DEFAULTS, KILL_ROW_KEYS,
+                             KILLSWITCH_SCOPES, GlobalError)
 
 _SKIN_LINK_RE = re.compile(r'href="/static/css/skins/[\w-]+\.css"')
-
-
-def _skins_available():
-    try:
-        d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "css", "skins")
-        return sorted(f[:-4] for f in os.listdir(d) if f.endswith(".css"))
-    except OSError:
-        return ["og", "default"]
-
-
-def _load_global():
-    data = None
-    if os.path.exists(GLOBAL_PATH):
-        try:
-            with open(GLOBAL_PATH) as fh:
-                data = json.load(fh)
-        except Exception:
-            data = None
-    if not isinstance(data, dict):
-        _save_global(GLOBAL_DEFAULTS)
-        return json.loads(json.dumps(GLOBAL_DEFAULTS))
-    merged = json.loads(json.dumps(GLOBAL_DEFAULTS))
-    if isinstance(data.get("skin"), str):
-        merged["skin"] = data["skin"]
-    if data.get("modal_mode") in MODAL_MODES:
-        merged["modal_mode"] = data["modal_mode"]
-    if data.get("modal_mode_ade") in ADE_MODAL_MODES:
-        merged["modal_mode_ade"] = data["modal_mode_ade"]
-    if isinstance(data.get("gate_keyboard"), bool):
-        merged["gate_keyboard"] = data["gate_keyboard"]
-    if isinstance(data.get("approve_hold"), bool):
-        merged["approve_hold"] = data["approve_hold"]
-    if isinstance(data.get("confirm"), dict):
-        for k in CONFIRM_KEYS:
-            if data["confirm"].get(k) in CONFIRM_STATES:
-                merged["confirm"][k] = data["confirm"][k]
-    if isinstance(data.get("killswitch"), dict):
-        for k in ("scope", "hold_to_fire"):
-            if k in data["killswitch"]:
-                merged["killswitch"][k] = data["killswitch"][k]
-    if isinstance(data.get("kill_holds"), dict):
-        for k in KILL_ROW_KEYS:
-            if isinstance(data["kill_holds"].get(k), bool):
-                merged["kill_holds"][k] = data["kill_holds"][k]
-    return merged
-
-
-def _save_global(data):
-    try:
-        with open(GLOBAL_PATH, "w") as fh:
-            json.dump(data, fh, indent=2)
-    except Exception:
-        pass
 
 
 def _serve_skinned(path):
     with open(path, encoding="utf-8") as fh:
         html = fh.read()
-    skin = _load_global().get("skin", "og")
+    skin = engine_settings.load_global().get("skin", "og")
     html = _SKIN_LINK_RE.sub(f'href="/static/css/skins/{skin}.css"', html, count=1)
     return app.response_class(html, mimetype="text/html")
 
@@ -544,12 +464,6 @@ def api_unload_weights():
         out["unloaded"] = client.unload(None) or "nothing loaded"
     except Exception as e:
         out["unloaded"] = f"ERROR {e}"
-    try:
-        was = client.llamacpp._serving
-        client.llamacpp.stop()
-        out["llamacpp"] = f"killed {was}" if was else "none loaded"
-    except Exception as e:
-        out["llamacpp"] = f"ERROR {e}"
     out["model"] = _pkill("ollama runner")
     return jsonify(out)
 
@@ -586,12 +500,6 @@ def _end_all_sessions():
         results["unloaded"] = client.unload(None) or "nothing loaded"
     except Exception as e:
         results["unloaded"] = f"ERROR {e}"
-    try:
-        was = client.llamacpp._serving
-        client.llamacpp.stop()
-        results["llamacpp"] = f"killed {was}" if was else "none loaded"
-    except Exception as e:
-        results["llamacpp"] = f"ERROR {e}"
     results["model"] = _pkill("ollama runner")
     return results
 
@@ -609,78 +517,16 @@ def api_end_all():
 
 @app.route("/api/global")
 def api_global_get():
-    return jsonify(_load_global())
+    return jsonify(engine_settings.load_global())
 
 
 @app.route("/api/global", methods=["POST"])
 def api_global_post():
     body = request.get_json(silent=True)
-    if not isinstance(body, dict):
-        return jsonify({"error": "expected a JSON object"}), 400
-    unknown = set(body) - {"skin", "modal_mode", "modal_mode_ade", "gate_keyboard",
-                           "approve_hold", "confirm", "killswitch", "kill_holds"}
-    if unknown:
-        return jsonify({"error": f"unknown key(s): {sorted(unknown)}"}), 400
-    current = _load_global()
-    if "skin" in body:
-        if body["skin"] not in _skins_available():
-            return jsonify({"error": f"unknown skin: {body['skin']!r}"}), 400
-        current["skin"] = body["skin"]
-    if "modal_mode" in body:
-        if body["modal_mode"] not in MODAL_MODES:
-            return jsonify({"error": f"unknown modal_mode: {body['modal_mode']!r}"}), 400
-        current["modal_mode"] = body["modal_mode"]
-    if "modal_mode_ade" in body:
-        if body["modal_mode_ade"] not in ADE_MODAL_MODES:
-            return jsonify({"error": f"unknown modal_mode_ade: {body['modal_mode_ade']!r}"}), 400
-        current["modal_mode_ade"] = body["modal_mode_ade"]
-    if "gate_keyboard" in body:
-        if not isinstance(body["gate_keyboard"], bool):
-            return jsonify({"error": "gate_keyboard must be a boolean"}), 400
-        current["gate_keyboard"] = body["gate_keyboard"]
-    if "approve_hold" in body:
-        if not isinstance(body["approve_hold"], bool):
-            return jsonify({"error": "approve_hold must be a boolean"}), 400
-        current["approve_hold"] = body["approve_hold"]
-    if "confirm" in body:
-        cf = body["confirm"]
-        if not isinstance(cf, dict):
-            return jsonify({"error": "confirm must be an object"}), 400
-        unknown_cf = set(cf) - set(CONFIRM_KEYS)
-        if unknown_cf:
-            return jsonify({"error": f"unknown confirm key(s): {sorted(unknown_cf)}"}), 400
-        for k, v in cf.items():
-            if v not in CONFIRM_STATES:
-                return jsonify({"error": f"confirm.{k} must be one of {CONFIRM_STATES}"}), 400
-        current["confirm"].update(cf)
-    if "killswitch" in body:
-        ks = body["killswitch"]
-        if not isinstance(ks, dict):
-            return jsonify({"error": "killswitch must be an object"}), 400
-        unknown_ks = set(ks) - {"scope", "hold_to_fire"}
-        if unknown_ks:
-            return jsonify({"error": f"unknown killswitch key(s): {sorted(unknown_ks)}"}), 400
-        if "scope" in ks:
-            if ks["scope"] not in KILLSWITCH_SCOPES:
-                return jsonify({"error": f"unknown killswitch scope: {ks['scope']!r}"}), 400
-            current["killswitch"]["scope"] = ks["scope"]
-        if "hold_to_fire" in ks:
-            if not isinstance(ks["hold_to_fire"], bool):
-                return jsonify({"error": "hold_to_fire must be a boolean"}), 400
-            current["killswitch"]["hold_to_fire"] = ks["hold_to_fire"]
-    if "kill_holds" in body:
-        kh = body["kill_holds"]
-        if not isinstance(kh, dict):
-            return jsonify({"error": "kill_holds must be an object"}), 400
-        unknown_kh = set(kh) - set(KILL_ROW_KEYS)
-        if unknown_kh:
-            return jsonify({"error": f"unknown kill_holds key(s): {sorted(unknown_kh)}"}), 400
-        for k, v in kh.items():
-            if not isinstance(v, bool):
-                return jsonify({"error": f"kill_holds.{k} must be a boolean"}), 400
-        current["kill_holds"].update(kh)
-    _save_global(current)
-    return jsonify(current)
+    try:
+        return jsonify(engine_settings.save_global(body))
+    except GlobalError as exc:
+        return jsonify({"error": str(exc)}), 400
 
 
 @app.route("/api/policy")
@@ -1000,8 +846,8 @@ _SETTINGS_CARRY_KEYS = ("outputStyle", "autoMemoryEnabled", "claudeMdExcludes")
 @app.route("/api/settings/browse")
 def api_settings_browse():
     presets = request.args.get("presets")
-    if presets == "claude":
-        return jsonify({"kind": presets, "names": settings_stack.list_presets(presets)})
+    if presets:
+        return jsonify({"kind": presets, "names": engine_settings.list_presets()})
     root = os.path.abspath(rt.WORKSPACE_ROOT)
     path = os.path.abspath(request.args.get("path") or root)
     if os.path.commonpath([path, root]) != root:
@@ -1020,10 +866,9 @@ def api_settings_browse():
 
 @app.route("/api/settings/read")
 def api_settings_read():
-    preset_kind = request.args.get("preset_kind")
     preset_name = request.args.get("preset_name")
-    if preset_kind == "claude" and preset_name:
-        fields, warnings = settings_stack.read_preset_file(preset_kind, preset_name)
+    if preset_name:
+        fields, warnings = engine_settings.read_preset(preset_name)
         return jsonify({"fields": fields, "carried": list(fields.keys()),
                         "dropped": [], "warnings": warnings})
     path = os.path.abspath(request.args.get("path") or "")
@@ -1058,7 +903,46 @@ def api_settings_resolved():
     region = ade_tracks.get_region(track_id) if track_id else None
     if region is None:
         return jsonify({"error": "region not found"}), 404
-    return jsonify(settings_stack.resolve(region.sess.settings))
+    bag = region.sess.settings
+    overlay, warnings = client.claude._overlay(bag)
+    # provenance: which layer set each key — file, preset, track, else global
+    bag_key_of = {
+        "outputStyle": "claude_output_style",
+        "autoMemoryEnabled": "claude_memory_enabled",
+        "claudeMdExcludes": "claude_md_excludes",
+        "setting_sources": "claude_setting_sources",
+        "config_dir": "claude_config_dir",
+        "system_prompt": "claude_system_prompt",
+        "bare": "claude_bare",
+    }
+    from engine.providers import _NORMALIZERS
+    preset_name = (bag.get("preset_name") or "").strip()
+    preset_fields = {}
+    if preset_name and preset_name in engine_settings.list_presets():
+        preset_fields, _ = engine_settings.read_preset(preset_name)
+    provenance = {}
+    for key, bag_key in bag_key_of.items():
+        value = bag.get(bag_key)
+        row = engine_settings.BY_KEY[bag_key]
+        norm = _NORMALIZERS.get(key)
+        if norm and norm(value) is None and overlay and overlay.get(key) is not None:
+            provenance[key] = "file"
+        elif preset_name and bag_key in preset_fields and preset_fields[bag_key] == value:
+            provenance[key] = "preset"
+        elif value != row.default:
+            provenance[key] = "track"
+        else:
+            provenance[key] = "global"
+    return jsonify({
+        "overlay": overlay,
+        "setting_sources": bag.get("claude_setting_sources") or None,
+        "config_dir": bag.get("claude_config_dir") or None,
+        "system_prompt": bag.get("claude_system_prompt") or None,
+        "bare": bool(bag.get("claude_bare")),
+        "preset_name": bag.get("preset_name") or "",
+        "provenance": provenance,
+        "warnings": warnings,
+    })
 
 
 @app.route("/api/ade-sessions")
@@ -1344,10 +1228,6 @@ if __name__ == "__main__":
         if _reaped:
             return
         _reaped = True
-        try:
-            client.llamacpp.stop()
-        except Exception:
-            pass
         if _ollama_proc is not None and _ollama_proc.poll() is None:
             try:
                 _ollama_proc.terminate()

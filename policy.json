@@ -1,5 +1,29 @@
 [
   {
+    "edge": "write_file",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "send_message",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "remember",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "run_command",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
     "edge": "check_read",
     "driver": "model",
     "scope": "inside",
@@ -12,67 +36,19 @@
     "hook": "ask"
   },
   {
-    "edge": "fetch_url",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
     "edge": "screen_capture",
     "driver": "model",
     "scope": "any",
     "hook": "ask"
   },
   {
-    "edge": "write_file",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "run_command",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "remember",
+    "edge": "fetch_url",
     "driver": "model",
     "scope": "any",
     "hook": "ask"
   },
   {
     "edge": "recall",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "default",
-    "driver": "human",
-    "scope": "any",
-    "hook": "open"
-  },
-  {
-    "edge": "logic_status",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "logic_open",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "logic_transport",
-    "driver": "model",
-    "scope": "any",
-    "hook": "ask"
-  },
-  {
-    "edge": "logic_command",
     "driver": "model",
     "scope": "any",
     "hook": "ask"
@@ -106,5 +82,35 @@
     "driver": "model",
     "scope": "any",
     "hook": "ask"
+  },
+  {
+    "edge": "initiate",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "reset_region",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "reset_self",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "request_messages",
+    "driver": "model",
+    "scope": "any",
+    "hook": "ask"
+  },
+  {
+    "edge": "default",
+    "driver": "human",
+    "scope": "any",
+    "hook": "open"
   }
 ]

@@ -2,6 +2,7 @@
 
 Builder: Opus.
 Order: third. Starts after Docs/Reports/RECEIPT-B-engine.md exists. Read A's and B's receipts first.
+Before Part 1: if Docs/Reports/RECEIPT-B2-fixes.md does not exist, build Docs/Specs/SPEC-B2-fixes.md first under its own guardrails and leave its receipt. If it exists, read it and confirm `/api/settings/resolved` returns `provenance` before you start.
 Scope source: Docs/Scope/SCOPE-sandbox-cleanup.md, Phase 1 (Context), Phase 2 (Gates: "get rid of old daemon tools"), Library Phase 3 (tools/skills/hooks) as the thing this makes room for.
 
 ## GUARDRAILS

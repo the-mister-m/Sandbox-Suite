@@ -18,9 +18,19 @@ from engine import agent_loop as al
 from engine import daemon_queue as dq
 from engine import ledger
 from engine import read_tool as rt
+from engine import settings as settings_table
 from engine import waypoint
 
 from ade import rails
+
+
+def kind_of(model):
+    # provider kind for a model name — drives the reset_on_change default
+    provider = rails.infer_provider(model)
+    for row in rails.PROVIDERS:
+        if row["id"] == provider:
+            return row["kind"]
+    return "local"
 
 
 SYSTEM_SENDER = "«harness»"
@@ -287,40 +297,54 @@ def _carried(src):
 
 class Track:
 
-    INHERITABLE = ("root", "overlay_rows", "provider", "loop_class", "mechanism")
-
-    def __init__(self, track_id, name, regions=None, root=None,
-                 overlay_rows=None, provider=None, loop_class=None,
-                 mechanism=None, created=None):
+    def __init__(self, track_id, name, regions=None, root=None, order=None,
+                 created=None):
         self.id      = track_id
         self.name    = name
         self.regions = list(regions or [])
-        self.root         = root
-        self.overlay_rows = overlay_rows
-        self.provider     = provider
-        self.loop_class   = loop_class
-        self.mechanism    = mechanism
-        self.created      = created or _now_iso()
-
-    def inherit(self, **authored):
-        out = {}
-        for key in self.INHERITABLE:
-            val = authored.get(key)
-            out[key] = self.__dict__[key] if val in (None, "") else val
-        return out
+        self.root    = root
+        self.order   = order
+        self.created = created or _now_iso()
 
     def index_entry(self):
         return {
-            "id":         self.id,
-            "name":       self.name,
-            "regions":    list(self.regions),
-            "root":       self.root,
-            "overlay_rows": self.overlay_rows,
-            "provider":   self.provider,
-            "loop_class": self.loop_class,
-            "mechanism":  self.mechanism,
-            "created":    self.created,
+            "id":      self.id,
+            "name":    self.name,
+            "regions": list(self.regions),
+            "root":    self.root,
+            "order":   self.order,
+            "created": self.created,
         }
+
+    def apply_edits(self, fields):
+        # name, root, order only — everything else rejected
+        rejected = []
+        for key, val in fields.items():
+            if key == "name":
+                new = val.strip() if isinstance(val, str) else ""
+                if new:
+                    self.name = new
+                else:
+                    rejected.append(key)
+            elif key == "root":
+                new = (os.path.abspath(os.path.expanduser(val.strip()))
+                       if isinstance(val, str) and val.strip() else "")
+                if new and os.path.isdir(new):
+                    self.root = new
+                    for region_id in self.regions:
+                        region = get_region(region_id)
+                        if region is not None:
+                            region.apply_edits([{"type": "root", "value": new}])
+                else:
+                    rejected.append(key)
+            elif key == "order":
+                if isinstance(val, int) and not isinstance(val, bool):
+                    self.order = val
+                else:
+                    rejected.append(key)
+            else:
+                rejected.append(key)
+        return rejected
 
 
 class Region:
@@ -346,7 +370,9 @@ class Region:
             model=model)
 
         self.sess = al.Session(io_surface=self.hub, sid=region_id, shell="ade")
+        self.sess.settings = settings_table.region_defaults(kind_of(model))
         self.sess.settings["model"] = model
+        self.sess.settings["seat"] = seat or ""
         if seat:
             self.sess.nick = seat
         self.sess.stop_key_watch = self._stop_watch
@@ -359,7 +385,7 @@ class Region:
         self.sess.region_name    = self.name
 
         self.sess.messages = [{"role": "system", "content": ""}]
-        al.reseat(self.sess, shell="ade")
+        al.rebuild_context(self.sess)
 
         self.inbox  = []
         self.outbox = []
@@ -461,9 +487,7 @@ class Region:
             "turn_ordinal": self._turn_ordinal,
             "claude_session_id": (al.router.claude_session_id(self.id, self.model)
                                   if al.router is not None else None),
-            "settings": {k: v for k, v in self.sess.settings.items()
-                         if k not in al.DEFAULT_SETTINGS
-                         or al.DEFAULT_SETTINGS[k] != v},
+            "settings": dict(self.sess.settings),
         }
 
     def flush(self, sdir):
@@ -576,7 +600,20 @@ class Region:
                 val = item.get("value")
         return val
 
+    @staticmethod
+    def _in_place_only(item):
+        # rename, gates and preset_name never touch model context
+        t = item.get("type")
+        if t in ("rename", "overlay"):
+            return True
+        return t == "setting" and item.get("key") in ("preset_name",
+                                                      "reset_on_change")
+
     def apply_edits(self, items):
+        if self.sess.settings.get("reset_on_change") and \
+                any(not self._in_place_only(i) for i in items):
+            self._reset_with(items)
+            return
         with self._inbox_lock:
             if self._pumping:
                 held = []
@@ -591,6 +628,42 @@ class Region:
             for item in items:
                 self._apply_edit(item, pending_keep_warm=pending_keep_warm)
 
+    def _reset_with(self, items):
+        # the fresh region is born with the edited settings
+        row = self.index_entry()
+        row.pop("claude_session_id", None)
+        settings = dict(row.get("settings") or {})
+        for item in items:
+            t = item.get("type")
+            val = item.get("value")
+            if t == "setting":
+                key = item.get("key")
+                settings[key] = val
+                if key == "model":
+                    row["vessel"] = val
+            elif t == "rename":
+                row["name"] = (val or "").strip() or row["name"]
+            elif t == "root":
+                new = os.path.abspath(os.path.expanduser((val or "").strip()))
+                if new and os.path.isdir(new):
+                    row["root"] = new
+            elif t == "seat":
+                nick = (val or "").strip() or None
+                row["seat"] = nick
+                settings["seat"] = nick or ""
+            elif t == "rail":
+                rail = val or {}
+                prov, lclass, mech = rails.normalize(
+                    provider=rail.get("provider", row.get("provider")),
+                    loop_class=rail.get("loop_class", row.get("loop_class")),
+                    mechanism=rail.get("mechanism", row.get("mechanism")),
+                    model=settings.get("model") or row.get("vessel"))
+                row["provider"], row["loop_class"], row["mechanism"] = prov, lclass, mech
+            elif t == "overlay":
+                row["overlay_rows"] = val
+        row["settings"] = settings
+        reset_region(self.id, row=row)
+
     def _apply_edit(self, item, pending_keep_warm=None):
         t = item.get("type")
         if t == "setting":
@@ -600,19 +673,14 @@ class Region:
                 self.sess.settings[key] = val
                 self.model = val
                 if old != val and al.router is not None:
-                    if al._is_llamacpp(val):
-                        al.router.llamacpp.ensure_serving(val, self.sess.io)
-                    elif al._is_llamacpp(old):
-                        al.router.llamacpp.stop(self.sess.io)
-                    if not al._is_llamacpp(old):
-                        keep_warm = (pending_keep_warm if pending_keep_warm is not None
-                                     else self.sess.settings.get("claude_keep_warm"))
-                        if al._is_claude(old) and keep_warm:
-                            self.sess.io.out(f"  [claude] keep_warm on — leaving '{old}' session warm", dim=True)
-                        else:
-                            msg = al.router.unload(old, track_id=self.id)
-                            if msg:
-                                self.sess.io.out("  " + msg, dim=True)
+                    keep_warm = (pending_keep_warm if pending_keep_warm is not None
+                                 else self.sess.settings.get("claude_keep_warm"))
+                    if al._is_claude(old) and keep_warm:
+                        self.sess.io.out(f"  [claude] keep_warm on — leaving '{old}' session warm", dim=True)
+                    else:
+                        msg = al.router.unload(old, region_id=self.id)
+                        if msg:
+                            self.sess.io.out("  " + msg, dim=True)
             elif key == "claude_keep_warm":
                 if al._is_claude(self.sess.settings.get("model")):
                     self.sess.settings[key] = val
@@ -624,7 +692,7 @@ class Region:
             if new and os.path.isdir(new):
                 self.root      = new
                 self.sess.root = new
-                al.reseat(self.sess, shell="ade")
+                al.rebuild_context(self.sess)
                 self.lifecycle.append({"event": "rerooted", "root": new,
                                        "ts": _now_iso()})
 
@@ -639,7 +707,8 @@ class Region:
             nick = (item.get("value") or "").strip() or None
             self.seat      = nick
             self.sess.nick = nick
-            al.reseat(self.sess, shell="ade")
+            self.sess.settings["seat"] = nick or ""
+            al.rebuild_context(self.sess)
 
         elif t == "rail":
             val = item.get("value") or {}
@@ -784,21 +853,20 @@ _session_lock = threading.Lock()
 
 
 def default_overlay_rows():
-    rows = [{"edge": e, "driver": "model", "scope": s, "hook": "ask"}
-            for e, s in al.GATE_EDGES]
-    rows.append({"edge": "check_read", "driver": "model",
-                 "scope": "outside", "hook": "ask"})
-    return rows
+    from engine import tools
+    return [{"edge": e, "driver": "model", "scope": s, "hook": "ask"}
+            for e, s in tools.gate_edges()]
 
 
 def stack_gate_edges():
-    from engine.policy import TOOL_EDGES
-    return frozenset(TOOL_EDGES.values())
+    from engine.tools import CLAUDE_NATIVE_EDGES
+    return frozenset(CLAUDE_NATIVE_EDGES.values())
 
 
 def model_gate_edges():
+    from engine import tools
     cli = stack_gate_edges()
-    return frozenset(e for e, _ in al.GATE_EDGES if e not in cli)
+    return frozenset(e for e, _ in tools.gate_edges() if e not in cli)
 
 
 def apply_gate_subset(overlay_rows, edge_names, hooks_by_edge):
@@ -846,9 +914,9 @@ def create_track(name, root=None, overlay_rows=None, provider=None,
                  loop_class=None, mechanism=None,
                  model=None, seat=None, settings=None, region=None):
     _ensure_session()
-    track = Track(uuid.uuid4().hex[:12], name,
-                  root=root, overlay_rows=overlay_rows, provider=provider,
-                  loop_class=loop_class, mechanism=mechanism)
+    with _tracks_lock:
+        order = len(_tracks)
+    track = Track(uuid.uuid4().hex[:12], name, root=root, order=order)
     with _tracks_lock:
         _tracks[track.id] = track
     if model is not None or seat is not None or settings is not None or region:
@@ -890,17 +958,13 @@ def insert_region(track_id, name, model, root=None, seat=None,
         track = _tracks.get(track_id)
     if track is None:
         return None
-    got = track.inherit(root=root, overlay_rows=overlay_rows, provider=provider,
-                        loop_class=loop_class, mechanism=mechanism)
-    if got["root"] is None:
-        got["root"] = rt.WORKSPACE_ROOT
-    if not isinstance(got["overlay_rows"], list):
-        got["overlay_rows"] = default_overlay_rows()
+    use_root = root or track.root or rt.WORKSPACE_ROOT
+    gates = overlay_rows if isinstance(overlay_rows, list) else default_overlay_rows()
     name = _stamp_name(name)
-    reg = Region(uuid.uuid4().hex[:12], name, model, got["root"],
-                 seat=seat, overlay_rows=got["overlay_rows"],
-                 provider=got["provider"], loop_class=got["loop_class"],
-                 mechanism=got["mechanism"], track=track.id,
+    reg = Region(uuid.uuid4().hex[:12], name, model, use_root,
+                 seat=seat, overlay_rows=gates,
+                 provider=provider, loop_class=loop_class,
+                 mechanism=mechanism, track=track.id,
                  carried=(region or {}))
     for key, val in (settings or {}).items():
         reg._apply_edit({"type": "setting", "key": key, "value": val})
@@ -1270,13 +1334,12 @@ def _do_reset(old, row):
     autosave()
 
     
-    if fresh.sess.settings.get("start_turn_on_reset",
-                               al.DEFAULT_SETTINGS["start_turn_on_reset"]):
+    if fresh.sess.settings.get("start_turn_on_reset", True):
         _fire_starter(fresh)
     return fresh
 
 
-def reset_region(region_id):
+def reset_region(region_id, row=None):
     region = get_region(region_id)
     if region is None:
         return "[reset: no such region]"
@@ -1287,7 +1350,9 @@ def reset_region(region_id):
             return "[reset: that region is closed]"
         region._reset_armed = True
         live = region._pumping
-    row = region.index_entry()
+    if row is None:
+        row = region.index_entry()
+    row = dict(row)
     row.pop("claude_session_id", None)
     region.hub.stop_requested.set()
     region.hub.resolve_gate(None, "n")
@@ -1354,7 +1419,7 @@ def _final_flush(track):
 SESSION_KIND  = "ade-session"
 TEMPLATE_KIND = "ade-template"
 
-ARCHIVE_SCHEMA = 4
+ARCHIVE_SCHEMA = 5
 
 
 def _is_closed(row):
@@ -1403,9 +1468,8 @@ def _read_master(mpath):
             tid = uuid.uuid4().hex[:12]
             tracks.append({
                 "id": tid, "name": row.get("name"), "regions": [row["id"]],
-                "root": row.get("root"), "overlay_rows": row.get("overlay_rows"),
-                "provider": row.get("provider"), "loop_class": row.get("loop_class"),
-                "mechanism": row.get("mechanism"), "created": row.get("created"),
+                "root": row.get("root"), "order": len(tracks),
+                "created": row.get("created"),
             })
             row["track"] = tid
             regions.append(row)
@@ -1515,12 +1579,10 @@ def _world_from_master(master, hydrate_dir):
     fresh_tracks = [Track(row["id"], row.get("name"),
                           regions=row.get("regions") or [],
                           root=row.get("root"),
-                          overlay_rows=row.get("overlay_rows"),
-                          provider=row.get("provider"),
-                          loop_class=row.get("loop_class"),
-                          mechanism=row.get("mechanism"),
+                          order=(row.get("order") if row.get("order") is not None
+                                 else i),
                           created=row.get("created"))
-                    for row in master.get("tracks", [])]
+                    for i, row in enumerate(master.get("tracks", []))]
     fresh, dead = [], []
     for row in master.get("regions", []):
         if _is_closed(row):
@@ -1551,9 +1613,8 @@ def _world_from_master(master, hydrate_dir):
     for t in fresh:
         if t.track not in known:
             orphan = Track(uuid.uuid4().hex[:12], t.name, regions=[t.id],
-                           root=t.root, overlay_rows=t.overlay_rows,
-                           provider=t.provider, loop_class=t.loop_class,
-                           mechanism=t.mechanism, created=t.created)
+                           root=t.root, order=len(fresh_tracks),
+                           created=t.created)
             t.track = orphan.id
             t.sess.track = orphan.id
             fresh_tracks.append(orphan)

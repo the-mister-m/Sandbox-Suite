@@ -19,28 +19,10 @@ def _edge_key(edge):
 
 
 def _default_rows():
-    return [
-        {"edge": "check_read",       "driver": "model", "scope": "inside",  "hook": "ask"},
-        {"edge": "check_read",       "driver": "model", "scope": "outside", "hook": "ask"},
-        {"edge": "fetch_url",        "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "screen_capture",   "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "write_file",       "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "run_command",      "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "remember",         "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "recall",           "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "send_message",     "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "request_messages", "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "logic_status",     "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "logic_open",       "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "logic_transport",  "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "logic_command",    "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "web_open",         "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "web_read",         "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "web_screenshot",   "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "web_act",          "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "web_eval",         "driver": "model", "scope": "any",     "hook": "ask"},
-        {"edge": "default",          "driver": "human", "scope": "any",     "hook": "open"},
-    ]
+    from engine import tools
+    return [{"edge": e, "driver": "model", "scope": s, "hook": "ask"}
+            for e, s in tools.gate_edges()] + [
+        {"edge": "default", "driver": "human", "scope": "any", "hook": "open"}]
 
 
 def _stat_mtime():
@@ -158,20 +140,7 @@ def reload():
         _mtime = seen
 
 
-TOOL_EDGES = {
-    "Read":         "check_read",
-    "Glob":         "check_read",
-    "Grep":         "check_read",
-    "NotebookRead": "check_read",
-    "Write":        "write_file",
-    "Edit":         "write_file",
-    "NotebookEdit": "write_file",
-    "Bash":         "run_command",
-    "BashOutput":   "run_command",
-    "KillShell":    "run_command",
-    "WebFetch":     "fetch_url",
-    "WebSearch":    "fetch_url",
-}
+from engine.tools import CLAUDE_NATIVE_EDGES as TOOL_EDGES
 
 _TARGET_KEYS = ("file_path", "notebook_path", "path", "command", "url",
                 "pattern", "query")

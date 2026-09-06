@@ -7,7 +7,7 @@ from engine import agent_loop as al
 from engine import daemon_queue as dq
 from engine import ledger
 from engine import read_tool as rt
-from engine import settings_stack
+from engine import settings as st
 from ade import rails
 from ade import tracks
 
@@ -230,40 +230,35 @@ def _do_create_track(msg):
 
 
 
-def _do_load_preset(track, name):
-    fields, warnings = settings_stack.read_preset_file("claude", name)
+def _do_load_preset(region, name):
+    fields, warnings = st.read_preset(name)
+
+    model_val = fields.get("model", region.sess.settings.get("model"))
+    new_bag = st.region_defaults(tracks.kind_of(model_val))
+    new_bag.update(fields)
+    if "reset_on_change" not in fields:
+        new_bag["reset_on_change"] = region.sess.settings.get("reset_on_change")
 
     items = []
-    for key in settings_stack.preset_keys():
-        how = settings_stack.PRESET_TABLE[key]["how"]
-        if how == "gates":
-            continue
-        if how == "name":
-            items.append({"type": "setting", "key": key, "value": name})
-            continue
-        if how == "layer":
-            items.append({"type": "setting", "key": key,
-                          "value": settings_stack.preset_default(key)})
-            continue
-        value = fields.get(key, settings_stack.preset_default(key))
+    for key, value in new_bag.items():
         if key == "seat":
             items.append({"type": "seat", "value": value or ""})
         else:
             items.append({"type": "setting", "key": key, "value": value})
 
-    model_val = fields.get("model")
-    if model_val:
+    if model_val and model_val != region.sess.settings.get("model"):
         prov, lclass, mech = rails.normalize(
             provider=rails.infer_provider(model_val), model=model_val)
         items.append({"type": "rail",
                       "value": {"provider": prov, "loop_class": lclass,
                                 "mechanism": mech}})
 
-    edge_names = tracks.stack_gate_edges() | tracks.model_gate_edges()
-    new_overlay = tracks.apply_gate_subset(track.overlay_rows, edge_names,
-                                           fields.get("gates") or {})
-    items.append({"type": "overlay", "value": new_overlay})
-    track.apply_edits(items)
+    overlay = fields.get(st.OVERLAY_KEY)
+    if isinstance(overlay, list):
+        items.append({"type": "overlay", "value": overlay})
+
+    items.append({"type": "setting", "key": "preset_name", "value": name})
+    region.apply_edits(items)
     return True, warnings
 
 
@@ -278,65 +273,25 @@ def _apply_spawn_presets(region, msg, webio):
         webio.out(f"[preset {name!r}: not applied at creation]", dim=True)
 
 
-def _capture_preset_fields(track, pending=None):
-    out = {}
-    pending = pending or {}
-    loaded = (track.sess.settings.get("claude_preset") or "").strip()
-    inherited = settings_stack.read_preset_file("claude", loaded)[0] if loaded else {}
-
-    for key in settings_stack.preset_keys():
-        how = settings_stack.PRESET_TABLE[key]["how"]
-        if how == "gates":
-            continue
-        if how == "name":
-            continue
-        if key in pending:
-            val = pending[key]
-        elif key == "model":
-            val = track.model
-        elif key == "seat":
-            val = track.seat
-        else:
-            val = track.sess.settings.get(key)
-        default = settings_stack.preset_default(key)
-        if val is None:
-            val = default
-        if val == default and key in inherited:
-            val = inherited[key]
-        if key == "model" or val != default:
-            out[key] = val
-    return out
+def _capture_preset_fields(region, pending=None):
+    bag = dict(region.sess.settings)
+    bag.update(pending or {})
+    return {k: bag[k] for k in st.preset_keys() if k in bag}
 
 
-def _capture_gates(track, edge_names, pending_overlay=None):
-    rows = pending_overlay or track.overlay_rows or tracks.default_overlay_rows()
-    out, seen = {}, set()
-    for r in rows:
-        edge = r.get("edge")
-        if edge not in edge_names or edge in seen:
-            continue
-        seen.add(edge)
-        if r.get("hook") != "ask":
-            out[edge] = r.get("hook")
-    return out
-
-
-def _do_save_preset(track, name, pending=None):
+def _do_save_preset(region, name, pending=None):
     pending = dict(pending or {})
     pending_overlay = pending.pop("overlay", None)
-    edge_names = tracks.stack_gate_edges() | tracks.model_gate_edges()
-    fields = _capture_preset_fields(track, pending)
-    gates = _capture_gates(track, edge_names, pending_overlay)
-    if gates:
-        fields["gates"] = gates
+    fields = _capture_preset_fields(region, pending)
+    overlay = pending_overlay if isinstance(pending_overlay, list) \
+        else region.overlay_rows
+    if isinstance(overlay, list):
+        fields[st.OVERLAY_KEY] = overlay
     if not (fields.get("model") or "").strip():
-        return False, (f"nothing to save — this track has no model, and a "
+        return False, (f"nothing to save — this region has no model, and a "
                        f"preset with no model loads onto the wrong rail. "
                        f"{name!r} was left alone")
-    if not fields:
-        return False, (f"nothing to save — this track is at the engine "
-                       f"defaults on every field, so {name!r} was left alone")
-    return settings_stack.write_preset_file("claude", name, fields)
+    return st.write_preset(name, fields)
 
 
 def _do_insert_region(msg):
@@ -535,10 +490,9 @@ def handle(ctx, msg):
             webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
             return
         fields = dict(msg.get("fields") or {})
-        if "name" in fields:
-            new = (fields.get("name") or "").strip()
-            if new:
-                row.name = new
+        rejected = row.apply_edits(fields)
+        if rejected:
+            webio.out("[edit_track_row: rejected keys: %s]" % ", ".join(rejected), dim=True)
         _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
 
     elif t == "killswitch":
@@ -936,7 +890,7 @@ def handle(ctx, msg):
         if not old_name or not new_name:
             webio.out("[rename_preset: bad name]", dim=True)
             return
-        ok, result = settings_stack.rename_preset_file("claude", old_name, new_name)
+        ok, result = st.rename_preset(old_name, new_name)
         webio.out(f"[preset renamed: {result}]" if ok else f"[rename_preset failed: {result}]", dim=True)
 
     elif t == "delete_preset":
@@ -944,7 +898,7 @@ def handle(ctx, msg):
         if not name:
             webio.out("[delete_preset: bad name]", dim=True)
             return
-        ok, result = settings_stack.delete_preset_file("claude", name)
+        ok, result = st.delete_preset(name)
         webio.out(f"[preset deleted: {result}]" if ok else f"[delete_preset failed: {result}]", dim=True)
 
     else:

@@ -15,12 +15,9 @@ import shlex
 import threading
 import queue
 
-import requests
-
 from engine.ollama_provider import OllamaProvider
-from engine.codex_provider import CodexProvider
 from engine import SUITE_ROOT
-from engine import settings_stack
+from engine import settings as st
 
 
 def _load_dotenv():
@@ -35,31 +32,6 @@ def _load_dotenv():
                 os.environ.setdefault(k.strip(), v.strip())
 
 _load_dotenv()
-
-LITERT_MODELS_DIR = os.environ.get("LITERT_MODELS_DIR") or \
-    os.path.join(SUITE_ROOT, "models")
-
-LLAMACPP_PORT = int(os.environ.get("LLAMACPP_PORT", "8033"))
-LLAMACPP_NGL  = os.environ.get("LLAMACPP_NGL", "99")
-
-def _first_glob(pattern):
-    hits = glob.glob(os.path.expanduser(pattern))
-    return hits[0] if hits else ""
-
-LLAMACPP_MODELS = {
-    "llamacpp:gemma-4-12b-bf16": (
-        os.environ.get("LLAMACPP_GEMMA_MODEL")
-            or os.path.expanduser("~/Downloads/gemma-4-12b-it-BF16.gguf"),
-        os.environ.get("LLAMACPP_GEMMA_MMPROJ") or _first_glob(
-            "~/.cache/huggingface/hub/models--unsloth--gemma-4-12B-it-qat-GGUF/snapshots/*/mmproj-F16.gguf"),
-    ),
-    "llamacpp:qwen2.5-omni-7b": (
-        os.environ.get("LLAMACPP_QWEN_MODEL")
-            or os.path.expanduser("~/.lmstudio/models/unsloth/Qwen2.5-Omni-7B-GGUF/Qwen2.5-Omni-7B-Q4_K_S.gguf"),
-        os.environ.get("LLAMACPP_QWEN_MMPROJ")
-            or os.path.expanduser("~/.lmstudio/models/unsloth/Qwen2.5-Omni-7B-GGUF/mmproj-F32.gguf"),
-    ),
-}
 
 AUDIO_TARGET_SR = 16000
 
@@ -106,28 +78,24 @@ CLAUDE_MODELS = ("sonnet", "haiku", "fable", "opus", "claude-opus-4-5",
                   "claude-opus-4-6", "claude-sonnet-4-5", "claude-sonnet-4-6",
                   "claude-opus-4-8", "claude-fable-5")
 
-
-CODEX_MODELS = ("gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5")
+CLAUDE_ALIASES = ("sonnet", "opus", "haiku", "fable")
 
 
 def _provider_for(model: str) -> str:
     if model and model.startswith("gemini"):
         return "gemini"
-    if model and model.startswith("llamacpp"):
-        return "llamacpp"
     if model in CLAUDE_MODELS:
         return "claude"
-    if model in CODEX_MODELS:
-        return "codex"
     return "ollama"
 
 
-def is_text_only_provider(provider=None, model=None) -> bool:
-    kind = provider or _provider_for(model or "")
-    return kind in ("codex", "claude")
-
-
 class GeminiProvider:
+
+    id = "gemini"
+    label = "Gemini"
+    kind = "cloud"
+    tool_mode = "native"
+    settings_keys = st.block_keys("gemini") + st.harness_keys()
 
     MODELS = ["gemini-2.5-flash", "gemini-3.1-pro-preview"]
 
@@ -144,10 +112,21 @@ class GeminiProvider:
     def available(self) -> bool:
         return bool(os.environ.get("GEMINI_API_KEY"))
 
-    def list_models(self):
-        return list(self.MODELS)
+    @staticmethod
+    def split_model(name):
+        model, sep, version = (name or "").partition("-")
+        return model, (version if sep else "")
 
-    def chat(self, messages, model=None, think=None, tools=None, num_ctx=None, timeout=None, **_kwargs):
+    def list_models(self) -> list[dict]:
+        rows = []
+        for name in self.MODELS:
+            model, version = self.split_model(name)
+            rows.append({"id": name, "provider": self.id,
+                         "model": model, "version": version})
+        return rows
+
+    def chat(self, messages, model=None, settings=None, tools=None,
+             region_id=None, root=None, metrics_sink=None):
         from google.genai import types
         client = self._get_client()
         system_text, contents = self._translate(messages)
@@ -189,6 +168,9 @@ class GeminiProvider:
             "in_tokens": in_tok, "out_tokens": out_tok,
             "duration_ns": time.monotonic_ns() - start,
         })
+
+    def unload(self, model=None, region_id=None) -> str:
+        return "[gemini] metered API — nothing to unload here"
 
     def _translate(self, messages):
         from google.genai import types
@@ -465,11 +447,55 @@ HOOK_SCRIPT_PATH = os.path.join(SUITE_ROOT, "hooks", "ade_pretooluse_hook.py")
 
 POST_TOOL_USE_TIMEOUT_S = 5.0
 
+# keys read out of the settings block on every call
+_WANT_KEYS = ("claude_cache_ttl", "claude_exclude_dynamic", "claude_tools",
+              "claude_setting_sources", "claude_system_prompt", "claude_bare",
+              "claude_config_dir", "claude_memory_enabled", "claude_md_excludes",
+              "claude_output_style", "claude_settings_file", "gate_wait_s",
+              "claude_disallowed_tools", "claude_add_dirs")
+
+# settings file keys carried into the CLI overlay
+_CARRIED_FILE_KEYS = ("outputStyle", "autoMemoryEnabled", "claudeMdExcludes")
+
+_OVERLAY_FROM_BLOCK = {"outputStyle": "claude_output_style",
+                       "autoMemoryEnabled": "claude_memory_enabled",
+                       "claudeMdExcludes": "claude_md_excludes"}
+
+
+def _norm_output_style(v):
+    return v if isinstance(v, str) and v else None
+
+
+def _norm_memory(v):
+    if v in ("on", True):
+        return True
+    if v in ("off", False):
+        return False
+    return None
+
+
+def _norm_excludes(v):
+    if isinstance(v, list):
+        return list(v) if v else None
+    if isinstance(v, str) and v.strip():
+        return [p.strip() for p in v.split(",") if p.strip()]
+    return None
+
+
+_NORMALIZERS = {"outputStyle": _norm_output_style,
+                "autoMemoryEnabled": _norm_memory,
+                "claudeMdExcludes": _norm_excludes}
+
 
 class ClaudeProvider:
 
+    id = "claude"
+    label = "Claude"
+    kind = "cloud"
+    tool_mode = "text"
+    settings_keys = st.block_keys("claude") + st.harness_keys()
+
     DEFAULT_MODEL = "sonnet"
-    DEFAULT_GATED = ["Bash", "Edit", "Write"]
 
     _THINKING_DISPLAY_REQ = json.dumps({
         "type": "control_request",
@@ -497,15 +523,67 @@ class ClaudeProvider:
     def available(self):
         return bool(self._get_binary())
 
-    def list_models(self):
-        return list(CLAUDE_MODELS) if self.available() else []
+    @staticmethod
+    def split_model(name):
+        if name in CLAUDE_ALIASES:
+            return name, ""
+        stem = name[len("claude-"):] if name.startswith("claude-") else name
+        model, sep, version = stem.partition("-")
+        return model, (version if sep else "")
 
-    def _build_cmd(self, binary, model, sys_text, claude_effort, claude_partial,
-                    session_id=None, resume=False, claude_exclude_dynamic=False,
-                    claude_tools=None, claude_setting_sources=None,
-                    claude_system_prompt=None, claude_bare=False,
-                    claude_settings_obj=None, claude_disallowed_tools=None,
-                    claude_add_dirs=None):
+    def list_models(self) -> list[dict]:
+        if not self.available():
+            return []
+        rows = []
+        for name in CLAUDE_MODELS:
+            model, version = self.split_model(name)
+            rows.append({"id": name, "provider": self.id,
+                         "model": model, "version": version})
+        return rows
+
+    @staticmethod
+    def _read_settings_file(path, warnings):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except OSError as exc:
+            warnings.append(f"settings file {path!r} unreadable: {exc}")
+            return {}
+        except ValueError as exc:
+            warnings.append(f"settings file {path!r} is not valid JSON: {exc}")
+            return {}
+        if not isinstance(raw, dict):
+            warnings.append(f"settings file {path!r} is not a JSON object — ignored")
+            return {}
+        return {k: raw[k] for k in _CARRIED_FILE_KEYS if k in raw}
+
+    def _overlay(self, settings):
+        # settings file first, the block's own keys win
+        warnings = []
+        path = (settings.get("claude_settings_file") or "").strip()
+        file_raw = self._read_settings_file(path, warnings) if path else {}
+        overlay = {}
+        for cli_key, block_key in _OVERLAY_FROM_BLOCK.items():
+            norm = _NORMALIZERS[cli_key]
+            value = norm(settings.get(block_key))
+            if value is None:
+                value = norm(file_raw.get(cli_key))
+            if value is not None:
+                overlay[cli_key] = value
+        return overlay or None, warnings
+
+    def _want_from(self, settings, model, root):
+        want = {k: settings.get(k) for k in _WANT_KEYS}
+        for k in ("claude_tools", "claude_disallowed_tools", "claude_add_dirs",
+                  "claude_md_excludes"):
+            want[k] = list(want[k]) if want[k] else []
+        want["model"] = model
+        want["root"] = root or None
+        return want
+
+    def _build_cmd(self, binary, model, sys_text, want, overlay,
+                   claude_effort=None, claude_partial=True,
+                   session_id=None, resume=False):
         cmd = [
             binary, "-p",
             "--output-format", "stream-json",
@@ -520,22 +598,23 @@ class ClaudeProvider:
             cmd += ["--effort", claude_effort]
         if claude_partial:
             cmd += ["--include-partial-messages"]
-        if claude_exclude_dynamic:
+        if want["claude_exclude_dynamic"]:
             cmd += ["--exclude-dynamic-system-prompt-sections"]
-        if claude_setting_sources:
-            cmd += ["--setting-sources", claude_setting_sources]
-        if claude_system_prompt:
-            cmd += ["--system-prompt", claude_system_prompt]
-        if claude_bare:
+        if want["claude_setting_sources"]:
+            cmd += ["--setting-sources", want["claude_setting_sources"]]
+        if want["claude_system_prompt"]:
+            cmd += ["--system-prompt", want["claude_system_prompt"]]
+        if want["claude_bare"]:
             cmd += ["--bare"]
-        if claude_settings_obj:
-            cmd += ["--settings", json.dumps(claude_settings_obj)]
-        if claude_disallowed_tools:
-            cmd += ["--disallowedTools", ",".join(claude_disallowed_tools)]
-        if claude_add_dirs:
-            for d in claude_add_dirs:
-                cmd += ["--add-dir", d]
-        cmd += ["--tools", ",".join(claude_tools) if claude_tools else ""]
+        settings_obj = self._settings_obj(want["claude_tools"], overlay,
+                                          want["gate_wait_s"])
+        if settings_obj:
+            cmd += ["--settings", json.dumps(settings_obj)]
+        if want["claude_disallowed_tools"]:
+            cmd += ["--disallowedTools", ",".join(want["claude_disallowed_tools"])]
+        for d in want["claude_add_dirs"]:
+            cmd += ["--add-dir", d]
+        cmd += ["--tools", ",".join(want["claude_tools"]) if want["claude_tools"] else ""]
         return cmd
 
     def _cache_env(self, cache_ttl, region_id=None, claude_config_dir=None):
@@ -586,15 +665,60 @@ class ClaudeProvider:
             note += "\n" + detail
         return note + "\n"
 
-    def chat(self, messages, model=None, claude_gated=None, claude_effort=None,
-             claude_partial=True, claude_cache_ttl="1h", claude_exclude_dynamic=False,
-             claude_tools=None, claude_setting_sources=None, claude_system_prompt=None,
-             claude_bare=False, claude_config_dir=None, claude_memory_enabled=None,
-             claude_md_excludes=None, claude_output_style=None, claude_settings_file=None,
-             claude_preset=None, claude_track_id=None, claude_root=None,
-             claude_disallowed_tools=None, claude_add_dirs=None,
-             gate_wait_s=None, timeout=None, metrics_sink=None, **_kwargs):
-        idle_timeout = _claude_idle_seconds(timeout)
+    def _read_events(self, reader, on_result, claude_partial, idle_timeout,
+                     region_id, alias, cache_ttl, calls, seen_calls,
+                     on_resolved_model):
+        # one stream reader for oneshot chat and the persistent turn
+        gate_deadline = None
+        while True:
+            raw = reader.readline(timeout=idle_timeout)
+            if raw is None:
+                if _rail_c_gate_pending(region_id):
+                    if gate_deadline is None:
+                        gate_deadline = _gate_grace_deadline(idle_timeout)
+                    if time.monotonic() < gate_deadline:
+                        continue
+                yield ("_idle", None)
+                return
+            if not raw:
+                return
+            gate_deadline = None
+            line = raw.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            t = obj.get("type")
+            if t == "system" and obj.get("subtype") == "init":
+                if obj.get("model"):
+                    on_resolved_model(obj["model"])
+            if t == "assistant":
+                _collect_call(obj, calls, seen_calls, alias, cache_ttl)
+            if claude_partial:
+                if t == "stream_event":
+                    delta = (obj.get("event") or {}).get("delta") or {}
+                    dt = delta.get("type")
+                    if dt == "thinking_delta":
+                        yield ("thinking", delta.get("thinking", ""))
+                    elif dt == "text_delta":
+                        yield ("content", delta.get("text", ""))
+            elif t == "assistant":
+                for block in (obj.get("message", {}).get("content") or []):
+                    bt = block.get("type")
+                    if bt == "thinking":
+                        yield ("thinking", block.get("thinking", ""))
+                    elif bt == "text":
+                        yield ("content", block.get("text", ""))
+            if t == "result":
+                on_result(obj.get("usage", {}) or {})
+                return
+
+    def chat(self, messages, model=None, settings=None, tools=None,
+             region_id=None, root=None, metrics_sink=None):
+        s = settings or {}
+        idle_timeout = _claude_idle_seconds((10, s.get("request_timeout")))
         binary = self._get_binary()
         if not binary:
             yield ("content", "[ClaudeProvider] claude binary not found\n")
@@ -603,27 +727,13 @@ class ClaudeProvider:
 
         stdin_text, sys_text = self._serialize(messages)
         target_model = model or self.DEFAULT_MODEL
-        resolved = settings_stack.resolve({
-            "claude_settings_file": claude_settings_file,
-            "claude_preset": claude_preset,
-            "claude_output_style": claude_output_style,
-            "claude_memory_enabled": claude_memory_enabled,
-            "claude_md_excludes": claude_md_excludes,
-            "claude_setting_sources": claude_setting_sources,
-            "claude_config_dir": claude_config_dir,
-            "claude_system_prompt": claude_system_prompt,
-            "claude_bare": claude_bare,
-        })
-        settings_obj = self._settings_obj(claude_tools, resolved["overlay"], gate_wait_s)
-        cmd = self._build_cmd(binary, target_model, sys_text, claude_effort, claude_partial,
-                              claude_exclude_dynamic=claude_exclude_dynamic,
-                              claude_tools=claude_tools,
-                              claude_setting_sources=resolved["setting_sources"],
-                              claude_system_prompt=resolved["system_prompt"],
-                              claude_bare=resolved["bare"],
-                              claude_settings_obj=settings_obj,
-                              claude_disallowed_tools=claude_disallowed_tools,
-                              claude_add_dirs=claude_add_dirs)
+        claude_partial = bool(s.get("claude_partial", True))
+        cache_ttl = s.get("claude_cache_ttl") or "1h"
+        want = self._want_from(s, target_model, root)
+        overlay, _warnings = self._overlay(s)
+        cmd = self._build_cmd(binary, target_model, sys_text, want, overlay,
+                              claude_effort=s.get("claude_effort"),
+                              claude_partial=claude_partial)
 
         start = time.monotonic_ns()
         proc = subprocess.Popen(
@@ -631,85 +741,48 @@ class ClaudeProvider:
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=claude_root or None,
-            env=self._cache_env(claude_cache_ttl, region_id=claude_track_id,
-                                claude_config_dir=resolved["config_dir"]),
+            cwd=root or None,
+            env=self._cache_env(cache_ttl, region_id=region_id,
+                                claude_config_dir=want["claude_config_dir"] or None),
         )
         errtail = _StderrTail(proc)
         stdin_pump = _StdinPump(proc)
         stdin_pump.send(stdin_text.encode("utf-8"), close=True)
         reader = _LineReader(proc.stdout)
 
-        in_tok = out_tok = cache_read = cache_creation = 0
-        usage_final = None
-        resolved_model = None
-        idle = False
-        calls = []
-        seen_calls = set()
+        state = {"in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
+                 "usage": None, "resolved": None, "idle": False}
+        calls, seen_calls = [], set()
+
+        def _on_result(usage):
+            state["usage"] = usage
+            state["in"] = usage.get("input_tokens", 0)
+            state["out"] = usage.get("output_tokens", 0)
+            state["cache_read"] = usage.get("cache_read_input_tokens", 0)
+            state["cache_creation"] = usage.get("cache_creation_input_tokens", 0)
 
         def _metrics():
             return {
-                "in_tokens": in_tok,
-                "out_tokens": out_tok,
-                "cache_read": cache_read,
-                "cache_creation": cache_creation,
-                "cost_usd": (_claude_turn_cost(target_model, resolved_model,
-                                               usage_final, claude_cache_ttl)
-                             if usage_final else 0.0),
+                "in_tokens": state["in"],
+                "out_tokens": state["out"],
+                "cache_read": state["cache_read"],
+                "cache_creation": state["cache_creation"],
+                "cost_usd": (_claude_turn_cost(target_model, state["resolved"],
+                                               state["usage"], cache_ttl)
+                             if state["usage"] else 0.0),
                 "duration_ns": time.monotonic_ns() - start,
                 "calls": list(calls),
             }
 
         try:
-            gate_deadline = None
-            while True:
-                raw = reader.readline(timeout=idle_timeout)
-                if raw is None:
-                    if _rail_c_gate_pending(claude_track_id):
-                        if gate_deadline is None:
-                            gate_deadline = _gate_grace_deadline(idle_timeout)
-                        if time.monotonic() < gate_deadline:
-                            continue
-                    idle = True
+            for channel, data in self._read_events(
+                    reader, _on_result, claude_partial, idle_timeout, region_id,
+                    target_model, cache_ttl, calls, seen_calls,
+                    lambda m: state.__setitem__("resolved", m)):
+                if channel == "_idle":
+                    state["idle"] = True
                     break
-                if not raw:
-                    break
-                gate_deadline = None
-                line = raw.decode("utf-8", errors="replace").strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                t = obj.get("type")
-                if t == "system" and obj.get("subtype") == "init":
-                    resolved_model = obj.get("model") or resolved_model
-                if t == "assistant":
-                    _collect_call(obj, calls, seen_calls, target_model,
-                                  claude_cache_ttl)
-                if claude_partial:
-                    if t == "stream_event":
-                        delta = (obj.get("event") or {}).get("delta") or {}
-                        dt = delta.get("type")
-                        if dt == "thinking_delta":
-                            yield ("thinking", delta.get("thinking", ""))
-                        elif dt == "text_delta":
-                            yield ("content", delta.get("text", ""))
-                elif t == "assistant":
-                    for block in (obj.get("message", {}).get("content") or []):
-                        bt = block.get("type")
-                        if bt == "thinking":
-                            yield ("thinking", block.get("thinking", ""))
-                        elif bt == "text":
-                            yield ("content", block.get("text", ""))
-                if t == "result":
-                    usage_final = obj.get("usage", {}) or {}
-                    in_tok = usage_final.get("input_tokens", 0)
-                    out_tok = usage_final.get("output_tokens", 0)
-                    cache_read = usage_final.get("cache_read_input_tokens", 0)
-                    cache_creation = usage_final.get("cache_creation_input_tokens", 0)
-                    break
+                yield (channel, data)
         finally:
             if metrics_sink is not None:
                 metrics_sink.clear()
@@ -722,9 +795,12 @@ class ClaudeProvider:
                     pass
             proc.wait()
 
-        if usage_final is None:
-            yield ("content", self._failure_note(proc, errtail, idle))
+        if state["usage"] is None:
+            yield ("content", self._failure_note(proc, errtail, state["idle"]))
         yield ("metrics", _metrics())
+
+    def unload(self, model=None, region_id=None) -> str:
+        return "[claude] ephemeral subprocess — nothing to unload here"
 
     def _render(self, messages):
         rows = []
@@ -792,40 +868,10 @@ class ClaudePersistentProvider(ClaudeProvider):
         self._sent_sig = []
         self._active_model = None
         self._resolved_model = None
-        self._cache_ttl = "1h"
-        self._spawned_cache_ttl = None
-        self._exclude_dynamic = False
-        self._spawned_exclude_dynamic = None
-        self._tools = []
-        self._spawned_tools = None
-        self._setting_sources = None
-        self._spawned_setting_sources = None
-        self._system_prompt = None
-        self._spawned_system_prompt = None
-        self._bare = False
-        self._spawned_bare = None
-        self._config_dir = None
-        self._spawned_config_dir = None
-        self._memory_enabled = None
-        self._spawned_memory_enabled = "unset"
-        self._md_excludes = None
-        self._spawned_md_excludes = None
-        self._output_style = None
-        self._spawned_output_style = None
-        self._settings_file = None
-        self._spawned_settings_file = None
-        self._preset = None
-        self._spawned_preset = None
-        self._gate_wait_s = None
-        self._spawned_gate_wait_s = "unset"
-        self._disallowed_tools = []
-        self._spawned_disallowed_tools = None
-        self._add_dirs = []
-        self._spawned_add_dirs = None
+        self._want = {}
+        self._spawned = None
         self._idle_timeout = CLAUDE_IDLE_TIMEOUT
         self._region_id = None
-        self._root = None
-        self._spawned_root = None
         self.claude_session_id = session_id or str(uuid.uuid4())
         self._session_established = bool(session_id)
         atexit.register(self.shutdown)
@@ -863,59 +909,28 @@ class ClaudePersistentProvider(ClaudeProvider):
             return False
         return bool(convo[self._sent_count:])
 
-    def chat(self, messages, model=None, claude_gated=None, claude_effort=None,
-             claude_partial=True, claude_cache_ttl="1h", claude_keep_warm=False,
-             claude_exclude_dynamic=False, claude_tools=None, claude_setting_sources=None,
-             claude_system_prompt=None, claude_bare=False, claude_config_dir=None,
-             claude_memory_enabled=None, claude_md_excludes=None, claude_output_style=None,
-             claude_settings_file=None, claude_preset=None, claude_root=None,
-             claude_track_id=None, claude_disallowed_tools=None, claude_add_dirs=None,
-             gate_wait_s=None, timeout=None, metrics_sink=None, **_kwargs):
+    def chat(self, messages, model=None, settings=None, tools=None,
+             region_id=None, root=None, metrics_sink=None):
+        s = settings or {}
         target = model or self.DEFAULT_MODEL
-        self._idle_timeout = _claude_idle_seconds(timeout)
-        self._cache_ttl = claude_cache_ttl or "1h"
-        self._exclude_dynamic = bool(claude_exclude_dynamic)
-        self._tools = list(claude_tools) if claude_tools else []
-        self._setting_sources = claude_setting_sources or None
-        self._system_prompt = claude_system_prompt or None
-        self._bare = bool(claude_bare)
-        self._config_dir = claude_config_dir or None
-        self._memory_enabled = claude_memory_enabled
-        self._md_excludes = list(claude_md_excludes) if claude_md_excludes else None
-        self._output_style = claude_output_style or None
-        self._disallowed_tools = list(claude_disallowed_tools) if claude_disallowed_tools else []
-        self._add_dirs = list(claude_add_dirs) if claude_add_dirs else []
-        self._settings_file = claude_settings_file or None
-        self._preset = claude_preset or None
-        self._gate_wait_s = gate_wait_s
-        self._region_id = claude_track_id
-        self._root = claude_root or None
-        if (self._proc is None or self._proc.poll() is not None
-                or target != self._active_model
-                or self._cache_ttl != self._spawned_cache_ttl
-                or self._exclude_dynamic != self._spawned_exclude_dynamic
-                or self._tools != self._spawned_tools
-                or self._setting_sources != self._spawned_setting_sources
-                or self._system_prompt != self._spawned_system_prompt
-                or self._bare != self._spawned_bare
-                or self._config_dir != self._spawned_config_dir
-                or self._memory_enabled != self._spawned_memory_enabled
-                or self._md_excludes != self._spawned_md_excludes
-                or self._output_style != self._spawned_output_style
-                or self._settings_file != self._spawned_settings_file
-                or self._preset != self._spawned_preset
-                or self._gate_wait_s != self._spawned_gate_wait_s
-                or self._disallowed_tools != self._spawned_disallowed_tools
-                or self._add_dirs != self._spawned_add_dirs
-                or self._root != self._spawned_root):
-            yield from self._spawn_and_prime(messages, target, claude_effort,
+        self._idle_timeout = _claude_idle_seconds((10, s.get("request_timeout")))
+        self._region_id = region_id
+        self._want = self._want_from(s, target, root)
+        self._overlay_cache = self._overlay(s)[0]
+        claude_partial = bool(s.get("claude_partial", True))
+        stale = (self._proc is None or self._proc.poll() is not None
+                 or self._want != self._spawned)
+        if stale:
+            yield from self._spawn_and_prime(messages, target,
+                                             s.get("claude_effort"),
                                              claude_partial, metrics_sink)
         elif self._continues(messages):
             yield from self._send_turn(messages, claude_partial, metrics_sink)
-        elif claude_keep_warm and self._catches_up(messages):
+        elif s.get("claude_keep_warm") and self._catches_up(messages):
             yield from self._send_catchup(messages, claude_partial, metrics_sink)
         else:
-            yield from self._spawn_and_prime(messages, target, claude_effort,
+            yield from self._spawn_and_prime(messages, target,
+                                             s.get("claude_effort"),
                                              claude_partial, metrics_sink)
 
     def _spawn_and_prime(self, messages, model, claude_effort, claude_partial,
@@ -929,35 +944,19 @@ class ClaudePersistentProvider(ClaudeProvider):
 
         _, sys_text = self._serialize(messages)
         resuming = self._session_established
-        resolved = settings_stack.resolve({
-            "claude_settings_file": self._settings_file,
-            "claude_preset": self._preset,
-            "claude_output_style": self._output_style,
-            "claude_memory_enabled": self._memory_enabled,
-            "claude_md_excludes": self._md_excludes,
-            "claude_setting_sources": self._setting_sources,
-            "claude_config_dir": self._config_dir,
-            "claude_system_prompt": self._system_prompt,
-            "claude_bare": self._bare,
-        })
-        settings_obj = self._settings_obj(self._tools, resolved["overlay"],
-                                          self._gate_wait_s)
-        cmd = self._build_cmd(binary, model, sys_text, claude_effort, claude_partial,
-                              session_id=self.claude_session_id, resume=resuming,
-                              claude_exclude_dynamic=self._exclude_dynamic,
-                              claude_tools=self._tools,
-                              claude_setting_sources=resolved["setting_sources"],
-                              claude_system_prompt=resolved["system_prompt"],
-                              claude_bare=resolved["bare"],
-                              claude_settings_obj=settings_obj,
-                              claude_disallowed_tools=self._disallowed_tools,
-                              claude_add_dirs=self._add_dirs)
+        cmd = self._build_cmd(binary, model, sys_text, self._want,
+                              self._overlay_cache,
+                              claude_effort=claude_effort,
+                              claude_partial=claude_partial,
+                              session_id=self.claude_session_id,
+                              resume=resuming)
 
         self._proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=self._root,
-            env=self._cache_env(self._cache_ttl, region_id=self._region_id,
-                                claude_config_dir=resolved["config_dir"]),
+            cwd=self._want["root"],
+            env=self._cache_env(self._want["claude_cache_ttl"],
+                                region_id=self._region_id,
+                                claude_config_dir=self._want["claude_config_dir"] or None),
         )
         self._stderr = _StderrTail(self._proc)
         self._stdin  = _StdinPump(self._proc)
@@ -965,22 +964,7 @@ class ClaudePersistentProvider(ClaudeProvider):
         self._stdin.send(self._THINKING_DISPLAY_REQ.encode("utf-8"))
         self._active_model = model
         self._resolved_model = None
-        self._spawned_cache_ttl = self._cache_ttl
-        self._spawned_exclude_dynamic = self._exclude_dynamic
-        self._spawned_tools = self._tools
-        self._spawned_setting_sources = self._setting_sources
-        self._spawned_system_prompt = self._system_prompt
-        self._spawned_bare = self._bare
-        self._spawned_config_dir = self._config_dir
-        self._spawned_memory_enabled = self._memory_enabled
-        self._spawned_md_excludes = self._md_excludes
-        self._spawned_output_style = self._output_style
-        self._spawned_settings_file = self._settings_file
-        self._spawned_preset = self._preset
-        self._spawned_gate_wait_s = self._gate_wait_s
-        self._spawned_disallowed_tools = self._disallowed_tools
-        self._spawned_add_dirs = self._add_dirs
-        self._spawned_root = self._root
+        self._spawned = dict(self._want)
         self._session_established = True
 
         if resuming:
@@ -1034,83 +1018,48 @@ class ClaudePersistentProvider(ClaudeProvider):
 
     def _read_turn(self, claude_partial, metrics_sink=None):
         start = time.monotonic_ns()
-        in_tok = out_tok = cache_read = cache_creation = 0
-        usage_final = None
-        idle = False
-        calls = []
-        seen_calls = set()
+        cache_ttl = self._want["claude_cache_ttl"] or "1h"
+        state = {"in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
+                 "usage": None, "idle": False}
+        calls, seen_calls = [], set()
+
+        def _apply(usage):
+            state["usage"] = usage
+            state["in"] = usage.get("input_tokens", 0)
+            state["out"] = usage.get("output_tokens", 0)
+            state["cache_read"] = usage.get("cache_read_input_tokens", 0)
+            state["cache_creation"] = usage.get("cache_creation_input_tokens", 0)
 
         def _metrics():
             return {
-                "in_tokens": in_tok,
-                "out_tokens": out_tok,
-                "cache_read": cache_read,
-                "cache_creation": cache_creation,
-                "cost_usd": (_claude_turn_cost(self._active_model, self._resolved_model,
-                                               usage_final, self._cache_ttl)
-                             if usage_final else 0.0),
+                "in_tokens": state["in"],
+                "out_tokens": state["out"],
+                "cache_read": state["cache_read"],
+                "cache_creation": state["cache_creation"],
+                "cost_usd": (_claude_turn_cost(self._active_model,
+                                               self._resolved_model,
+                                               state["usage"], cache_ttl)
+                             if state["usage"] else 0.0),
                 "duration_ns": time.monotonic_ns() - start,
                 "calls": list(calls),
             }
 
+        def _set_resolved(m):
+            self._resolved_model = m
+
         try:
-            gate_deadline = None
-            while True:
-                raw = self._reader.readline(timeout=self._idle_timeout)
-                if raw is None:
-                    if _rail_c_gate_pending(self._region_id):
-                        if gate_deadline is None:
-                            gate_deadline = _gate_grace_deadline(self._idle_timeout)
-                        if time.monotonic() < gate_deadline:
-                            continue
-                    idle = True
+            for channel, data in self._read_events(
+                    self._reader, _apply, claude_partial, self._idle_timeout,
+                    self._region_id, self._active_model, cache_ttl, calls,
+                    seen_calls, _set_resolved):
+                if channel == "_idle":
+                    state["idle"] = True
                     break
-                if not raw:
-                    break
-                gate_deadline = None
-                line = raw.decode("utf-8", errors="replace").strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                t = obj.get("type")
-                if t == "system" and obj.get("subtype") == "init":
-                    self._resolved_model = obj.get("model") or self._resolved_model
-                if t == "assistant":
-                    _collect_call(obj, calls, seen_calls, self._active_model,
-                                  self._cache_ttl)
-                if claude_partial:
-                    if t == "stream_event":
-                        delta = (obj.get("event") or {}).get("delta") or {}
-                        dt = delta.get("type")
-                        if dt == "thinking_delta":
-                            yield ("thinking", delta.get("thinking", ""))
-                        elif dt == "text_delta":
-                            yield ("content", delta.get("text", ""))
-                elif t == "assistant":
-                    for block in (obj.get("message", {}).get("content") or []):
-                        bt = block.get("type")
-                        if bt == "thinking":
-                            yield ("thinking", block.get("thinking", ""))
-                        elif bt == "text":
-                            yield ("content", block.get("text", ""))
-                if t == "result":
-                    usage_final = obj.get("usage", {}) or {}
-                    in_tok = usage_final.get("input_tokens", 0)
-                    out_tok = usage_final.get("output_tokens", 0)
-                    cache_read = usage_final.get("cache_read_input_tokens", 0)
-                    cache_creation = usage_final.get("cache_creation_input_tokens", 0)
-                    break
+                yield (channel, data)
         except GeneratorExit:
             drained = self._interrupt_and_drain()
             if drained:
-                usage_final = drained
-                in_tok = usage_final.get("input_tokens", 0)
-                out_tok = usage_final.get("output_tokens", 0)
-                cache_read = usage_final.get("cache_read_input_tokens", 0)
-                cache_creation = usage_final.get("cache_creation_input_tokens", 0)
+                _apply(drained)
             raise
         finally:
             if metrics_sink is not None:
@@ -1118,15 +1067,11 @@ class ClaudePersistentProvider(ClaudeProvider):
                 metrics_sink.update(_metrics())
 
         turn_metrics = _metrics()
-        if usage_final is None:
-            if idle:
+        if state["usage"] is None:
+            if state["idle"]:
                 drained = self._interrupt_and_drain()
                 if drained:
-                    usage_final = drained
-                    in_tok = usage_final.get("input_tokens", 0)
-                    out_tok = usage_final.get("output_tokens", 0)
-                    cache_read = usage_final.get("cache_read_input_tokens", 0)
-                    cache_creation = usage_final.get("cache_creation_input_tokens", 0)
+                    _apply(drained)
                     turn_metrics = _metrics()
                 note = (f"\n[tool run ended — nothing from the CLI for "
                         f"{int(self._idle_timeout)}s. The session is still live; "
@@ -1136,7 +1081,7 @@ class ClaudePersistentProvider(ClaudeProvider):
                     note += detail + "\n"
                 yield ("content", note)
             else:
-                note = self._failure_note(self._proc, self._stderr, idle)
+                note = self._failure_note(self._proc, self._stderr, False)
                 self.shutdown()
                 yield ("content", note)
         yield ("metrics", turn_metrics)
@@ -1215,332 +1160,36 @@ class ClaudePersistentProvider(ClaudeProvider):
         self._sent_sig = []
         self._active_model = None
         self._resolved_model = None
+        self._spawned = None
         return killed
-
-
-class LiteRTProvider:
-
-    def __init__(self):
-        self._engines = {}
-
-    def _scan(self):
-        d = LITERT_MODELS_DIR
-        if not os.path.isdir(d):
-            return {}
-        return {os.path.splitext(f)[0]: os.path.join(d, f)
-                for f in os.listdir(d) if f.endswith(".litertlm")}
-
-    def available(self):
-        return bool(self._scan())
-
-    def list_models(self):
-        return sorted(self._scan())
-
-    def handles(self, model):
-        return model in self._scan()
-
-    def _engine(self, model):
-        import litert_lm
-        path = self._scan()[model]
-        eng = self._engines.get(path)
-        if eng is None:
-            eng = litert_lm.Engine(path, backend=litert_lm.Backend.GPU(),
-                                   audio_backend=litert_lm.Backend.GPU())
-            self._engines[path] = eng
-        return eng
-
-    def unload(self, model=None):
-        if model is None:
-            paths = list(self._engines)
-        else:
-            scan = self._scan()
-            paths = [scan[model]] if model in scan else []
-        n = 0
-        for p in paths:
-            eng = self._engines.pop(p, None)
-            if eng is not None:
-                try: eng.close()
-                except Exception: pass
-                n += 1
-        return n
-
-    def chat(self, messages, model=None, litert_mode=None, **_kwargs):
-        target = model or (self.list_models() or [None])[0]
-        if target is None or not self.handles(target):
-            yield ("content", "[LiteRT] no .litertlm model found in models/ — download one first\n")
-            yield ("metrics", {"in_tokens": 0, "out_tokens": 0, "duration_ns": 0})
-            return
-        eng = self._engine(target)
-        system_text, history, last = self._translate(messages)
-        conv = eng.create_conversation(
-            messages=history or None,
-            system_message=system_text or None,
-            automatic_tool_calling=False,
-        )
-        yield from self._stream(conv, last)
-
-    def _stream(self, conv, contents):
-        import time as _t
-        start = _t.monotonic_ns()
-        out_chars = 0
-        try:
-            for chunk in conv.send_message_async(contents):
-                for block in (chunk.get("content") or []):
-                    if isinstance(block, dict) and block.get("type") == "text":
-                        t = block.get("text", "")
-                        out_chars += len(t)
-                        yield ("content", t)
-        except GeneratorExit:
-            try: conv.cancel_process()
-            except Exception: pass
-            raise
-        in_tok = getattr(conv, "token_count", 0) or 0
-        yield ("metrics", {
-            "in_tokens": in_tok,
-            "out_tokens": max(1, out_chars // 4),
-            "duration_ns": _t.monotonic_ns() - start,
-        })
-
-    def _content_parts(self, m):
-        from litert_lm import Content
-        text = m.get("content") or ""
-        parts = [Content.Text(text)] if text else []
-        for item in (m.get("media") or []):
-            raw = base64.b64decode(item["data_b64"])
-            if item.get("kind") == "audio":
-                parts.append(Content.AudioBytes(normalize_audio(raw, item.get("mime"))))
-            elif item.get("kind") == "image":
-                parts.append(Content.ImageBytes(raw))
-        return parts
-
-    def _translate(self, messages):
-        from litert_lm import Contents, Message
-        system_text = "\n\n".join(m["content"] for m in messages
-                                  if m["role"] == "system" and m.get("content"))
-        non_system = [m for m in messages if m["role"] != "system"]
-        if not non_system:
-            return system_text, [], Contents.of("")
-        *history_msgs, last = non_system
-        history = []
-        for m in history_msgs:
-            parts = self._content_parts(m)
-            contents = Contents.of(*parts) if parts else Contents.of("")
-            history.append(Message.model(contents) if m["role"] == "assistant"
-                           else Message.user(contents))
-        last_parts = self._content_parts(last)
-        return system_text, history, (Contents.of(*last_parts) if last_parts else Contents.of(""))
-
-
-class LiteRTPersistentProvider(LiteRTProvider):
-
-    def __init__(self):
-        super().__init__()
-        self._conv = None
-        self._active_model = None
-        self._sent_count = 0
-
-    def reset(self):
-        if self._conv is not None:
-            try: self._conv.close()
-            except Exception: pass
-        self._conv = None
-        self._active_model = None
-        self._sent_count = 0
-
-    def chat(self, messages, model=None, litert_mode=None, **_kwargs):
-        target = model or (self.list_models() or [None])[0]
-        if target is None or not self.handles(target):
-            yield ("content", "[LiteRT/persistent] no .litertlm model found in models/\n")
-            yield ("metrics", {"in_tokens": 0, "out_tokens": 0, "duration_ns": 0})
-            return
-        if self._conv is None or target != self._active_model:
-            yield from self._prime(messages, target)
-        else:
-            yield from self._send_turn(messages)
-
-    def _prime(self, messages, model):
-        self.reset()
-        eng = self._engine(model)
-        system_text, history, last = self._translate(messages)
-        self._conv = eng.create_conversation(
-            messages=history or None, system_message=system_text or None,
-            automatic_tool_calling=False)
-        self._active_model = model
-        self._sent_count = len(messages)
-        yield from self._stream(self._conv, last)
-
-    def _send_turn(self, messages):
-        from litert_lm import Contents
-        new = messages[self._sent_count:]
-        self._sent_count = len(messages)
-        parts = []
-        for m in new:
-            if m["role"] in ("system", "assistant"):
-                continue
-            parts.extend(self._content_parts(m))
-        if not parts:
-            yield ("metrics", {"in_tokens": getattr(self._conv, "token_count", 0) or 0,
-                               "out_tokens": 0, "duration_ns": 0})
-            return
-        yield from self._stream(self._conv, Contents.of(*parts))
-
-
-class LlamaCppProvider:
-
-    MODELS = list(LLAMACPP_MODELS)
-
-    def __init__(self, base_url=None):
-        self.base_url = (base_url or os.environ.get("LLAMACPP_BASE_URL")
-                          or f"http://127.0.0.1:{LLAMACPP_PORT}").rstrip("/")
-        self._proc = None
-        self._serving = None
-        atexit.register(self.stop)
-
-    def available(self) -> bool:
-        try:
-            r = requests.get(f"{self.base_url}/health", timeout=3)
-            return r.status_code == 200
-        except requests.exceptions.RequestException:
-            return False
-
-    def list_models(self):
-        return list(self.MODELS)
-
-    def ensure_serving(self, model, io=None):
-        say = io.out if io else (lambda *a, **k: None)
-        spec = LLAMACPP_MODELS.get(model)
-        if not spec:
-            say(f"  [llamacpp] unknown model '{model}'"); return False
-        gguf, mmproj = spec
-        if not (gguf and os.path.isfile(gguf)):
-            say(f"  [llamacpp] model file missing: {gguf}"); return False
-        if not (mmproj and os.path.isfile(mmproj)):
-            say(f"  [llamacpp] mmproj (audio encoder) missing: {mmproj}"); return False
-        if self._serving == model and self.available():
-            say(f"  [llamacpp] {model} already up"); return True
-        if not shutil.which("llama-server"):
-            say("  [llamacpp] llama-server not found (brew install llama.cpp)"); return False
-        self.stop(io)
-        say(f"  [llamacpp] loading {model} … (one-model server, ~20-40s for a cold load)")
-        self._proc = subprocess.Popen(
-            ["llama-server", "-m", gguf, "--mmproj", mmproj,
-             "--host", "127.0.0.1", "--port", str(LLAMACPP_PORT),
-             "--jinja", "-ngl", str(LLAMACPP_NGL)],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        self._serving = model
-        for _ in range(180):
-            time.sleep(1)
-            if self._proc.poll() is not None:
-                say("  [llamacpp] llama-server exited during load — check the model/mmproj pair")
-                self._serving = None; return False
-            if self.available():
-                say(f"  [llamacpp] {model} ready"); return True
-        say("  [llamacpp] timed out waiting for /health (server still loading?)")
-        return False
-
-    def stop(self, io=None):
-        if self._proc and self._proc.poll() is None:
-            self._proc.terminate()
-            try:
-                self._proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                self._proc.kill()
-            if io:
-                io.out(f"  [llamacpp] stopped {self._serving}")
-        self._proc = None
-        self._serving = None
-
-    def _to_openai_messages(self, messages):
-        out = []
-        for m in messages:
-            role, text, media = m.get("role"), (m.get("content") or ""), m.get("media")
-            if not media:
-                out.append({"role": role, "content": text})
-                continue
-            parts = [{"type": "text", "text": text}] if text else []
-            for item in media:
-                if item.get("kind") == "audio":
-                    raw = base64.b64decode(item["data_b64"])
-                    norm = normalize_audio(raw, item.get("mime"))
-                    parts.append({"type": "input_audio", "input_audio": {
-                        "data": base64.b64encode(norm).decode(), "format": "wav"}})
-                elif item.get("kind") == "image":
-                    mime = item.get("mime", "image/png")
-                    parts.append({"type": "image_url", "image_url": {
-                        "url": f"data:{mime};base64,{item['data_b64']}"}})
-            out.append({"role": role, "content": parts or text})
-        return out
-
-    def chat(self, messages, model=None, timeout=None, temperature=None, top_p=None,
-             num_predict=None, seed=None, **_kwargs):
-        body = {
-            "model": model or self.MODELS[0],
-            "messages": self._to_openai_messages(messages),
-            "stream": True,
-            "stream_options": {"include_usage": True},
-        }
-        if temperature is not None:
-            body["temperature"] = temperature
-        if top_p is not None:
-            body["top_p"] = top_p
-        if seed is not None:
-            body["seed"] = seed
-        if num_predict is not None:
-            body["max_tokens"] = num_predict
-
-        start = time.monotonic_ns()
-        resp = requests.post(f"{self.base_url}/v1/chat/completions", json=body,
-                             stream=True, timeout=timeout or (10, 600))
-        resp.raise_for_status()
-
-        in_tok = out_tok = 0
-        for line in resp.iter_lines():
-            if not line:
-                continue
-            line = line.decode("utf-8") if isinstance(line, bytes) else line
-            if not line.startswith("data: "):
-                continue
-            data = line[len("data: "):]
-            if data == "[DONE]":
-                break
-            obj = json.loads(data)
-            for choice in obj.get("choices", []):
-                delta = choice.get("delta", {})
-                if delta.get("content"):
-                    yield ("content", delta["content"])
-            usage = obj.get("usage")
-            if usage:
-                in_tok = usage.get("prompt_tokens", 0)
-                out_tok = usage.get("completion_tokens", 0)
-        yield ("metrics", {
-            "in_tokens": in_tok, "out_tokens": out_tok,
-            "duration_ns": time.monotonic_ns() - start,
-        })
 
 
 class Router:
 
     def __init__(self):
-        self.ollama   = OllamaProvider()
-        self.gemini   = GeminiProvider()
-        self.litert   = LiteRTProvider()
-        self.litert_p = LiteRTPersistentProvider()
-        self.llamacpp = LlamaCppProvider()
-        self.claude   = ClaudeProvider()
-        self.codex    = CodexProvider()
+        """Adding a provider: one class with the Provider interface, one line here."""
+        self.providers = {"ollama": OllamaProvider(),
+                          "gemini": GeminiProvider(),
+                          "claude": ClaudeProvider()}
+        self.ollama = self.providers["ollama"]
+        self.gemini = self.providers["gemini"]
+        self.claude = self.providers["claude"]
         self.claude_p = {}
-        self.model    = self.ollama.model
+        self.model = self.ollama.model
 
-    def claude_provider_for(self, track_id, model):
-        key = (track_id, model)
+    def provider_for(self, model):
+        return self.providers[_provider_for(model or self.model)]
+
+    def claude_provider_for(self, region_id, model):
+        key = (region_id, model)
         p = self.claude_p.get(key)
         if p is None:
             p = ClaudePersistentProvider()
             self.claude_p[key] = p
         return p
 
-    def claude_reattach(self, track_id, model, session_id, delivered_messages):
-        key = (track_id, model)
+    def claude_reattach(self, region_id, model, session_id, delivered_messages):
+        key = (region_id, model)
         if key in self.claude_p:
             return False
         p = ClaudePersistentProvider(session_id=session_id)
@@ -1548,18 +1197,18 @@ class Router:
         self.claude_p[key] = p
         return True
 
-    def claude_session_id(self, track_id, model):
-        p = self.claude_p.get((track_id, model))
+    def claude_session_id(self, region_id, model):
+        p = self.claude_p.get((region_id, model))
         return p.claude_session_id if p is not None else None
 
-    def claude_close_track(self, track_id):
-        for key in [k for k in self.claude_p if k[0] == track_id]:
+    def claude_close_track(self, region_id):
+        for key in [k for k in self.claude_p if k[0] == region_id]:
             self.claude_p.pop(key).shutdown()
 
-    def claude_interrupt_track(self, track_id):
+    def claude_interrupt_track(self, region_id):
         n = 0
         for key, prov in list(self.claude_p.items()):
-            if key[0] == track_id:
+            if key[0] == region_id:
                 try:
                     if prov.interrupt():
                         n += 1
@@ -1567,79 +1216,40 @@ class Router:
                     pass
         return n
 
-    def _pick(self, model, litert_mode="oneshot", claude_mode="persistent", claude_track_id=None,
-              provider=None):
-        m = model or self.model
-        if provider is not None:
-            if provider == "codex":
-                return self.codex
-            raise ValueError(
-                f"Router: unknown provider {provider!r} "
-                f"(known explicit providers: 'codex'; pass provider=None to route by model name)"
-            )
-        kind = _provider_for(m)
-        if kind == "codex":
-            return self.codex
-        if kind == "gemini":
-            return self.gemini
-        if kind == "llamacpp":
-            return self.llamacpp
-        if kind == "claude":
-            return (self.claude_provider_for(claude_track_id, m)
-                    if claude_mode == "persistent" else self.claude)
-        if self.litert.handles(m):
-            return self.litert_p if litert_mode == "persistent" else self.litert
-        return self.ollama
-
     def available(self) -> bool:
-        return (self.ollama.available() or self.gemini.available()
-                or self.llamacpp.available() or self.claude.available())
+        return any(p.available() for p in self.providers.values())
 
-    def list_models(self):
-        models = []
-        if self.ollama.available():
-            models += self.ollama.list_models()
-        if self.gemini.available():
-            models += self.gemini.list_models()
-        if self.litert.available():
-            models += self.litert.list_models()
-        if self.claude.available():
-            models += self.claude.list_models()
-        if self.codex.available():
-            models += list(CODEX_MODELS)
-        models += self.llamacpp.list_models()
-        return models
+    def list_models(self) -> list[dict]:
+        hidden = set(st.load_global().get("models", {}).get("hidden") or [])
+        rows = []
+        for p in self.providers.values():
+            if not p.available():
+                continue
+            rows += [r for r in p.list_models() if r["id"] not in hidden]
+        return rows
 
-    def chat(self, messages, model=None, litert_mode="oneshot", claude_mode="persistent",
-             claude_track_id=None, provider=None, **kwargs):
-        picked = self._pick(model, litert_mode, claude_mode, claude_track_id, provider)
-        if picked is self.codex:
-            if kwargs.get("workspace_root") is None:
-                kwargs["workspace_root"] = kwargs.get("claude_root")
-        return picked.chat(
-            messages, model=model, claude_track_id=claude_track_id, **kwargs)
+    def chat(self, messages, model=None, settings=None, region_id=None,
+             root=None, tools=None, metrics_sink=None):
+        s = settings or {}
+        picked = self.provider_for(model)
+        if picked.id == "claude" and s.get("claude_mode", "persistent") == "persistent":
+            picked = self.claude_provider_for(region_id, model or picked.DEFAULT_MODEL)
+        return picked.chat(messages, model=model, settings=s, tools=tools,
+                           region_id=region_id, root=root,
+                           metrics_sink=metrics_sink)
 
-    def unload(self, model=None, track_id=None):
+    def unload(self, model=None, region_id=None):
         if model is None:
-            msgs = [self.ollama.unload(None)]
-            n = self.litert.unload(None)
-            if n: msgs.append(f"[litert] dropped {n} engine(s)")
-            return "  ".join(x for x in msgs if x)
-        if _provider_for(model) == "llamacpp":
-            return "[llamacpp] external server — nothing to unload here"
-        if _provider_for(model) == "codex":
-            return "[codex] ephemeral subprocess — nothing to unload here"
-        if _provider_for(model) == "claude":
-            if track_id is not None:
-                p = self.claude_p.pop((track_id, model), None)
+            return self.ollama.unload(None)
+        kind = _provider_for(model)
+        if kind == "claude":
+            if region_id is not None:
+                p = self.claude_p.pop((region_id, model), None)
                 if p is None or not p.shutdown():
                     return "[claude] subprocess model — no live session"
-                return "[claude] persistent session ended (this track only)"
+                return "[claude] persistent session ended (this region only)"
             n = sum(1 for p in self.claude_p.values() if p.shutdown())
             self.claude_p.clear()
             return (f"[claude] {n} persistent session(s) ended" if n
                     else "[claude] subprocess model — no live session")
-        if self.litert.handles(model):
-            n = self.litert.unload(model)
-            return f"[litert] dropped {n} engine(s)" if n else "[unload] not loaded"
-        return self.ollama.unload(model)
+        return self.providers[kind].unload(model, region_id=region_id)

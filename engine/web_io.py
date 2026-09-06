@@ -173,9 +173,14 @@ class WebIO:
         with self._send_lock:
             self.ws.send(json.dumps({"type": "status", "phase": phase}))
 
-    def send_models(self, models, current):
+    def send_models(self, rows, current):
+        # rows carry id/provider/model/version; list stays for phase 2 JS
+        rows = list(rows or [])
         with self._send_lock:
-            self.ws.send(json.dumps({"type": "models", "list": models, "current": current}))
+            self.ws.send(json.dumps({"type": "models",
+                                     "list": [r["id"] for r in rows],
+                                     "rows": rows,
+                                     "current": current}))
 
     def send_gate_history(self, entries):
         with self._send_lock:

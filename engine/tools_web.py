@@ -12,18 +12,6 @@ try:
 except ImportError:
     websocket = None
 
-EDGES = [
-    {"name": "web_open",       "level": "check", "grade": "enforced"},
-    {"name": "web_read",       "level": "read",  "grade": "enforced"},
-    {"name": "web_screenshot", "level": "check", "grade": "enforced"},
-    {"name": "web_act",        "level": "run",   "grade": "enforced"},
-    {"name": "web_eval",       "level": "run",   "grade": "enforced"},
-]
-
-STUBS = ["receive", "render-a-gate"]
-
-AUTH_NOTE = "none — local headless Chrome via CDP, dedicated port 9223 (never 9222)"
-
 CDP_PORT = 9223
 CHROME_PATHS = (
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -297,18 +285,6 @@ def disconnect() -> str:
     return f"[browse disconnect: Chrome (port {CDP_PORT}) killed, websocket closed]"
 
 
-def capabilities() -> list:
-    return list(EDGES)
-
-
-def receive() -> str:
-    return "[browser receive: not implemented — declared stub, no inbound event source]"
-
-
-def render_a_gate(gate: dict = None) -> str:
-    return "not-renderable"
-
-
 def _state() -> str:
     if _proc is None:
         return "[browser state: not connected — no Chrome process]"
@@ -321,13 +297,3 @@ def _state() -> str:
 
 
 atexit.register(disconnect)
-
-
-from engine import channel_registry
-
-channel_registry.register("webbrowser", {
-    "edges": EDGES,
-    "auth": AUTH_NOTE,
-    "state": _state,
-    "stubs": STUBS,
-})

@@ -4,7 +4,6 @@ import os
 import re
 import time
 
-from engine import read_tool as rt
 from engine import SUITE_ROOT
 
 BASE        = SUITE_ROOT
@@ -129,26 +128,18 @@ def _seat_matches(seat_clause, nick, has_folder):
     return bool(nick) and nick.lower() in _names(seat_clause)
 
 
-def _shell_matches(shell_clause, shell):
-    c = shell_clause.strip().lower()
-    if c == "all shells":
-        return True
-    return bool(shell) and shell.lower() in _names(shell_clause)
-
-
-def _applies(text, shell, nick, has_folder):
+def _applies(text, nick, has_folder):
     m = _APPLIES.search(text)
     if not m:
         return True
     line = re.sub(r"\([^)]*\)", "", m.group(1)).strip().rstrip(".")
-    parts = [p.strip() for p in line.split(",")]
-    if len(parts) != 2 or not all(parts):
+    seat_clause = line.split(",")[0].strip()
+    if not seat_clause:
         return True
-    seat_clause, shell_clause = parts
-    return _seat_matches(seat_clause, nick, has_folder) and _shell_matches(shell_clause, shell)
+    return _seat_matches(seat_clause, nick, has_folder)
 
 
-def _skills(shell, nick, has_folder):
+def _skills(nick, has_folder):
     d = os.path.join(INJECTIONS, "skills")
     try:
         names = sorted(os.listdir(d))
@@ -159,7 +150,7 @@ def _skills(shell, nick, has_folder):
         if not n.endswith(".md") or n.startswith("_"):
             continue
         t = _read(os.path.join(d, n))
-        if t and _applies(t, shell, nick, has_folder):
+        if t and _applies(t, nick, has_folder):
             out.append(t)
     return out
 
@@ -217,15 +208,45 @@ def _peers_block(rows, region_id=None):
     return "\n".join(out)
 
 
-def compile_injections(nick, model, shell="conference", task="",
-                       region_id=None, region_name=None):
+def root_note(root):
+    return (f"Your workspace root is: {root}. Relative paths resolve there. "
+            "Reaching outside the workspace needs approval each time.")
+
+
+# provider tool_mode without a Router instance: the classes carry it
+def _tool_mode(model):
+    try:
+        from engine import providers
+    except Exception:
+        return "text"
+    kind = providers._provider_for(model or "")
+    for cls in (providers.OllamaProvider, providers.GeminiProvider,
+                providers.ClaudeProvider):
+        if getattr(cls, "id", None) == kind:
+            return getattr(cls, "tool_mode", "text")
+    return "text"
+
+
+def _capabilities(model):
+    from engine import tools
+    if _tool_mode(model) == "native":
+        return ("You have these tools: " + ", ".join(tools.tool_names())
+                + ". A human approves before a gated one runs.")
+    return tools.text_hint()
+
+
+def build_context(sess, *, root, region_id, region_name, task=""):
+    nick = getattr(sess, "nick", None)
+    model = (getattr(sess, "settings", None) or {}).get("model", "")
+
     sys_parts = []
 
-    t = _read(os.path.join(INJECTIONS, "preamble.md"))
+    t = _read(os.path.join(INJECTIONS, "global", "preamble.md"))
     if t:
         sys_parts.append(t)
 
-    sys_parts.append(_legend_block(nick, model))
+    if nick:
+        sys_parts.append(_legend_block(nick, model))
 
     t = _model_blurb(model)
     if t:
@@ -233,11 +254,9 @@ def compile_injections(nick, model, shell="conference", task="",
     else:
         sys_parts.append("## Your current vessel\n\n"
                           f"Your current vessel is `{model}` (handle {vessel_handle(model)}).")
-    root_note = (f"Your workspace root is: {rt.WORKSPACE_ROOT}\n"
-                 "Relative paths resolve there. Reaching outside the workspace "
-                 "needs the Captain's approval each time.")
-    sys_parts.append("## Your capabilities\n\n" + rt.TEXT_WORKER_HINT
-                     + "\n\n" + root_note)
+
+    sys_parts.append("## Your capabilities\n\n" + _capabilities(model)
+                     + "\n\n" + root_note(root))
 
     block = self_block(region_id, region_name)
     if block:
@@ -272,10 +291,10 @@ def compile_injections(nick, model, shell="conference", task="",
 
     ctx_parts = []
 
-    t = _read(os.path.join(INJECTIONS, "shells", f"{shell}.md"))
+    t = _read(os.path.join(INJECTIONS, "session", "ade.md"))
     if t:
         ctx_parts.append(t)
-    ctx_parts.extend(_skills(shell, nick, bool(folder)))
+    ctx_parts.extend(_skills(nick, bool(folder)))
 
     if task:
         ctx_parts.append(task)

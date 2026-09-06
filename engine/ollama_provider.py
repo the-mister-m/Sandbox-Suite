@@ -2,6 +2,8 @@
 import json
 import requests
 
+from engine.settings import block_keys, harness_keys
+
 
 def _to_ollama_messages(messages):
     out = []
@@ -18,8 +20,26 @@ def _to_ollama_messages(messages):
     return out
 
 
+_OPTION_KEYS = ("temperature", "top_k", "top_p", "min_p", "repeat_penalty",
+                "repeat_last_n", "seed", "num_predict", "mirostat",
+                "mirostat_tau", "mirostat_eta", "num_gpu", "num_thread")
+
+
+def split_model(name):
+    model, sep, version = (name or "").partition(":")
+    return model, (version if sep else "")
+
+
 class OllamaProvider:
-    def __init__(self, model: str = "gemma4:26b-mxfp8", host: str = "http://localhost:11434"):
+
+    id = "ollama"
+    label = "Ollama"
+    kind = "local"
+    tool_mode = "native"
+    settings_keys = block_keys("ollama") + harness_keys()
+
+    def __init__(self, model: str = "gemma4:26b-mxfp8",
+                 host: str = "http://localhost:11434"):
         self.model = model
         self.host = host
 
@@ -30,51 +50,49 @@ class OllamaProvider:
         except requests.exceptions.ConnectionError:
             return False
 
-    def list_models(self) -> list[str]:
+    def list_models(self) -> list[dict]:
         try:
             resp = requests.get(f"{self.host}/api/tags", timeout=5)
             resp.raise_for_status()
-            return sorted(m["name"] for m in resp.json().get("models", []))
+            names = sorted(m["name"] for m in resp.json().get("models", []))
         except requests.exceptions.RequestException:
             return []
+        rows = []
+        for name in names:
+            model, version = split_model(name)
+            rows.append({"id": name, "provider": self.id,
+                         "model": model, "version": version})
+        return rows
 
-    def chat(self, messages: list[dict], model: str = None, think: bool = None,
-             tools: list = None, num_ctx: int = None, timeout=None,
-             temperature: float = None, top_k: int = None, top_p: float = None,
-             min_p: float = None, repeat_penalty: float = None,
-             repeat_last_n: int = None, seed: int = None, num_predict: int = None,
-             keep_alive: int = None, mirostat: int = None,
-             mirostat_tau: float = None, mirostat_eta: float = None,
-             num_gpu: int = None, num_thread: int = None, **_kwargs):
+    def chat(self, messages, model=None, settings=None, tools=None,
+             region_id=None, root=None, metrics_sink=None):
+        s = settings or {}
         body = {
             "model": model or self.model,
             "messages": _to_ollama_messages(messages),
             "stream": True,
         }
-        if think is not None:
-            body["think"] = think
+        if s.get("think") is False:
+            body["think"] = False
         if tools:
             body["tools"] = tools
+        keep_alive = s.get("keep_alive")
         if keep_alive is not None:
             body["keep_alive"] = keep_alive * 60
+
         opts = {}
-        if num_ctx:
-            opts["num_ctx"] = num_ctx
-        for key, val in [
-            ("temperature", temperature), ("top_k", top_k), ("top_p", top_p),
-            ("min_p", min_p), ("repeat_penalty", repeat_penalty),
-            ("repeat_last_n", repeat_last_n), ("seed", seed),
-            ("num_predict", num_predict), ("mirostat", mirostat),
-            ("mirostat_tau", mirostat_tau), ("mirostat_eta", mirostat_eta),
-            ("num_gpu", num_gpu), ("num_thread", num_thread),
-        ]:
+        if s.get("num_ctx"):
+            opts["num_ctx"] = s["num_ctx"]
+        for key in _OPTION_KEYS:
+            val = s.get(key)
             if val is not None:
                 opts[key] = val
         if opts:
             body["options"] = opts
 
+        timeout = (10, s.get("request_timeout") or 600)
         resp = requests.post(f"{self.host}/api/chat", json=body, stream=True,
-                             timeout=timeout or (10, 600))
+                             timeout=timeout)
         resp.raise_for_status()
 
         try:
@@ -100,7 +118,7 @@ class OllamaProvider:
             resp.close()
             raise
 
-    def unload(self, model: str = None) -> str:
+    def unload(self, model=None, region_id=None) -> str:
         try:
             if model is None:
                 r = requests.get(f"{self.host}/api/ps", timeout=5)

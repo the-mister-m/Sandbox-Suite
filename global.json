@@ -28,5 +28,15 @@
     "kill_hosts": true,
     "end_all_sessions": true,
     "shutdown_suite": true
+  },
+  "voices": {
+    "tts_engine": "say",
+    "tts_voice": "",
+    "stt_engine": "parakeet_mlx",
+    "listen_mode": "ptt"
+  },
+  "models": {
+    "order": [],
+    "hidden": []
   }
 }
