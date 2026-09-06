@@ -1,0 +1,18 @@
+{
+  "model": "fable",
+  "claude_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Glob",
+    "Grep",
+    "NotebookRead",
+    "NotebookEdit",
+    "WebFetch",
+    "WebSearch"
+  ],
+  "name": "User Fable"
+}

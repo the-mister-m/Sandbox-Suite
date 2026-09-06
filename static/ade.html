@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ADE — Agentic Development Environment</title>
+<link rel="stylesheet" href="/static/vendor/xterm.css">
+<link rel="stylesheet" href="/static/vendor/monaco/vs/editor/editor.main.css">
+<link rel="stylesheet" href="/static/css/skins/og.css">
+<link rel="stylesheet" href="/static/css/ade.css">
+</head>
+<body>
+
+
+<div id="shell">
+
+  <div id="topbar">
+    <span class="brand">ADE</span>
+    <button class="tb-btn" id="adeModalToggle" title="ADE gate presentation — click to cycle (inherit → full → window → corner → off)">modal: inherit</button>
+    <button class="tb-btn" id="adePopPos" title="corner-pop position — click to toggle">pop: pane</button>
+    <button class="tb-btn" id="adePopDismiss" title="corner-pop auto-dismiss — click to toggle">auto: off</button>
+    <span class="ph-spacer" style="flex:1"></span>
+    <button class="tb-btn" id="btnMuFull">&#10530; multi-use</button>
+    <button class="tb-btn" id="btnWin3">&#10530; EXPAND LEDGER</button>
+    <button class="tb-btn panic" id="btnPanic">&#9632; KILL ALL</button>
+  </div>
+
+  <div class="pane-head" id="sessionBar">
+    <span>Session</span>
+    <span id="agentStrip"></span>
+    <button class="ag-chip ag-retired" id="btnRetiredChats"
+            title="agents whose cache was cleared — open their transcripts">RETIRED CHATS</button>
+    <span class="ph-spacer"></span>
+    <button class="tb-btn" id="btnAdeSave">Save</button>
+    <button class="tb-btn" id="btnAdeLoad">Load</button>
+    <button class="tb-btn" id="btnAdeNew">New</button>
+    <button class="tb-btn" id="btnAdeEnd">End</button>
+  </div>
+
+  <div id="panes">
+
+    <div id="leftcol">
+      <div class="pane" id="anchorPane">
+        <div class="pane-head">
+          <span>Anchor chat</span>
+          <span class="ag-chip ag-empty" id="anchorAgentChip"></span>
+          <span class="ph-spacer"></span>
+          <select id="anchorSel"></select>
+          <span class="cp-zoom" title="chat text size">
+            <button class="tb-btn" id="anchorZoomOut" type="button">&minus;</button>
+            <span class="cp-zoomlbl" id="anchorZoomLbl"></span>
+            <button class="tb-btn" id="anchorZoomIn" type="button">+</button>
+          </span>
+          <button class="tb-btn" id="btnEditTrack" title="edit anchored track">&#9998;</button>
+        </div>
+        <div class="cp-scriptwrap">
+          <div id="anchorBody" class="cp-script"></div>
+          <button class="cp-jump-bottom hidden" title="jump to latest">&#8595; latest</button>
+        </div>
+        <div class="cp-busy busy-hidden">
+          <span class="cp-busy-word"></span><span class="cp-busy-dot"></span>
+          <span class="cp-phase-timer cp-timer-wait">wait 0.0s</span>
+          <span class="cp-phase-timer cp-timer-think">think 0.0s</span>
+          <span class="cp-phase-timer cp-timer-work">work 0.0s</span>
+        </div>
+        <div class="cp-input">
+          <textarea id="anchorInput" rows="1" placeholder="Message the anchored track&#8230;"></textarea>
+          <div class="cp-btns">
+            <button id="anchorSend">Send</button>
+            <button id="anchorStop" class="cp-stop" title="stop this track's current turn (the seat and the inbox stay)">Stop</button>
+          </div>
+        </div>
+        <div class="cp-meters">
+          <span class="cp-met-status">idle</span>
+          <span class="cp-met-ctx">ctx &#8212;</span>
+          <span class="cp-met-cache">cache &#8212;</span>
+          <span class="cp-met-tsnow">t/s &#8212;</span>
+          <span class="cp-met-tsavg">avg &#8212;</span>
+        </div>
+      </div>
+
+      <div class="split h" id="splitLeft" data-split="left"></div>
+
+      <div class="pane" id="glPane">
+        <div class="pane-head">
+          <span>Gate / Queue / Log</span>
+          <span class="ph-spacer"></span>
+          <span id="glTrackName" style="text-transform:none; letter-spacing:0; font-weight:400; color:var(--text-2);"></span>
+          <button class="tb-btn" id="btnAnchorLedger" title="jump to the ledger view">&#8599; ledger</button>
+        </div>
+        <div class="cp-gates" id="glList" style="flex:1;"></div>
+      </div>
+    </div>
+
+    <div class="split v" id="splitCol" data-split="col"></div>
+
+    <div id="rightcol">
+
+      <div id="arrange">
+        <div id="viewTabs">
+          <div class="vtab active" data-view="timeline">Timeline</div>
+          <div class="vtab" data-view="arrange">Arrange</div>
+          <div class="vtab" data-view="queue">Queue / Log</div>
+          <div class="vtab" data-view="changes">Changes</div>
+          <div class="vtab" data-view="ledger">Ledger</div>
+          <div class="vtab" data-view="messenger">Messenger</div>
+          <span class="ph-spacer"></span>
+        </div>
+
+        <div id="arrangeBody">
+          <div class="view active" id="view-timeline"><div class="empty">Timeline &#8212; wired at S8.</div></div>
+          <div class="view" id="view-arrange"></div>
+          <div class="view" id="view-queue"><div class="empty">Queue / Log &#8212; wired at S8.</div></div>
+          <div class="view" id="view-changes"><div class="empty">Changes &#8212; wired at S8.</div></div>
+          <div class="view" id="view-ledger"><div class="empty">Ledger &#8212; wired at S8.</div></div>
+          <div class="view" id="view-messenger"></div>
+        </div>
+      </div>
+
+      <div class="split h" id="splitRow" data-split="row"></div>
+
+      <div id="bottomrow">
+
+        <div class="pane" id="multiuse">
+          <div id="muTabs">
+            <div class="mtab active" data-mtab="files">Files</div>
+            <div class="mtab active" data-mtab="editor">Editor</div>
+            <div class="mtab" data-mtab="term">Terminal</div>
+            <span class="ph-spacer"></span>
+            <button class="tb-btn" id="btnMuExpand" style="margin:4px 6px;">&#10530; window</button>
+          </div>
+
+          <div id="muBody">
+            <div class="mview active" id="mvFiles"></div>
+            <div class="split v" id="splitMu1" data-musplit="1"></div>
+            <div class="mview active" id="mvEditor"></div>
+            <div class="split v" id="splitMu2" data-musplit="2"></div>
+            <div class="mview" id="mvTerm"></div>
+          </div>
+        </div>
+
+        <div class="split v" id="splitBot" data-split="bot"></div>
+
+        <div class="pane" id="focus">
+          <div class="pane-head">
+            <span>Focus</span>
+            <span class="ag-chip ag-empty" id="focusAgentChip"></span>
+            <span class="ph-spacer"></span>
+            <select id="focusSel" title="mirror a track (read-only)"></select>
+            <span id="focusName" style="text-transform:none; letter-spacing:0; font-weight:400; color:var(--text-2);">&#8212;</span>
+            <span class="cp-zoom" title="chat text size">
+              <button class="tb-btn" id="focusZoomOut" type="button">&minus;</button>
+              <span class="cp-zoomlbl" id="focusZoomLbl"></span>
+              <button class="tb-btn" id="focusZoomIn" type="button">+</button>
+            </span>
+            <button class="tb-btn" id="btnFocusLedger" title="jump to the ledger view">&#8599; ledger</button>
+          </div>
+          <div class="cp-scriptwrap">
+            <div id="focusScript" class="cp-script"></div>
+            <button class="cp-jump-bottom hidden" title="jump to latest">&#8595; latest</button>
+          </div>
+          <div class="cp-busy busy-hidden">
+            <span class="cp-busy-word"></span><span class="cp-busy-dot"></span>
+            <span class="cp-phase-timer cp-timer-wait">wait 0.0s</span>
+            <span class="cp-phase-timer cp-timer-think">think 0.0s</span>
+            <span class="cp-phase-timer cp-timer-work">work 0.0s</span>
+          </div>
+          <div class="cp-input">
+            <textarea id="focusInput" rows="1" placeholder="Message the focused track&#8230;"></textarea>
+            <div class="cp-btns">
+              <button id="focusSend">Send</button>
+              <button id="focusStop" class="cp-stop" title="stop this track's current turn (the seat and the inbox stay)">Stop</button>
+            </div>
+          </div>
+          <div class="cp-meters">
+            <span class="cp-met-status">idle</span>
+            <span class="cp-met-ctx">ctx &#8212;</span>
+            <span class="cp-met-cache">cache &#8212;</span>
+            <span class="cp-met-tsnow">t/s &#8212;</span>
+            <span class="cp-met-tsavg">avg &#8212;</span>
+          </div>
+          <div class="split h cp-gatesplit" id="splitFocusGate" data-split="focusgate"></div>
+          <div id="focusGateWrap" class="cp-gatewrap">
+            <div class="cp-gatehead">Gate / Queue / Log</div>
+            <div id="focusGates" class="cp-gates"></div>
+          </div>
+        </div>
+
+        <div id="alert">
+          <div id="alertHead">
+            <span class="al-kind" id="alKind"></span>
+            <span class="al-track" id="alTrack"></span>
+            <span class="ph-spacer"></span>
+            <span class="mono" id="alTime" style="font-size:10.5px; color:var(--text-4);"></span>
+            <button class="tb-btn" id="alClose" title="dismiss (Esc) — does not answer">&#10005;</button>
+          </div>
+          <div id="alertBody"></div>
+          <div id="alertFoot"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="peek"></div>
+
+<div id="modal"><div id="modalBox"></div></div>
+
+<script src="/static/vendor/xterm.min.js"></script>
+<script src="/static/vendor/xterm-addon-fit.min.js"></script>
+<script src="/static/vendor/monaco/vs/loader.js"></script>
+
+<script>
+try {
+  self.MonacoEnvironment = {
+    getWorkerUrl: function () {
+      var base = location.origin + '/static/vendor/monaco/';
+      return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
+        "self.MonacoEnvironment = { baseUrl: '" + base + "' };\n" +
+        "importScripts('" + base + "vs/base/worker/workerMain.js');"
+      );
+    }
+  };
+
+  require.config({ paths: { 'vs': '/static/vendor/monaco/vs' } });
+  require(['vs/editor/editor.main'], function() {
+    window._monacoLoaded = true;
+    if (window._onMonacoReady) window._onMonacoReady();
+  });
+} catch (e) {
+  console.error('Monaco init failed — editor pane will be inert:', e);
+}
+</script>
+
+<script type="module" src="/static/js/ade/boot.js"></script>
+
+</body>
+</html>

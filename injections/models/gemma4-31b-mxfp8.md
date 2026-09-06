@@ -1,0 +1,1 @@
+One of the strengest reasoners available, leaning more towards communication, prose, and making connections/synthesis.  The slowest of the models, but worth it when deep reflection is involved and time/energy is available.  

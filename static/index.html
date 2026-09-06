@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LLM Sandbox — web</title>
+<link rel="stylesheet" href="/static/vendor/xterm.css">
+<link rel="stylesheet" href="/static/vendor/monaco/vs/editor/editor.main.css">
+<link rel="stylesheet" href="/static/css/skins/og.css">
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+#conf-container { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#conference-root { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+#conf-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; border-bottom: 1px solid var(--gridline);
+  background: var(--surface-1); flex-shrink: 0;
+}
+#conf-title { font-size: 11px; opacity: .45; margin-right: 6px; }
+.conf-label { font-size: 10px; opacity: .4; }
+.conf-ctrl-btn {
+  font-size: 11px; background: var(--ix-surface-a); border: 1px solid var(--gridline);
+  color: var(--ix-text-body2); border-radius: 3px; padding: 2px 8px; cursor: pointer;
+}
+.conf-ctrl-btn:hover { background: var(--well); color: var(--ix-text-hi); }
+#conf-save-wrap { margin-left: auto; display: flex; gap: 6px; }
+#conf-body { display: flex; flex: 1; overflow: hidden; }
+#conf-transcript {
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+#conf-sidebar {
+  width: 200px; flex-shrink: 0; border-left: 1px solid var(--gridline);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-head {
+  padding: 8px 10px; font-size: 11px; color: var(--ix-text-mute);
+  border-bottom: 1px solid var(--ix-surface-a);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.conf-invite {
+  font-size: 10px; color: var(--ix-green-1); background: none; border: none;
+  cursor: pointer; padding: 0;
+}
+.conf-invite:hover { color: var(--col-you); }
+#conf-part-list {
+  list-style: none; margin: 0; padding: 6px 0;
+  overflow-y: auto; flex: 1;
+}
+.room-participant {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; font-size: 11px;
+}
+.room-participant.busy .part-status { color: var(--ix-blue-1); }
+.part-dot { flex: 0 0 10px; font-size: 8px; }
+.part-name { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.part-name > span:first-child { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.part-model-id { font-size: 9px; color: var(--border-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.part-status { font-size: 10px; opacity: .45; }
+.part-remove {
+  background: none; border: none; color: var(--border-2); cursor: pointer;
+  font-size: 13px; padding: 0 2px; line-height: 1;
+}
+.part-remove:hover { color: var(--ix-red-1); }
+.part-move {
+  background: none; border: none; color: var(--border-2); cursor: pointer;
+  font-size: 11px; padding: 0 2px; line-height: 1;
+}
+.part-move:hover { color: var(--text-2); }
+.part-move:disabled { color: var(--gridline); cursor: default; }
+.sidebar-hint { padding: 8px 10px; font-size: 10px; color: var(--ix-text-dim2); line-height: 1.5; }
+#conf-queue-list {
+  list-style: none; margin: 0; padding: 4px 0;
+  overflow-y: auto; flex: 0 0 auto; max-height: 220px;
+  border-top: 1px solid var(--ix-surface-a);
+}
+.queue-empty { padding: 6px 10px; font-size: 10px; color: var(--ix-text-dim2); }
+.queue-bid {
+  padding: 6px 10px; border-bottom: 1px solid var(--surface-3);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.queue-bid-name { font-size: 11px; font-weight: 600; }
+.queue-bid-text { font-size: 11px; color: var(--ix-text-soft); line-height: 1.4; }
+.queue-dispatch-btn {
+  align-self: flex-start; font-size: 10px; margin-top: 2px;
+  background: var(--ix-green-bg-1); border: 1px solid var(--ix-green-bg-3); color: var(--ix-green-4);
+  border-radius: 3px; padding: 2px 8px; cursor: pointer;
+}
+.queue-dispatch-btn:hover { background: var(--ix-green-bg-2); }
+.room-entry { display: flex; flex-direction: column; gap: 2px; }
+.room-tag { font-size: 10px; font-weight: 600; letter-spacing: .03em; }
+.room-body { font-size: 13px; color: var(--ix-text-body); line-height: 1.55; white-space: pre-wrap; }
+.room-entry-human .room-tag { color: var(--text-3) !important; }
+.room-entry-human .room-body { color: var(--col-cot); }
+.room-annotation { font-size: 11px; color: var(--fg-dim); display: block; }
+#conf-bar {
+  display: flex; align-items: flex-end; gap: 6px;
+  padding: 8px 12px; border-top: 1px solid var(--ix-surface-a); flex-shrink: 0;
+}
+#conf-msg {
+  flex: 1; resize: none; height: 52px;
+  background: var(--plane); border: 1px solid var(--well); color: var(--text-1);
+  border-radius: 4px; padding: 8px 10px; font-size: 13px;
+  font-family: inherit; outline: none;
+}
+#conf-msg:focus { border-color: var(--ix-text-dim2); }
+#conf-bar-btns { display: flex; flex-direction: column; gap: 4px; }
+#conf-send, #conf-stop {
+  font-size: 11px; padding: 4px 10px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--gridline);
+}
+#conf-send { background: var(--ix-green-bg-1); color: var(--ix-green-4); }
+#conf-send:hover { background: var(--ix-green-bg-2); }
+#conf-send:disabled { opacity: .35; cursor: default; }
+#conf-stop { background: var(--ix-surface-a); color: var(--text-3); }
+#conf-stop:hover { background: var(--ix-red-bg-1); color: var(--ix-red-3); }
+.room-dropdown {
+  position: fixed; z-index: 500; background: var(--plane);
+  border: 1px solid var(--gridline); border-radius: 4px;
+  padding: 4px 0; min-width: 160px;
+  box-shadow: 0 4px 16px var(--ix-shadow-1);
+}
+.rd-item {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 12px; font-size: 11px; color: var(--text-2);
+  background: none; border: none; cursor: pointer;
+}
+.rd-item:hover { background: var(--ix-surface-a); color: var(--ix-text-hi); }
+.rd-item.rd-active { color: var(--ix-blue-1); }
+.rd-nick-label {
+  padding: 5px 12px 2px; font-size: 10px; color: var(--ix-text-mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rd-nick-input {
+  display: block; width: calc(100% - 16px); margin: 2px 8px 0;
+  padding: 4px 6px; font-size: 11px; background: var(--ix-surface-a);
+  border: 1px solid var(--ix-text-dim2); border-radius: 3px; color: var(--text-1); outline: none;
+}
+.rd-nick-input:focus { border-color: var(--ix-text-mute); }
+
+#conf-part-list { min-height: 40px; }
+#conf-gate-history {
+  list-style: none; margin: 0; padding: 4px 0;
+  overflow-y: auto; flex: 0 0 auto; max-height: 150px;
+  border-top: 1px solid var(--ix-surface-a);
+}
+.gate-entry {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 10px; font-size: 10px; color: var(--border-2);
+}
+.gate-entry:hover { background: var(--ix-surface-b); }
+.gh-result { flex-shrink: 0; font-size: 11px; width: 12px; text-align: center; }
+.gate-approved .gh-result { color: var(--gate-blue); }
+.gate-denied   .gh-result { color: var(--gate-red); }
+.gh-label {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gate-approved .gh-label { color: var(--gate-blue); }
+.gate-denied   .gh-label { color: var(--gate-red); }
+.gh-time { flex-shrink: 0; font-size: 9px; color: var(--ix-border-dim2); }
+
+#sessions-wrap { position: relative; display: inline-flex; align-items: center; }
+#sessions-btn  { font-size: 11px; opacity: .55; }
+#sessions-btn:hover, #sessions-btn.active { opacity: 1; }
+#sessions-panel {
+  display: none; position: absolute; top: calc(100% + 4px); right: 0;
+  background: var(--plane); border: 1px solid var(--gridline); border-radius: 4px;
+  padding: 6px 0; min-width: 220px; z-index: 200;
+  box-shadow: 0 4px 16px var(--ix-shadow-2);
+}
+#sessions-panel.open { display: block; }
+.session-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; font-size: 11px; color: var(--text-2);
+}
+.session-row .s-dot   { flex: 0 0 12px; color: var(--ix-text-mute); }
+.session-row .s-model { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-row .s-status { flex: 0 0 60px; text-align: right; opacity: .5; font-size: 10px; }
+.session-row.s-busy .s-dot { color: var(--ix-blue-1); }
+#session-new-row { padding: 6px 10px 2px; border-top: 1px solid var(--well); margin-top: 4px; }
+#session-new-row a {
+  font-size: 11px; color: var(--ix-text-mute); text-decoration: none;
+}
+#session-new-row a:hover { color: var(--text-2); }
+#saves-zone { border-top: 1px solid var(--ix-surface-a); margin-top: 4px; max-height: 200px; overflow-y: auto; }
+.saves-head { padding: 5px 10px 3px; font-size: 10px; color: var(--border-2); }
+.saves-loading, .saves-empty { padding: 4px 10px; font-size: 10px; color: var(--ix-text-dim2); }
+.save-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 10px; font-size: 10px; color: var(--text-4);
+}
+.save-row:hover { background: var(--ix-surface-b); }
+.save-time { flex-shrink: 0; color: var(--border-2); }
+.save-preview { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.save-resume {
+  flex-shrink: 0; font-size: 10px; background: var(--ix-green-bg-1);
+  border: 1px solid var(--ix-green-bg-3); color: var(--ix-green-5); border-radius: 3px;
+  padding: 1px 6px; cursor: pointer;
+}
+.save-resume:hover { color: var(--ix-blue-4); background: var(--ix-green-bg-2); }
+.save-load {
+  flex-shrink: 0; font-size: 10px; background: var(--ix-surface-a);
+  border: 1px solid var(--gridline); color: var(--col-cot); border-radius: 3px;
+  padding: 1px 6px; cursor: pointer;
+}
+.save-load:hover { color: var(--ix-text-body); background: var(--well); }
+.save-delete {
+  flex-shrink: 0; font-size: 10px; background: none;
+  border: none; color: var(--ix-border-dim); cursor: pointer; padding: 1px 4px;
+}
+.save-delete:hover { color: var(--ix-red-1); }
+
+
+#daemon-container {
+  flex: 1; display: grid; overflow: hidden;
+  grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr;
+  gap: 1px; background: var(--ix-surface-a);
+}
+#daemon-cell-ledger { grid-column: 1 / -1; }
+#room-ledger-cell {
+  width: 440px; flex-shrink: 0; min-width: 0;
+  border-left: 1px solid var(--gridline); background: var(--ix-surface-c);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.daemon-cell { background: var(--ix-surface-c); display: flex; flex-direction: column; overflow: hidden; min-width: 0; min-height: 0; }
+.daemon-cell-head {
+  display: flex; align-items: center; gap: 8px; padding: 5px 10px;
+  font-size: 10px; color: var(--text-4); border-bottom: 1px solid var(--ix-surface-a); flex-shrink: 0;
+}
+.daemon-cell-head select { font-size: 10px; background: var(--surface-2); color: var(--ix-text-soft); border: 1px solid var(--gridline); }
+#daemon-cell-chat #pane-cell-chat,
+#daemon-cell-chat { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#daemon-cell-settings { overflow-y: auto; }
+#daemon-cell-settings .settings-close { display: none; }
+
+.q-filter { font-size: 10px; color: var(--text-4); display: flex; align-items: center; gap: 3px; margin-left: auto; }
+.q-btn {
+  font-size: 10px; background: var(--ix-surface-a); border: 1px solid var(--gridline); color: var(--ix-text-soft);
+  border-radius: 3px; padding: 1px 7px; cursor: pointer;
+}
+.q-btn:hover { background: var(--well); color: var(--ix-text-hi); }
+.q-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+.q-empty { padding: 12px 10px; font-size: 11px; color: var(--border-2); }
+.q-entry { border-bottom: 1px solid var(--surface-3); padding: 6px 10px; }
+.q-entry.q-superseded { background: var(--ix-amber-bg-1); }
+.q-head { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--col-cot); }
+.q-type { color: var(--ix-blue-5); font-weight: 600; }
+.q-hook { padding: 0 5px; border-radius: 2px; background: var(--ix-surface-e); }
+.q-hook-open   { color: var(--gate-green); } .q-hook-ask { color: var(--gate-blue); }
+.q-hook-queue  { color: var(--gate-yellow); } .q-hook-locked { color: var(--gate-red); }
+.q-driver { color: var(--ix-text-mute); }
+.q-time { margin-left: auto; color: var(--border-2); }
+.q-body { font-size: 12px; color: var(--ix-text-body); margin: 3px 0; word-break: break-all; }
+.q-conds { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.q-cond { font-size: 9px; padding: 1px 5px; border-radius: 8px; background: var(--surface-3); }
+.q-cond.q-pass { color: var(--ix-green-2); } .q-cond.q-fail { color: var(--ix-red-2); }
+.q-actions { display: flex; gap: 5px; }
+.q-btn-approve { color: var(--ix-green-2); } .q-btn-deny { color: var(--ix-red-2); }
+.q-btn-super { color: var(--ix-amber-1); }
+
+.dl-feed { flex: 1; overflow-y: auto; padding: 4px 0; }
+.dl-row { display: flex; align-items: baseline; gap: 6px; padding: 1px 10px;
+          font-size: 11px; color: var(--col-cot); white-space: nowrap; overflow: hidden; }
+.dl-row:hover { background: var(--plane); }
+.dl-time { flex-shrink: 0; font-size: 9px; color: var(--ix-text-dim2); width: 52px; }
+.dl-verb { flex-shrink: 0; color: var(--ix-blue-2); }
+.dl-target { overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
+.dl-summary { color: var(--ix-text-mute); overflow: hidden; text-overflow: ellipsis; }
+.dl-mark { flex-shrink: 0; }
+.dl-approved .dl-mark { color: var(--gate-blue); } .dl-denied .dl-mark { color: var(--gate-red); }
+.dl-locked .dl-mark { color: var(--gate-red); } .dl-locked .dl-target { color: var(--gate-red); }
+.dl-hook { flex-shrink: 0; font-size: 9px; color: var(--border-2); margin-left: auto; }
+</style>
+</head>
+<body>
+
+<header id="header">
+  <div id="header-pane-btns">
+  </div>
+  <div id="sessions-wrap">
+    <button id="sessions-btn" title="active sessions">● 0</button>
+    <div id="sessions-panel"></div>
+  </div>
+  <button id="modal-toggle" title="gate presentation — click to cycle">modal: full</button>
+  <button id="hdr-settings" title="settings">&#9881;</button>
+</header>
+
+<div id="main">
+
+  <div id="settings-overlay"></div>
+
+  <div id="gate-modal">
+    <div id="gate-box">
+      <div id="gate-prompt"></div>
+      <pre id="gate-diff" style="display:none"></pre>
+      <div id="gate-input-row">
+        <input id="gate-answer" type="text" placeholder="press y or n…" autocomplete="off">
+        <button id="gate-yes">y</button>
+        <button id="gate-alt" style="display:none">alt</button>
+        <button id="gate-queue" style="display:none">queue</button>
+        <button id="gate-no">n</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="grid">
+    <div id="gutter-v" class="grid-gutter-v" style="display:none"></div>
+    <div id="gutter-h" class="grid-gutter-h" style="display:none"></div>
+    <button id="grid-settings-btn" title="settings">&#9881;</button>
+  </div>
+
+  <div id="bar-wrap">
+    <div id="bar-divider"></div>
+    <div id="attach-strip" class="hidden"></div>
+    <div id="bar">
+      <textarea id="msg" placeholder="message the model…" autocomplete="off" autofocus></textarea>
+      <button id="attach" title="attach image(s)/audio — images need a vision model; audio needs a LiteRT model">img</button>
+      <input id="attach-input" type="file" accept="image/*,audio/*" multiple hidden>
+      <button id="mic" title="record (push to talk)">● rec</button>
+      <button id="send">send</button>
+      <button id="stop">stop</button>
+      <button id="killswitch" title="killswitch — fires /killswitch">kill</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="/static/vendor/xterm.min.js"></script>
+<script src="/static/vendor/xterm-addon-fit.min.js"></script>
+<script src="/static/vendor/monaco/vs/loader.js"></script>
+
+<script>
+try {
+  self.MonacoEnvironment = {
+    getWorkerUrl: function () {
+      var base = location.origin + '/static/vendor/monaco/';
+      return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
+        "self.MonacoEnvironment = { baseUrl: '" + base + "' };\n" +
+        "importScripts('" + base + "vs/base/worker/workerMain.js');"
+      );
+    }
+  };
+
+  require.config({ paths: { 'vs': '/static/vendor/monaco/vs' } });
+  require(['vs/editor/editor.main'], function() {
+    window._monacoLoaded = true;
+    if (window._onMonacoReady) window._onMonacoReady();
+  });
+} catch (e) {
+  console.error('Monaco init failed — editor pane will be inert:', e);
+}
+</script>
+
+<script type="module" src="/static/js/shell.js"></script>
+
+</body>
+</html>

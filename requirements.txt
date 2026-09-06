@@ -1,0 +1,13 @@
+requests
+flask
+flask-sock
+
+# Claude Agent SDK — the agent-loop rail (engine/claude_sdk.py).
+# ~75MB: it BUNDLES its own pinned `claude` binary and spawns THAT, not the one
+# on your PATH (measured 2026-07-25: bundled 2.1.220 vs system 2.1.218 — recon
+# §10b P11). So this line pins the CLI too, whether you meant it to or not.
+# Pinned deliberately: the bypass matrix in §10b P14 was measured against this
+# exact version, and a new PermissionMode arriving via an unpinned bump is
+# exactly the case build_options' whitelist exists to survive.
+claude-agent-sdk==0.2.128
+google-genai>=2.6.0

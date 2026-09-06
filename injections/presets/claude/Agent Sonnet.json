@@ -1,0 +1,24 @@
+{
+  "model": "sonnet",
+  "claude_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Glob",
+    "Grep",
+    "NotebookRead",
+    "NotebookEdit",
+    "WebFetch",
+    "WebSearch"
+  ],
+  "gates": {
+    "check_read": "open",
+    "fetch_url": "open",
+    "write_file": "open",
+    "run_command": "open"
+  },
+  "name": "Agent Sonnet"
+}

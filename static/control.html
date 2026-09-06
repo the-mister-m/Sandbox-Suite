@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LLM Sandbox — control center</title>
+<link rel="stylesheet" href="/static/css/skins/og.css">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+<div id="cc-root">
+  <header id="cc-header">
+    <span id="cc-title">LLM Sandbox</span>
+    <nav id="cc-tabs">
+      <button class="cc-tab active" data-tab="launch">launch</button>
+      <button class="cc-tab" data-tab="settings">settings</button>
+      <button class="cc-tab" data-tab="status">status</button>
+    </nav>
+  </header>
+
+  <main id="cc-main">
+
+    <section id="cc-panel-launch" class="cc-panel cc-panel-active">
+      <div class="cc-col">
+        <h2>new</h2>
+        <div class="cc-launch-links">
+          <a href="/ide" target="_blank" class="cc-launch-btn">+ IDE</a>
+          <a href="/daemon" target="_blank" class="cc-launch-btn">+ daemon window</a>
+        </div>
+        <div class="cc-room-create">
+          <input id="cc-room-name" type="text" placeholder="room name (blank = random)" autocomplete="off">
+          <button id="cc-room-go" class="cc-launch-btn">+ conference room</button>
+        </div>
+      </div>
+
+      <div class="cc-col">
+        <h2>load session</h2>
+        <div id="cc-sessions-list" class="cc-list">loading…</div>
+      </div>
+
+      <div class="cc-col">
+        <h2>load room</h2>
+        <div id="cc-rooms-list" class="cc-list">loading…</div>
+      </div>
+
+      <div class="cc-col">
+        <h2>ADE sessions</h2>
+        <div class="cc-ade-toolbar" style="display:flex; gap:var(--gap-sm); margin-bottom:var(--gap-xs);">
+          <button id="cc-ade-new"  class="cc-launch-btn" style="flex:1;">new</button>
+          <button id="cc-ade-load" class="cc-launch-btn" style="flex:1; opacity:.4; cursor:default;" disabled>load</button>
+          <button id="cc-ade-save" class="cc-launch-btn" style="flex:1;">save</button>
+        </div>
+        <button id="cc-end-all" class="cc-launch-btn cc-danger"
+                style="width:100%;"
+                title="delete every live region and unload the model weights — open ADE tabs reload">End All Sessions</button>
+        <div id="cc-end-all-note" class="cc-note" style="min-height:1.2em;"></div>
+        <div id="cc-ade-sessions-list" class="cc-list">loading…</div>
+      </div>
+    </section>
+
+    <section id="cc-panel-settings" class="cc-panel">
+      <div id="cc-modal-mode" class="gm-field">
+        <span class="gm-field-label">gate presentation</span>
+        <div class="seg cc-modal-seg">
+          <button type="button" data-mode="fullscreen">fullscreen</button>
+          <button type="button" data-mode="window">window</button>
+          <button type="button" data-mode="corner">corner</button>
+          <button type="button" data-mode="off">off</button>
+        </div>
+      </div>
+      <div id="cc-gate-keyboard" class="gm-field">
+        <span class="gm-field-label">keyboard answers</span>
+        <div class="seg cc-kbd-seg">
+          <button type="button" data-kbd="on">on</button>
+          <button type="button" data-kbd="off">mouse only</button>
+        </div>
+      </div>
+      <div id="cc-approve-hold" class="gm-field">
+        <span class="gm-field-label">approve gesture</span>
+        <div class="seg cc-hold-seg">
+          <button type="button" data-hold="off">click</button>
+          <button type="button" data-hold="on">hold to fire</button>
+        </div>
+      </div>
+      <div id="cc-gatematrix"></div>
+
+
+      <div class="cc-kill-head">KILL CONTROLS — what each one takes</div>
+      <div id="cc-kill-rows" class="cc-kill-rows">loading…</div>
+    </section>
+
+    <section id="cc-panel-status" class="cc-panel">
+      <p class="cc-stub-note">
+        STATUS is a stub. This tab will become the dashboard derived from the
+        ADE's four views — its content is designed last, by lock
+        (CONTROL-CENTER.md §1, §5). Nothing lives here yet.
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="/static/js/control.js"></script>
+</body>
+</html>

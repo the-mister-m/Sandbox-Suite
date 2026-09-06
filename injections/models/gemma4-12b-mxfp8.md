@@ -1,0 +1,1 @@
+On the slower side, but runs light weight. Can see and hear (and should eventually do both).  Good for thinking and doing things as a team (can run two at a time)

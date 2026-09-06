@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Queue/Log — ADE</title>
+<link rel="stylesheet" href="/static/css/skins/og.css">
+<link rel="stylesheet" href="/static/css/ade.css">
+<style>
+  #winHead{
+    flex-shrink:0; display:flex; align-items:center; gap:10px; height:36px;
+    padding:0 14px; background:var(--surface-1); border-bottom:1px solid var(--gridline);
+  }
+  #winHead .wtitle{ font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); font-weight:600; }
+  #winHead .ph-spacer{ flex:1; }
+  #ledgerHost{ flex:1; min-height:0; display:flex; flex-direction:column; }
+</style>
+</head>
+<body style="height:100vh; display:flex; flex-direction:column; margin:0;">
+
+<div id="winHead">
+  <span class="wtitle">Queue/Log</span>
+  <span class="ph-spacer"></span>
+  <button class="tb-btn" id="winRefresh">refresh</button>
+</div>
+<div id="ledgerHost"></div>
+
+<script type="module" src="/static/js/ade/ledgerwin.js"></script>
+</body>
+</html>

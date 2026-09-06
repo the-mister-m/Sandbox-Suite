@@ -1,0 +1,32 @@
+{
+  "skin": "og",
+  "modal_mode": "fullscreen",
+  "modal_mode_ade": "inherit",
+  "gate_keyboard": true,
+  "approve_hold": false,
+  "confirm": {
+    "editor_save": "ask",
+    "file_delete": "ask",
+    "file_move": "ask",
+    "terminal_run": "silent",
+    "setroot": "ask",
+    "session_new": "ask",
+    "session_load": "ask",
+    "delete_saved_session": "ask",
+    "delete_voice": "ask",
+    "room_remove": "ask",
+    "room_load": "ask",
+    "gate_matrix_save": "ask"
+  },
+  "killswitch": {
+    "scope": "models",
+    "hold_to_fire": true
+  },
+  "kill_holds": {
+    "end_all_turns": false,
+    "unload_weights": false,
+    "kill_hosts": true,
+    "end_all_sessions": true,
+    "shutdown_suite": true
+  }
+}
