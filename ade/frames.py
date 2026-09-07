@@ -2,6 +2,7 @@
 import os
 import shutil
 import threading
+import uuid
 
 from engine import agent_loop as al
 from engine import daemon_queue as dq
@@ -12,32 +13,76 @@ from ade import rails
 from ade import tracks
 
 
-def _human_path(path):
+def _human_path(environment, path):
     path = path or "."
     expanded = os.path.expanduser(path)
     if os.path.isabs(expanded):
         return os.path.abspath(expanded)
-    return os.path.abspath(os.path.join(rt.WORKSPACE_ROOT, expanded))
+    return os.path.abspath(os.path.join(environment.root, expanded))
 
 
 _conns_lock = threading.Lock()
+# one row per open socket: the sender and the environment it is bound to
 _conns = []
 
 
-def register_conn(webio):
+def _recount(environment):
+    if environment is None:
+        return
+    environment.windows = sum(1 for c in _conns if c["environment"] is environment)
+
+
+def register_conn(webio, environment):
     with _conns_lock:
-        _conns.append(webio)
+        _conns.append({"webio": webio, "environment": environment})
+        _recount(environment)
 
 
 def unregister_conn(webio):
     with _conns_lock:
-        if webio in _conns:
-            _conns.remove(webio)
+        gone = [c for c in _conns if c["webio"] is webio]
+        for c in gone:
+            _conns.remove(c)
+        for c in gone:
+            _recount(c["environment"])
 
 
-def _broadcast(method, *args):
+def bind_conn(webio, environment):
+    # moves one open socket from the environment it held to another
     with _conns_lock:
-        conns = list(_conns)
+        old = None
+        for c in _conns:
+            if c["webio"] is webio:
+                old = c["environment"]
+                c["environment"] = environment
+        _recount(old)
+        _recount(environment)
+
+
+def conn_count(environment):
+    with _conns_lock:
+        return sum(1 for c in _conns if c["environment"] is environment)
+
+
+def close_conns(environment):
+    # closes every socket bound to this environment, returns the count closed
+    with _conns_lock:
+        gone = [c for c in _conns if c["environment"] is environment]
+        for c in gone:
+            _conns.remove(c)
+        _recount(environment)
+    for c in gone:
+        try:
+            c["webio"].ws.close()
+        except Exception:
+            pass
+    return len(gone)
+
+
+def _broadcast(environment, method, *args):
+    # reaches only the sockets bound to this environment
+    with _conns_lock:
+        conns = [c["webio"] for c in _conns if c["environment"] is environment]
     for w in conns:
         try:
             getattr(w, method)(*args)
@@ -45,48 +90,72 @@ def _broadcast(method, *args):
             pass
 
 
+def _broadcast_all(method, *args):
+    # suite-level fanout: every open socket, whatever it is bound to
+    with _conns_lock:
+        conns = [c["webio"] for c in _conns]
+    for w in conns:
+        try:
+            getattr(w, method)(*args)
+        except Exception:
+            pass
+
+
+def refuse(webio, reason):
+    try:
+        webio.send_session_refused(reason)
+    except Exception:
+        pass
+
+
 def broadcast_reload(reason=""):
-    _broadcast("send_reload", reason)
+    _broadcast_all("send_reload", reason)
 
 
-def broadcast_gate(kind, gid, prompt, track_id, track_name):
-    _broadcast("send_gate_broadcast", kind, gid, prompt, track_id, track_name)
+def broadcast_gate(environment, kind, gid, prompt, track_id, track_name):
+    _broadcast(environment, "send_gate_broadcast", kind, gid, prompt,
+               track_id, track_name)
 
 
 def broadcast_track_status(track_id, phase):
-    _broadcast("send_track_status", track_id, phase)
+    _broadcast(tracks.environment_of_region(track_id),
+               "send_track_status", track_id, phase)
 
 
 def broadcast_context_warn(track_id, peak, cap):
-    _broadcast("send_context_warn", track_id, peak, cap)
+    _broadcast(tracks.environment_of_region(track_id),
+               "send_context_warn", track_id, peak, cap)
 
 
-def broadcast_roster():
-    _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+def broadcast_roster(environment):
+    _broadcast(environment, "send_track_list", tracks.list_regions(environment),
+               tracks.list_tracks(environment))
 
 
 def broadcast_region_replaced(old_id, new_id):
-    _broadcast("send_region_replaced", old_id, new_id)
+    _broadcast(tracks.environment_of_region(new_id),
+               "send_region_replaced", old_id, new_id)
 
 
 def broadcast_human_mail():
-    waiting = tracks.waypoint.peek(tracks.HUMAN_SENDER)
-    if not waiting:
-        return
-    displays = []
-    for line in waiting:
-        sender = tracks.get_region(line.get("from"))
-        displays.append(sender.name if sender is not None else line.get("from"))
-    _broadcast("send_activity", {
-        "kind":   "mail",
-        "track":  tracks.HUMAN_SENDER,
-        "count":  len(waiting),
-        "from":   list(dict.fromkeys(displays)),
-        "system": [d for d, l in zip(displays, waiting)
-                   if l.get("from") == tracks.SYSTEM_SENDER],
-        "bodies": [l.get("body", "") for l in waiting],
-        "ts":     waiting[-1].get("said"),
-    })
+    for environment in tracks.list_environments():
+        waiting = environment.waypoint.peek(tracks.HUMAN_SENDER)
+        if not waiting:
+            continue
+        displays = []
+        for line in waiting:
+            sender = tracks.get_region(line.get("from"))
+            displays.append(sender.name if sender is not None else line.get("from"))
+        _broadcast(environment, "send_activity", {
+            "kind":   "mail",
+            "track":  tracks.HUMAN_SENDER,
+            "count":  len(waiting),
+            "from":   list(dict.fromkeys(displays)),
+            "system": [d for d, l in zip(displays, waiting)
+                       if l.get("from") == tracks.SYSTEM_SENDER],
+            "bodies": [l.get("body", "") for l in waiting],
+            "ts":     waiting[-1].get("said"),
+        })
 
 
 _dirty_lock  = threading.Lock()
@@ -112,19 +181,23 @@ def _fire_dirty():
         _dirty_stores.clear()
         _dirty_timer = None
     if stores:
-        _broadcast("send_feed_dirty", stores)
+        _broadcast_all("send_feed_dirty", stores)
 
 
 class AdeCtx:
 
-    def __init__(self, webio, conn_sid, live_runner, rebind, sanitize_media=None):
+    def __init__(self, webio, conn_sid, live_runner, rebind, environment,
+                 sanitize_media=None):
         self.webio       = webio
         self.conn_sid    = conn_sid
         self.live_runner = live_runner
         self.rebind      = rebind
+        # the one environment this socket dispatches against for its lifetime
+        self.environment = environment
         self.sanitize_media = sanitize_media
         self.anchored    = None
-        self.mirror      = None
+        # region id -> Region: every instance in this window streams its own
+        self.mirrors     = {}
 
 
 _DRAG_IMAGE_MIMES = {".png": "image/png", ".jpg": "image/jpeg",
@@ -177,7 +250,9 @@ def _name_receivers(r):
 
 
 def _track_gatelog(track_id):
-    return [_name_receivers(r) for r in ledger.ade_snapshot(since=0)
+    w = tracks.environment_of_region(track_id)
+    log_dir = w.log_dir if w is not None else None
+    return [_name_receivers(r) for r in ledger.ade_snapshot(since=0, log_dir=log_dir)
             if r.get("kind") == "action" and r.get("track") == track_id]
 
 
@@ -189,7 +264,7 @@ def _anchor(ctx, track):
     ctx.webio.send_track_transcript(track.id, track.sess.messages)
     ctx.webio.send_chat_history(track.id, _track_gatelog(track.id))
     for e in dq.waiting_gates(track.sess.sid):
-        ctx.webio.post_gate(e["id"], e.get("prompt") or "")
+        ctx.webio.post_gate(e["id"], e.get("prompt") or "", track.id)
 
 
 def _detach(ctx):
@@ -202,16 +277,42 @@ def _detach(ctx):
     ctx.rebind(None)
 
 
+def _rebind_environment(ctx, environment):
+    # the socket follows a load or a new session onto that environment
+    if environment is None or environment is ctx.environment:
+        return
+    ctx.environment = environment
+    bind_conn(ctx.webio, environment)
+
+
+# one socket, many followed regions
+def _follow(ctx, region):
+    if region.id in ctx.mirrors:
+        return
+    view = tracks.MirrorView(ctx.webio, region.id)
+    region.hub.add_mirror(view, ctx.conn_sid)
+    ctx.mirrors[region.id] = region
+    view.transcript(region.sess.messages)
+    view.gatelog(_track_gatelog(region.id))
+
+
+def _unfollow(ctx, region_id):
+    region = ctx.mirrors.pop(region_id, None)
+    if region is None:
+        return
+    # remove_mirror_for drops every view this socket holds on that region
+    region.hub.remove_mirror_for(ctx.webio)
+
+
 def disconnect(ctx):
     _detach(ctx)
-    if ctx.mirror is not None:
-        ctx.mirror.hub.remove_mirror_for(ctx.webio)
-        ctx.mirror = None
+    for region_id in list(ctx.mirrors):
+        _unfollow(ctx, region_id)
 
 
 
 
-def _do_create_track(msg):
+def _do_create_track(msg, environment):
     name     = (msg.get("name") or "untitled").strip() or "untitled"
     settings = msg.get("settings")
     has_region = ("model" in msg or "seat" in msg or settings is not None
@@ -224,13 +325,42 @@ def _do_create_track(msg):
         mechanism=msg.get("mechanism"),
         model=(msg.get("model") or "") if has_region else None,
         seat=((msg.get("seat") or "").strip() or None) if has_region else None,
-        settings=settings, region=msg.get("region"))
+        settings=settings, region=msg.get("region"), environment=environment)
 
 
 
 
 
-def _do_load_preset(region, name):
+CHANGE_CHOICES = ("reset_region", "rewrite_cache", "cancel")
+
+# pending change-modal records, keyed by token
+_pending_changes = {}
+_pending_lock = threading.Lock()
+
+
+def _park_change(region_id, action, items=None, name=None, fields=None):
+    token = uuid.uuid4().hex[:12]
+    with _pending_lock:
+        _pending_changes[token] = {"region": region_id, "action": action,
+                                   "items": items or [], "name": name,
+                                   "fields": fields}
+    return token
+
+
+def _take_change(token):
+    with _pending_lock:
+        return _pending_changes.pop(token, None)
+
+
+def _send_change_prompt(ctx, region_id, token, action, items):
+    payload = {"type": "change_prompt", "token": token,
+               "region": region_id, "action": action,
+               "edits": items, "choices": list(CHANGE_CHOICES),
+               "text": "How would you like to change?"}
+    _broadcast(ctx.environment, "_send", payload)
+
+
+def _preset_load_items(region, name):
     fields, warnings = st.read_preset(name)
 
     model_val = fields.get("model", region.sess.settings.get("model"))
@@ -258,7 +388,17 @@ def _do_load_preset(region, name):
         items.append({"type": "overlay", "value": overlay})
 
     items.append({"type": "setting", "key": "preset_name", "value": name})
-    region.apply_edits(items)
+    return items, warnings
+
+
+def _do_load_preset(region, name, mode="auto"):
+    items, warnings = _preset_load_items(region, name)
+    if mode == "reset":
+        region.apply_with_reset(items)
+    elif mode == "in_place":
+        region.apply_in_place(items)
+    else:
+        region.apply_edits(items)
     return True, warnings
 
 
@@ -294,7 +434,7 @@ def _do_save_preset(region, name, pending=None):
     return st.write_preset(name, fields)
 
 
-def _do_insert_region(msg):
+def _do_insert_region(msg, environment):
     r = msg.get("region") or {}
     return tracks.insert_region(
         msg.get("track", ""),
@@ -307,10 +447,10 @@ def _do_insert_region(msg):
         provider=r.get("provider") or msg.get("provider"),
         loop_class=r.get("loop_class") or msg.get("loop_class"),
         mechanism=r.get("mechanism") or msg.get("mechanism"),
-        region=r)
+        region=r, environment=environment)
 
 
-def _do_duplicate_region(region_id, name=None):
+def _do_duplicate_region(region_id, environment, name=None):
     src = tracks.get_region(region_id)
     if src is None:
         return None, None
@@ -321,7 +461,8 @@ def _do_duplicate_region(region_id, name=None):
         overlay_rows=src.overlay_rows,
         provider=src.provider,
         loop_class=src.loop_class,
-        mechanism=src.mechanism)
+        mechanism=src.mechanism,
+        environment=environment)
     reg = tracks.insert_region(
         track.id, new_name, src.model,
         root=src.root,
@@ -331,7 +472,7 @@ def _do_duplicate_region(region_id, name=None):
         provider=src.provider,
         loop_class=src.loop_class,
         mechanism=src.mechanism,
-        region=dict(src.carried))
+        region=dict(src.carried), environment=environment)
     return track, reg
 
 
@@ -376,22 +517,55 @@ def _plan_rows(plan):
     return rows
 
 
+def _do_gate_action(action, gid, log_dir=None):
+    if action == "approve":
+        dq.answer_gate(gid, True)
+        dq.notify("gate_answered")
+    elif action == "deny":
+        if dq.deny(gid) is None:
+            ledger._deny_orphan(gid, log_dir=log_dir)
+    elif action == "queue":
+        dq.defer_gate(gid)
+
+
+# a write result that did not land
+_WRITE_REFUSALS = ("[WRITE refused", "[WRITE failed", "[WRITE denied", "[save denied")
+
+
+def _write_refused(result):
+    text = result if isinstance(result, str) else ""
+    return any(text.startswith(m) for m in _WRITE_REFUSALS)
+
+
 def handle(ctx, msg):
     webio = ctx.webio
     t = msg.get("type")
+    # the instance that sent this frame; every reply echoes it back
+    _inst = msg.get("inst") or ""
+
+    def _roster():
+        _broadcast(ctx.environment, "send_track_list",
+                   tracks.list_regions(ctx.environment),
+                   tracks.list_tracks(ctx.environment))
+
+    def _init():
+        _broadcast(ctx.environment, "send_ade_init",
+                   tracks.session_meta(ctx.environment),
+                   tracks.list_regions(ctx.environment),
+                   tracks.list_tracks(ctx.environment))
 
     if t == "create_track":
-        track = _do_create_track(msg)
+        track = _do_create_track(msg, ctx.environment)
         made = tracks.regions_of(track.id)
         if made:
             _apply_spawn_presets(made[0], msg, webio)
-            webio.send_track_created(made[0], track)
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        webio.send_track_created(made[0] if made else None, track)
+        _roster()
         if made:
             _anchor(ctx, made[0])
 
     elif t == "insert_region":
-        reg = _do_insert_region(msg)
+        reg = _do_insert_region(msg, ctx.environment)
         if reg is None:
             webio.out("[insert_region: unknown track]", dim=True)
             return
@@ -399,7 +573,7 @@ def handle(ctx, msg):
             reg.node_id = msg.get("node_id")
         _apply_spawn_presets(reg, msg, webio)
         webio.send_track_created(reg, tracks.get_track(reg.track))
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        _roster()
         _anchor(ctx, reg)
 
     elif t == "anchor":
@@ -449,8 +623,8 @@ def handle(ctx, msg):
         if killed is not None:
             if ctx.anchored is killed:
                 _detach(ctx)
-            _broadcast("send_track_removed", tid)
-            _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+            _broadcast(ctx.environment, "send_track_removed",tid)
+            _roster()
 
     elif t == "reset_track":
         tid = msg.get("track", "")
@@ -466,140 +640,156 @@ def handle(ctx, msg):
         removed = tracks.remove_track(tid)
         if removed is None and not doomed:
             webio.out("[delete_track: unknown track]", dim=True)
-            webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+            webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
             return
         for rid in doomed:
-            _broadcast("send_track_removed", rid)
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+            _broadcast(ctx.environment, "send_track_removed",rid)
+        _roster()
 
     elif t == "duplicate_region":
         track, reg = _do_duplicate_region(msg.get("region", msg.get("track", "")),
-                                          msg.get("name"))
+                                          ctx.environment, msg.get("name"))
         if reg is None:
             webio.out("[duplicate_region: unknown region]", dim=True)
-            webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+            webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
             return
         webio.send_track_created(reg, track)
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        _roster()
         _anchor(ctx, reg)
 
     elif t == "edit_track_row":
         row = tracks.get_track(msg.get("track", ""))
         if row is None:
             webio.out("[edit_track_row: unknown track]", dim=True)
-            webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+            webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
             return
         fields = dict(msg.get("fields") or {})
         rejected = row.apply_edits(fields)
         if rejected:
             webio.out("[edit_track_row: rejected keys: %s]" % ", ".join(rejected), dim=True)
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        _roster()
 
     elif t == "killswitch":
-        stopped = tracks.stop_all_regions()
+        stopped = tracks.stop_all_regions(ctx.environment)
         webio.out(f"[killswitch: ended {stopped} turn(s) — every seat, "
                   f"transcript and warm session kept]", dim=True)
 
     elif t == "answer":
+        # the in-turn ask reply only; approve, deny and queue ride gate_action
         raw = msg.get("track")
         track_id = raw if isinstance(raw, str) else None
         track = tracks.get_region(track_id) if track_id else None
+        gid  = msg.get("id")
+        text = msg.get("text", "")
         if track_id and track is None:
             webio.out("[answer: unknown track]", dim=True)
-        elif track is not None:
-            gid = msg.get("id")
+            return
+        if track is not None:
             if not gid:
                 webio.out("[answer: track named without a gate id]", dim=True)
-            else:
-                track.hub.resolve_gate(gid, msg.get("text", ""))
-        elif not webio.resolve_gate(msg.get("id"), msg.get("text", "")):
-            if ctx.anchored is not None:
-                ctx.anchored.hub.resolve_gate(msg.get("id"), msg.get("text", ""))
+                return
+            track.hub.resolve_gate(gid, text)
+        else:
+            if not webio.resolve_gate(gid, text) and ctx.anchored is not None:
+                ctx.anchored.hub.resolve_gate(gid, text)
 
     elif t == "ade_plan":
         plan = msg.get("plan")
         if not isinstance(plan, dict):
             webio.out("[plan: nothing to pipe]", dim=True)
             return
-        tracks.set_plan(plan)
+        tracks.set_plan(plan, ctx.environment)
         rows = _plan_rows(plan)
         if not rows:
             webio.out("[plan: no regions on the selected phase]", dim=True)
             return
         n_tracks = n_regions = 0
         for track_name, nodes in rows:
-            track = _do_create_track({"name": track_name})
+            track = _do_create_track({"name": track_name}, ctx.environment)
             n_tracks += 1
             for node in nodes:
                 reg = _do_insert_region({"track": track.id,
-                                         "region": _plan_region(node)})
+                                         "region": _plan_region(node)},
+                                        ctx.environment)
                 if reg is not None:
                     reg.node_id = node.get("id")
                     n_regions += 1
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        _roster()
         webio.out(f"[plan piped: {n_tracks} track(s), {n_regions} region(s) — "
                   f"nothing started]", dim=True)
 
     elif t == "ade_save":
-        tracks.set_plan(msg.get("plan"))
+        environment = ctx.environment
+        tracks.set_plan(msg.get("plan"), environment)
         name = (msg.get("name") or "").strip()
-        if name and msg.get("template"):
-            d = tracks.save_template(name)
+        if name and msg.get("session_template"):
+            d = tracks.save_session_template(name, environment)
+            webio.out(f"[session template saved: {name}]" if d else
+                      "[no live session to template]", dim=True)
+        elif name and msg.get("template"):
+            d = tracks.save_template(name, environment)
             webio.out(f"[template saved: {name}]" if d else
                       "[no live session to template]", dim=True)
         elif name:
-            tracks.save_session(name)
-            _broadcast("send_ade_init", tracks.session_meta(),
-                       tracks.list_regions(), tracks.list_tracks())
+            tracks.save_session(name, environment)
+            _init()
 
     elif t == "ade_load":
         back = tracks.reload_session(msg.get("sid", ""))
         if back is not None:
             _detach(ctx)
-            _broadcast("send_ade_init", tracks.session_meta(),
-                       tracks.list_regions(), tracks.list_tracks())
-            for track in back:
-                if tracks.waypoint.has_mail(track.id) and track.nudge():
+            _rebind_environment(ctx, back)
+            _init()
+            for track in tracks.list_regions(back):
+                if back.waypoint.has_mail(track.id) and track.nudge():
                     threading.Thread(target=track.run_pump, args=(ctx.live_runner,),
                                      daemon=True).start()
 
     elif t == "ade_new":
         tid = (msg.get("template") or "").strip()
         if tid:
-            if tracks.instantiate_template(tid) is None:
+            fresh = tracks.instantiate_template(tid)
+            if fresh is None:
                 webio.out("[no such template]", dim=True)
                 return
         else:
-            tracks.new_session()
+            fresh = tracks.new_session()
         _detach(ctx)
-        _broadcast("send_ade_init", tracks.session_meta(),
-                       tracks.list_regions(), tracks.list_tracks())
+        _rebind_environment(ctx, fresh)
+        _init()
 
     elif t == "ade_end":
-        tracks.set_plan(msg.get("plan"))
-        tracks.end_session()
+        environment = ctx.environment
+        tracks.set_plan(msg.get("plan"), environment)
+        tracks.end_session(environment.sid())
+        close_conns(environment)
         _detach(ctx)
-        _broadcast("send_ade_init", tracks.session_meta(),
-                       tracks.list_regions(), tracks.list_tracks())
 
     elif t == "feed":
-        _since = msg.get("since", tracks.session_started_ms())
+        _since = msg.get("since", tracks.session_started_ms(ctx.environment))
         webio.send_feed(
-            ledger.ade_snapshot(limit=msg.get("limit") or None, since=_since),
-            ledger.region_totals(since=_since))
+            ledger.ade_snapshot(limit=msg.get("limit") or None, since=_since,
+                                log_dir=ctx.environment.log_dir),
+            ledger.region_totals(since=_since, log_dir=ctx.environment.log_dir), inst=_inst)
 
     elif t == "ledger_detail":
-        webio.send_ledger_detail(ledger.detail(msg.get("id", ""), shell="ade"))
+        webio.send_ledger_detail(ledger.detail(msg.get("id", ""), shell="ade",
+                                               log_dir=ctx.environment.log_dir),
+                                 inst=_inst)
 
     elif t == "wp_feed":
-        webio.send_wp_feed(tracks.waypoint.display_lines(),
-                           tracks.waypoint.waiting_counts())
+        webio.send_wp_feed(ctx.environment.waypoint.display_lines(),
+                           ctx.environment.waypoint.waiting_counts())
 
     elif t == "wp_send":
         receivers = [r for r in (msg.get("to") or []) if r]
         body = (msg.get("body") or "").strip()
         if receivers and body:
-            tracks.waypoint.append_message(tracks.HUMAN_SENDER, receivers, body)
+            ctx.environment.waypoint.append_message(
+                tracks.HUMAN_SENDER, receivers, body)
 
     elif t == "wp_mute":
         region_id = msg.get("id") or ""
@@ -609,34 +799,25 @@ def handle(ctx, msg):
     elif t == "wp_read":
         ids = [i for i in (msg.get("ids") or []) if isinstance(i, int)]
         if ids:
-            tracks.waypoint.collect(tracks.HUMAN_SENDER, ids=ids)
+            ctx.environment.waypoint.collect(tracks.HUMAN_SENDER, ids=ids)
 
     elif t == "transcript":
         track = tracks.get_region(msg.get("track", ""))
         if track is not None:
-            webio.send_transcript(track.id, track.sess.messages)
+            webio.send_transcript(track.id, track.sess.messages, inst=_inst)
 
     elif t == "gate_action":
-        action = msg.get("action")
-        gid    = msg.get("id")
-        if action == "approve":
-            dq.answer_gate(gid, True)
-            dq.notify("gate_answered")
-        elif action == "deny":
-            if dq.deny(gid) is None:
-                ledger._deny_orphan(gid)
-        elif action == "queue":
-            dq.defer_gate(gid)
+        _do_gate_action(msg.get("action"), msg.get("id"), ctx.environment.log_dir)
 
     elif t == "tree":
-        text = rt.list_dir(_human_path(msg.get("path")), show_hidden=msg.get("hidden", False))
+        text = rt.list_dir(_human_path(ctx.environment, msg.get("path")), show_hidden=msg.get("hidden", False))
         if isinstance(text, dict) and msg.get("tag"):
             text["tag"] = msg["tag"]
-        webio.send_tree(text)
+        webio.send_tree(text, inst=_inst)
 
     elif t == "open":
         path = msg.get("path", "")
-        full = _human_path(path)
+        full = _human_path(ctx.environment, path)
         try:
             import mimetypes as _mt
             _mime, _ = _mt.guess_type(full)
@@ -649,30 +830,33 @@ def handle(ctx, msg):
                     content = _f.read()
         except OSError as e:
             content = f"[open failed: {e}]"
-        webio.send_file(path, content)
+        webio.send_file(path, content, inst=_inst)
 
     elif t == "save":
         path    = msg.get("path", "")
         content = msg.get("content", "")
-        result  = rt.write_file(_human_path(path), content)
-        webio.send_saved(path, result)
-        _broadcast("send_tree_dirty", "*")
-        dq.notify("file_save")
+        # the server owns the write: the gate answers here, not the browser
+        result  = rt.write_file(_human_path(ctx.environment, path), content)
+        ok      = not _write_refused(result)
+        webio.send_saved(path, result, inst=_inst, ok=ok)
+        if ok:
+            _broadcast_all("send_tree_dirty", "*")
+            dq.notify("file_save")
 
     elif t == "delete":
         path = msg.get("path", "")
         try:
-            result = rt.delete_file(_human_path(path))
+            result = rt.delete_file(_human_path(ctx.environment, path))
         except OSError as e:
             result = f"[DELETE failed: {e}]"
         webio.send_deleted(path, result)
-        _broadcast("send_tree_dirty", "*")
+        _broadcast_all("send_tree_dirty", "*")
 
     elif t == "move":
         src = msg.get("src", "")
         dst = msg.get("dst", "")
-        src_full = _human_path(src)
-        dst_full = _human_path(dst)
+        src_full = _human_path(ctx.environment, src)
+        dst_full = _human_path(ctx.environment, dst)
         src_real = os.path.realpath(src_full)
         dst_real = os.path.realpath(dst_full)
         src_is_tree = os.path.isdir(src_full) and not os.path.islink(src_full)
@@ -697,14 +881,14 @@ def handle(ctx, msg):
                 except OSError as e:
                     result = f"[MOVE failed: {e}]"
         webio.send_moved(src, dst, result)
-        _broadcast("send_tree_dirty", "*")
+        _broadcast_all("send_tree_dirty", "*")
 
     elif t == "rename":
         src    = msg.get("src", "")
         name   = msg.get("name", "")
         parent = os.path.dirname(src)
         dst    = os.path.join(parent, name) if parent else name
-        src_full = _human_path(src)
+        src_full = _human_path(ctx.environment, src)
         if not os.path.exists(src_full):
             result = f"[RENAME failed: no such file or directory: {src}]"
         elif not name or os.sep in name or ".." in name:
@@ -723,14 +907,14 @@ def handle(ctx, msg):
                 except OSError as e:
                     result = f"[RENAME failed: {e}]"
         webio.send_renamed(src, dst, result)
-        _broadcast("send_tree_dirty", "*")
+        _broadcast_all("send_tree_dirty", "*")
 
     elif t == "mkdir":
         path = msg.get("path", "")
         if not path:
             result = f"[MKDIR refused: invalid path: {path}]"
         else:
-            full = _human_path(path)
+            full = _human_path(ctx.environment, path)
             if os.path.exists(full):
                 result = f"[MKDIR refused: {path} already exists]"
             elif not os.path.isdir(os.path.dirname(full)):
@@ -742,16 +926,16 @@ def handle(ctx, msg):
                 except OSError as e:
                     result = f"[MKDIR failed: {e}]"
         webio.send_made(path, result)
-        _broadcast("send_tree_dirty", "*")
+        _broadcast_all("send_tree_dirty", "*")
 
     elif t == "rmdir":
         path = msg.get("path", "")
         if not path:
             result = f"[RMDIR refused: invalid path: {path}]"
         else:
-            full = _human_path(path)
+            full = _human_path(ctx.environment, path)
             full_real = os.path.realpath(full)
-            session_real = os.path.realpath(rt.WORKSPACE_ROOT)
+            session_real = os.path.realpath(ctx.environment.root)
             if not os.path.exists(full):
                 result = f"[RMDIR failed: no such directory: {path}]"
             elif not os.path.isdir(full):
@@ -770,61 +954,62 @@ def handle(ctx, msg):
                 except OSError as e:
                     result = f"[RMDIR failed: {e}]"
         webio.send_deleted(path, result)
-        _broadcast("send_tree_dirty", "*")
+        _broadcast_all("send_tree_dirty", "*")
 
     elif t == "setroot":
-        result = al.set_and_persist_root(msg.get("path", ""))
-        webio.out(result, dim=True)
-        if not result.startswith("[workspace root"):
+        path = msg.get("path", "")
+        full = os.path.abspath(os.path.expanduser(path.strip()))
+        if not os.path.isdir(full):
+            webio.out(f"[root unchanged: no directory at '{path}']", dim=True)
             return
+        ctx.environment.root = full
+        webio.out(f"[workspace root → {full}]", dim=True)
         moved = []
-        for region in tracks.list_regions():
+        for region in tracks.list_regions(ctx.environment):
             try:
-                region.apply_edits([{"type": "root", "value": rt.WORKSPACE_ROOT}])
+                region.apply_edits([{"type": "root", "value": full}])
                 moved.append(region.name)
             except Exception:
                 pass
         if moved:
-            webio.out(f"[session root → {rt.WORKSPACE_ROOT} — moved {len(moved)} "
+            webio.out(f"[session root → {full} — moved {len(moved)} "
                       f"agent(s): {', '.join(moved)}]", dim=True)
         else:
-            webio.out(f"[session root → {rt.WORKSPACE_ROOT} — no agents yet; every "
+            webio.out(f"[session root → {full} — no agents yet; every "
                       f"agent added from here starts in it]", dim=True)
-        broadcast_reload(f"session root moved to {rt.WORKSPACE_ROOT}")
+        broadcast_reload(f"session root moved to {full}")
 
     elif t == "input":
-        track = ctx.anchored
+        tid = msg.get("track", "")
+        track = tracks.get_region(tid) if tid else ctx.anchored
         if track is None:
-            webio.out("[input: no track anchored]", dim=True)
+            webio.out("[input: unknown region]", dim=True)
             return
-        os.write(track.shell_master(), msg["data"].encode())
+        os.write(track.shell_master(msg.get("shell", "")), msg["data"].encode())
 
     elif t == "close_shell":
         track = tracks.get_region(msg.get("track", ""))
         if track is not None:
-            track.close_shell()
+            track.close_shell(msg.get("shell") or None)
 
-    elif t == "focus":
-        if ctx.mirror is not None:
-            ctx.mirror.hub.remove_mirror_for(webio)
-            ctx.mirror = None
+    elif t in ("focus", "follow"):
         tid = msg.get("track")
         if tid:
             track = tracks.get_region(tid)
             if track is None:
-                webio.out("[focus: unknown track]", dim=True)
+                webio.out("[follow: unknown region]", dim=True)
             else:
-                view = tracks.MirrorView(webio, track.id)
-                track.hub.add_mirror(view, ctx.conn_sid)
-                ctx.mirror = track
-                view.transcript(track.sess.messages)
-                view.gatelog(_track_gatelog(track.id))
+                _follow(ctx, track)
+
+    elif t == "unfollow":
+        _unfollow(ctx, msg.get("track", ""))
 
     elif t == "edit_track":
         track = tracks.get_region(msg.get("track", ""))
         if track is None:
             webio.out("[edit_track: unknown track]", dim=True)
-            webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+            webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
             return
         items = []
         fields = dict(msg.get("fields") or {})
@@ -835,7 +1020,8 @@ def handle(ctx, msg):
             if not want or not os.path.isdir(os.path.abspath(os.path.expanduser(want))):
                 fields.pop("root")
                 webio.out("[root unchanged — no such directory: %s]" % (want or "(blank)"), dim=True)
-                webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+                webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
         for key, value in fields.items():
             if key == "name":
                 item = {"type": "rename", "value": value}
@@ -850,8 +1036,48 @@ def handle(ctx, msg):
             items.append(item)
         if rail:
             items.append({"type": "rail", "value": rail})
+        if track.prompts_on_change(items):
+            token = _park_change(track.id, "edit", items=items)
+            _send_change_prompt(ctx, track.id, token, "edit", items)
+            return
         track.apply_edits(items)
-        _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
+        _roster()
+
+    elif t == "change_answer":
+        token  = (msg.get("token") or "").strip()
+        choice = (msg.get("choice") or "").strip()
+        rec = _take_change(token)
+        if rec is None:
+            webio.out("[change_answer: unknown token]", dim=True)
+            return
+        if choice not in CHANGE_CHOICES:
+            webio.out("[change_answer: unknown choice]", dim=True)
+            return
+        if choice == "cancel":
+            webio.send_track_list(tracks.list_regions(ctx.environment),
+                                  tracks.list_tracks(ctx.environment))
+            return
+        region = tracks.get_region(rec["region"])
+        if region is None:
+            webio.out("[change_answer: unknown region]", dim=True)
+            return
+        mode = "reset" if choice == "reset_region" else "in_place"
+        if rec["action"] == "edit":
+            if mode == "reset":
+                region.apply_with_reset(rec["items"])
+            else:
+                region.apply_in_place(rec["items"])
+        elif rec["action"] == "load_preset":
+            ok, warnings = _do_load_preset(region, rec["name"], mode=mode)
+            for w in warnings:
+                webio.out(f"[preset {rec['name']!r}] {w}", dim=True)
+        elif rec["action"] == "save_preset":
+            ok, result = _do_save_preset(region, rec["name"], rec["fields"])
+            webio.out(f"[preset saved: {result}]" if ok
+                      else f"[save_preset failed: {result}]", dim=True)
+            if mode == "reset":
+                tracks.reset_region(region.id)
+        _roster()
 
     elif t == "load_preset":
         track = tracks.get_region(msg.get("track", ""))
@@ -862,13 +1088,15 @@ def handle(ctx, msg):
         if not name:
             webio.out("[load_preset: bad name]", dim=True)
             return
-        ok, warnings = _do_load_preset(track, name)
-        for w in warnings:
-            webio.out(f"[preset {name!r}] {w}", dim=True)
-        if ok:
-            _broadcast("send_track_list", tracks.list_regions(), tracks.list_tracks())
-        else:
-            webio.send_track_list(tracks.list_regions(), tracks.list_tracks())
+        mode = msg.get("mode")
+        if mode in ("reset", "in_place"):
+            ok, warnings = _do_load_preset(track, name, mode=mode)
+            for w in warnings:
+                webio.out(f"[preset {name!r}] {w}", dim=True)
+            _roster()
+            return
+        token = _park_change(track.id, "load_preset", name=name)
+        _send_change_prompt(ctx, track.id, token, "load_preset", [])
 
     elif t == "save_preset":
         track = tracks.get_region(msg.get("track", ""))
@@ -880,9 +1108,9 @@ def handle(ctx, msg):
             webio.out("[save_preset: bad name]", dim=True)
             return
         pending = msg.get("fields")
-        ok, result = _do_save_preset(track, name,
-                                     pending if isinstance(pending, dict) else None)
-        webio.out(f"[preset saved: {result}]" if ok else f"[save_preset failed: {result}]", dim=True)
+        token = _park_change(track.id, "save_preset", name=name,
+                             fields=pending if isinstance(pending, dict) else None)
+        _send_change_prompt(ctx, track.id, token, "save_preset", [])
 
     elif t == "rename_preset":
         old_name = (msg.get("old_name") or "").strip()

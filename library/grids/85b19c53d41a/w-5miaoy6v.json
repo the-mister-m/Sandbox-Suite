@@ -1,0 +1,30 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "timeline-mtqexop4-1",
+      "type": "timeline",
+      "slot": {
+        "col": 7,
+        "row": 4,
+        "w": 6,
+        "h": 6
+      },
+      "options": {}
+    },
+    {
+      "id": "anchor_chat-mtqh9coc-1",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": ""
+      }
+    }
+  ]
+}

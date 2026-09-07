@@ -1,0 +1,69 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "chat-mtq4224h-2",
+      "type": "chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 9
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "region": "a4d07374a736",
+        "speech_enabled": false,
+        "tts_engine": "say"
+      }
+    },
+    {
+      "id": "mini_queue-mtq4m9yn-5",
+      "type": "mini_queue",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "mount-mtq4oxz4-1",
+      "type": "mount",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "queue-mtq4w4f4-1",
+      "type": "queue",
+      "slot": {
+        "col": 5,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "claude_cache_ttl": "1h",
+        "claude_exclude_dynamic": false
+      }
+    },
+    {
+      "id": "browser-mtq4wuy8-2",
+      "type": "browser",
+      "slot": {
+        "col": 9,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

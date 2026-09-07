@@ -235,7 +235,19 @@ def _capabilities(model):
     return tools.text_hint()
 
 
-def build_context(sess, *, root, region_id, region_name, task=""):
+def track_layer(track_id):
+    if not track_id:
+        return ""
+    return _read(os.path.join(INJECTIONS, "track", f"{track_id}.md"))
+
+
+def region_layer(region_id):
+    if not region_id:
+        return ""
+    return _read(os.path.join(INJECTIONS, "region", f"{region_id}.md"))
+
+
+def build_context(sess, *, root, region_id, region_name, task="", track_id=None):
     nick = getattr(sess, "nick", None)
     model = (getattr(sess, "settings", None) or {}).get("model", "")
 
@@ -264,7 +276,7 @@ def build_context(sess, *, root, region_id, region_name, task=""):
 
     if _peers_provider is not None:
         try:
-            block = _peers_block(_peers_provider(), region_id)
+            block = _peers_block(_peers_provider(region_id), region_id)
         except Exception:
             block = ""
         if block:
@@ -294,6 +306,16 @@ def build_context(sess, *, root, region_id, region_name, task=""):
     t = _read(os.path.join(INJECTIONS, "session", "ade.md"))
     if t:
         ctx_parts.append(t)
+
+    tid = track_id if track_id is not None else getattr(sess, "track", None)
+    t = track_layer(tid)
+    if t:
+        ctx_parts.append(t)
+
+    t = region_layer(region_id)
+    if t:
+        ctx_parts.append(t)
+
     ctx_parts.extend(_skills(nick, bool(folder)))
 
     if task:

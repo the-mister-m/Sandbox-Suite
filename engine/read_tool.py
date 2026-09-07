@@ -463,7 +463,7 @@ def send_message(sender: str, receivers, body: str) -> str:
 def request_messages(caller: str, since_id=None) -> str:
     if _is_muted(caller):
         return MUTED_LINE
-    path = waypoint.default.path
+    path = waypoint.store_for(caller).path
     if not os.path.exists(path):
         return "[no messages]"
 

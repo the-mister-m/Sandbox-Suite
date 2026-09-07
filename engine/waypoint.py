@@ -139,11 +139,6 @@ class Waypoint:
     def set_append_listener(self, fn):
         self._append_listener = fn
 
-    def repoint(self, path):
-        with self._lock:
-            self.path = path
-        self.replay()
-
     def waiting_counts(self):
         with self._lock:
             return {k: len(v) for k, v in self._waiting.items() if v}
@@ -235,24 +230,51 @@ class Waypoint:
 
 default = Waypoint()
 
+# resolves a sender/receiver id to the Waypoint store its environment owns;
+# None or no match falls back to the shared default store
+_store_resolver = None
+
+
+def set_store_resolver(fn):
+    global _store_resolver
+    _store_resolver = fn
+
+
+def _store_for(*idents):
+    if _store_resolver is not None:
+        for ident in idents:
+            try:
+                store = _store_resolver(ident)
+            except Exception:
+                store = None
+            if store is not None:
+                return store
+    return default
+
+
+def store_for(*idents):
+    return _store_for(*idents)
+
 
 def append_message(sender, receivers, body, *, wake=True):
-    return default.append_message(sender, receivers, body, wake=wake)
+    receivers = list(receivers)
+    return _store_for(sender, *receivers).append_message(sender, receivers, body, wake=wake)
 
 def append_denied(sender, receivers, body):
-    return default.append_denied(sender, receivers, body)
+    receivers = list(receivers)
+    return _store_for(sender, *receivers).append_denied(sender, receivers, body)
 
 def collect(track_ident, ids=None):
-    return default.collect(track_ident, ids=ids)
+    return _store_for(track_ident).collect(track_ident, ids=ids)
 
 def peek(track_ident):
-    return default.peek(track_ident)
+    return _store_for(track_ident).peek(track_ident)
 
 def has_mail(track_ident):
-    return default.has_mail(track_ident)
+    return _store_for(track_ident).has_mail(track_ident)
 
 def dead_letter_all(track_ident):
-    return default.dead_letter_all(track_ident)
+    return _store_for(track_ident).dead_letter_all(track_ident)
 
 def set_nudger(fn):
     return default.set_nudger(fn)
@@ -266,8 +288,14 @@ def set_track_resolver(fn):
 def set_append_listener(fn):
     return default.set_append_listener(fn)
 
-def repoint(path):
-    return default.repoint(path)
+def new_store(path):
+    # one environment's own waypoint file, wired with default's callbacks
+    store = Waypoint(path)
+    store._nudger = default._nudger
+    store._track_prober = default._track_prober
+    store._track_resolver = default._track_resolver
+    store._append_listener = default._append_listener
+    return store
 
 def waiting_counts():
     return default.waiting_counts()

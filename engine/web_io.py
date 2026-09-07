@@ -32,20 +32,22 @@ class WebIO:
         with self._send_lock:
             self.ws.send(json.dumps(frame))
 
-    def ask(self, prompt):
+    def ask(self, prompt, region=""):
         gid  = uuid.uuid4().hex[:8]
         slot = queue.Queue(maxsize=1)
         with self._gate_cv:
-            self._gate_pending.append({"id": gid, "prompt": prompt, "slot": slot})
+            self._gate_pending.append({"id": gid, "prompt": prompt, "slot": slot,
+                                       "region": region})
             self._push_pending_locked()
             while (self._gate_active is not None
                    or not self._gate_pending
                    or self._gate_pending[0]["id"] != gid):
                 self._gate_cv.wait()
             self._gate_pending = [p for p in self._gate_pending if p["id"] != gid]
-            self._gate_active  = {"id": gid, "prompt": prompt, "slot": slot}
+            self._gate_active  = {"id": gid, "prompt": prompt, "slot": slot,
+                                  "region": region}
             self._push_pending_locked()
-        self._send({"type": "ask", "prompt": prompt, "id": gid})
+        self._send({"type": "ask", "prompt": prompt, "id": gid, "region": region})
         answer = slot.get()
         with self._gate_cv:
             self._gate_active = None
@@ -61,12 +63,13 @@ class WebIO:
                 "gate wait on the receiver thread — this deadlocks: spawn the "
                 "turn on an agent thread (MAP.md §Threading)")
 
-    def post_gate(self, gid, prompt):
+    def post_gate(self, gid, prompt, region=""):
         with self._gate_cv:
             if any(p["id"] == gid for p in self._gate_pending) or \
                (self._gate_active and self._gate_active["id"] == gid):
                 return
-            self._gate_pending.append({"id": gid, "prompt": prompt, "slot": None})
+            self._gate_pending.append({"id": gid, "prompt": prompt, "slot": None,
+                                       "region": region})
             self._advance_locked()
             self._push_pending_locked()
 
@@ -91,7 +94,8 @@ class WebIO:
         if len(prompt) > MODAL_MAX:
             prompt = (prompt[:MODAL_MAX]
                       + f"\n…[+{len(head['prompt']) - MODAL_MAX} more — open the record]")
-        self._send({"type": "ask", "prompt": prompt, "id": head["id"]})
+        self._send({"type": "ask", "prompt": prompt, "id": head["id"],
+                    "region": head.get("region") or ""})
 
     def resolve_gate(self, gid, text):
         with self._gate_cv:
@@ -130,9 +134,13 @@ class WebIO:
         if record_ids:
             dq.reorder(record_ids)
 
+    # every pending row names the region its gate belongs to
     def _push_pending_locked(self):
-        pending = [{"id": p["id"], "prompt": p["prompt"]} for p in self._gate_pending]
-        active  = ({"id": self._gate_active["id"], "prompt": self._gate_active["prompt"]}
+        pending = [{"id": p["id"], "prompt": p["prompt"],
+                    "region": p.get("region") or ""} for p in self._gate_pending]
+        active  = ({"id": self._gate_active["id"],
+                    "prompt": self._gate_active["prompt"],
+                    "region": self._gate_active.get("region") or ""}
                    if self._gate_active else None)
         self._send({"type": "gate_pending", "pending": pending, "active": active})
 
@@ -150,9 +158,11 @@ class WebIO:
         with self._send_lock:
             self.ws.send(json.dumps({"type": "meters", "meters": d}))
 
-    def term(self, data):
+    # shell is the tab's own PTY key; region is the PTY's region
+    def term(self, data, shell="", region=""):
         with self._send_lock:
-            self.ws.send(json.dumps({"type": "term", "data": data}))
+            self.ws.send(json.dumps({"type": "term", "data": data,
+                                     "shell": shell, "region": region}))
 
     def speak(self, text, *, engine="browser", voice=""):
         if not text.strip():
@@ -205,5 +215,5 @@ class WebIO:
     def send_ledger_state(self, records, sid=None):
         self._send({"type": "ledger_state", "records": records, "sid": sid})
 
-    def send_ledger_detail(self, detail):
-        self._send({"type": "ledger_detail", "detail": detail})
+    def send_ledger_detail(self, detail, inst=""):
+        self._send({"type": "ledger_detail", "detail": detail, "inst": inst})

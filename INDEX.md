@@ -40,3 +40,90 @@
 - [Docs/Specs/SPEC-D8-browser-viewer.md](Docs/Specs/SPEC-D8-browser-viewer.md) — Job 8 spec: browser, viewer, read-only Monaco
 - [Docs/Handoffs/HANDOFF-phase3.md](Docs/Handoffs/HANDOFF-phase3.md) — parked Phase 3 decisions
 - [Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-scope.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-scope.md) — session review, Phase 2 scoping
+- [Docs/Reports/RECEIPT-D1-settings.md](Docs/Reports/RECEIPT-D1-settings.md) — Job 1 receipt: five settings tiers, preset rules, change modal, session templates, registries, context layers
+- [library/registry/widgets.json](library/registry/widgets.json) — widget registry, seven types, read by the widget selection page
+- [library/registry/providers.json](library/registry/providers.json) — provider registry, three providers and two empty slots, read by the library
+- [injections/track/](injections/track/) — track context files, one per track id
+- [injections/region/](injections/region/) — region context files, one per region id, empty this phase
+- [Docs/tests/test_presets.py](Docs/tests/test_presets.py) — preset four rules
+- [Docs/tests/test_context_layers.py](Docs/tests/test_context_layers.py) — track and region context layers
+- [Docs/tests/test_session_widget.py](Docs/tests/test_session_widget.py) — session tier, widget tier, registries
+- [Docs/tests/test_change_modal.py](Docs/tests/test_change_modal.py) — change modal frame pair, session templates
+- [Docs/Reports/RECEIPT-D3a-environments.md](Docs/Reports/RECEIPT-D3a-environments.md) — Job 3a receipt: Environment class, registry, session routes, shutdown autosave, boot registration, waypoint fix pass
+- [Docs/tests/test_environments.py](Docs/tests/test_environments.py) — two live environments, registry, end, shutdown autosave, boot registration, waypoint isolation
+- [Docs/Reports/RECEIPT-D3b-sockets.md](Docs/Reports/RECEIPT-D3b-sockets.md) — Job 3b receipt: /ws/ade/<sid>, window count, gate vocabulary, /suite and /matrix route stubs
+- [Docs/tests/test_sockets.py](Docs/tests/test_sockets.py) — socket binding, per-session broadcast, window count, answer to gate_action
+- [static/suite.html](static/suite.html) — Suite Page placeholder behind GET /suite, Job 4 writes it
+- [static/matrix.html](static/matrix.html) — matrix window placeholder behind GET /matrix and /matrix/&lt;sid&gt;, Job 5 writes it
+- [Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-wave1-2.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-wave1-2.md) — session review, Waves 1 and 2 built, Environment naming, no current session
+- [Docs/Specs/SPEC-D3c-end-closes-sockets.md](Docs/Specs/SPEC-D3c-end-closes-sockets.md) / [Docs/Reports/RECEIPT-D3c-end-closes-sockets.md](Docs/Reports/RECEIPT-D3c-end-closes-sockets.md) — Job D3c: End Session closes every socket bound to it
+- [Docs/Reports/RECEIPT-D5-matrix.md](Docs/Reports/RECEIPT-D5-matrix.md) — Job 5 receipt: matrix window, widget frame contract, matrix template routes, widget registry route, registry rows-to-type rename
+- [Docs/Reports/RECEIPT-D4-suite-library.md](Docs/Reports/RECEIPT-D4-suite-library.md) — Job 4 receipt: Suite Page, library tabs, session/preset/context-file routes, route "/" repoint
+- [Docs/Reports/RECEIPT-D6-chat-queue.md](Docs/Reports/RECEIPT-D6-chat-queue.md) — Job 6 receipt: chat, mini queue and queue widgets, markdown transcript, speech lock, answer translation removed
+- [Docs/Reports/RECEIPT-D7-editor-terminal.md](Docs/Reports/RECEIPT-D7-editor-terminal.md) — Job 7 receipt: editor (Monaco, markdown preview, native save dialog, exit diff modal) and terminal (xterm, region picker) widgets
+- [Docs/Reports/RECEIPT-D8-browser-viewer.md](Docs/Reports/RECEIPT-D8-browser-viewer.md) — Job 8 receipt: file browser (macOS directory picker, sizes, duplicate/rename/reveal/open), viewer (full render list), shared read-only Monaco export
+- [Docs/Specs/SPEC-D10-tabs-targets.md](Docs/Specs/SPEC-D10-tabs-targets.md) / [Docs/Reports/RECEIPT-D10-tabs-targets.md](Docs/Reports/RECEIPT-D10-tabs-targets.md) — Job 10: one widget folder standard, instance targets on every frame, many live regions per socket, tabs in editor/terminal/viewer, server-side save, pre-close hook, server-side grid state, settings trickle, vendored markdown, nested model picker
+- [Docs/Reports/RECEIPT-D11c-defaults-archive.md](Docs/Reports/RECEIPT-D11c-defaults-archive.md) / [Docs/tests/test_session_settings_archive.py](Docs/tests/test_session_settings_archive.py) — Job D11c: widget defaults moved off editor/terminal/viewer/browser into engine/settings.py, session settings bag archived to settings.json by autosave and restored by reload_session
+- [Docs/Reports/RECEIPT-D11a-suite-controls.md](Docs/Reports/RECEIPT-D11a-suite-controls.md) — Job D11a: global settings form rebuilt with real controls (dropdowns, toggles, confirm buttons, list rows), library section hidden with nav button
+- [Docs/Reports/RECEIPT-D11b-mount-widget.md](Docs/Reports/RECEIPT-D11b-mount-widget.md) / [Docs/tests/test_mount_widget.py](Docs/tests/test_mount_widget.py) — Job D11b: mount widget (create_track then insert_region, nested model picker) replaces the stub widget in the registry, widget_defaults, and matrix.html
+- [Docs/Specs/SPEC-D11a-suite-controls.md](Docs/Specs/SPEC-D11a-suite-controls.md) / [Docs/Specs/SPEC-D11b-mount-widget.md](Docs/Specs/SPEC-D11b-mount-widget.md) / [Docs/Specs/SPEC-D11c-defaults-archive.md](Docs/Specs/SPEC-D11c-defaults-archive.md) — the three D11 fix specs, one page each
+- [Docs/Scope/SCOPE-phase3-session-agent.md](Docs/Scope/SCOPE-phase3-session-agent.md) — session agent brief, waves, decisions
+- [Docs/Specs/SPEC-E1-session-root.md](Docs/Specs/SPEC-E1-session-root.md) — session root rung
+- [Docs/Specs/SPEC-E2-ledger-per-session.md](Docs/Specs/SPEC-E2-ledger-per-session.md) — ledger per environment
+- [Docs/Specs/SPEC-E3-lifecycle.md](Docs/Specs/SPEC-E3-lifecycle.md) — shutdown modal, six lifecycle fixes
+- [Docs/Specs/SPEC-E4-archives-context.md](Docs/Specs/SPEC-E4-archives-context.md) — library toggle, transcript route, context follows reset
+- [Docs/Specs/SPEC-E5-matrix-chrome.md](Docs/Specs/SPEC-E5-matrix-chrome.md) — picker columns, agent strip, session corner button
+- [Docs/Specs/SPEC-E6-devagent.md](Docs/Specs/SPEC-E6-devagent.md) — dev widget, replaces the track settings modal
+- [Docs/Specs/SPEC-E7-chat-gatelist.md](Docs/Specs/SPEC-E7-chat-gatelist.md) — old chat and gate list as widgets
+- [Docs/Specs/SPEC-E8-timeline.md](Docs/Specs/SPEC-E8-timeline.md) — timeline port, opus
+- [Docs/Specs/SPEC-E9-queue.md](Docs/Specs/SPEC-E9-queue.md) — queue log port
+- [Docs/Specs/SPEC-E10-ledger.md](Docs/Specs/SPEC-E10-ledger.md) — ledger port
+- [Docs/Specs/SPEC-E11-changes.md](Docs/Specs/SPEC-E11-changes.md) — changes port
+- [Docs/Specs/SPEC-E12-messenger.md](Docs/Specs/SPEC-E12-messenger.md) — messenger port
+- [Docs/Specs/SPEC-E13-transcript.md](Docs/Specs/SPEC-E13-transcript.md) — transcript widget
+- [Docs/Specs/SPEC-E14-retire.md](Docs/Specs/SPEC-E14-retire.md) — delete old pages, redpen checklist
+- [Docs/audit/AUDIT-BRIEF-phase3.md](Docs/audit/AUDIT-BRIEF-phase3.md) — read-only audit brief for the Phase 3 scope session: lane, Brandon's Phase 2 decisions, pointers, what to look for, report shape
+- [Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-wave3-4.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase2-wave3-4.md) — session review: Waves 3 and 4, Job 10, D11a/b/c, redpen stopped, handoff deleted, audit unsent
+- [Docs/Reports/RECEIPT-E1-session-root.md](Docs/Reports/RECEIPT-E1-session-root.md) — Job E1: session root rung added to Environment, setroot/_human_path/create_track/insert_region/custody moved off the global root — 2026-09-06
+- [Docs/Reports/RECEIPT-E2-ledger-per-session.md](Docs/Reports/RECEIPT-E2-ledger-per-session.md) — Job E2: ledger directory resolver hook, per-record log_dir resolution, pending_as_records filtered per environment — 2026-09-06
+- [Docs/Reports/RECEIPT-E3-lifecycle.md](Docs/Reports/RECEIPT-E3-lifecycle.md) — Job E3: shutdown-suite modal and route, saved_ts on open and archived sessions, ade_end closes sockets, session settings write persists, bare /api/sessions route deleted, ask-timeout item blocked — 2026-09-06
+- [Docs/Reports/RECEIPT-E4-archives-context.md](Docs/Reports/RECEIPT-E4-archives-context.md) — Job E4: library_archives toggle, GET /api/transcripts route, region context files follow reset — 2026-09-06
+- [Docs/Reports/RECEIPT-E5-matrix-chrome.md](Docs/Reports/RECEIPT-E5-matrix-chrome.md) — Job E5: picker columns, agent strip ported as widget "strip", shared feed-rows.js, session rung corner button — 2026-09-06
+- [Docs/Reports/RECEIPT-E7-chat-gatelist.md](Docs/Reports/RECEIPT-E7-chat-gatelist.md) — Job E7: anchor_chat and gate_list widgets, detached, shared/turns.js for E10/E13 — 2026-09-06
+- [Docs/Reports/RECEIPT-E6-devagent.md](Docs/Reports/RECEIPT-E6-devagent.md) — Job E6: devagent widget, tree + track/region rungs, settings/context/gates/preset tabs — 2026-09-06
+- [Docs/Reports/RECEIPT-E11-changes.md](Docs/Reports/RECEIPT-E11-changes.md) — Job E11: changes widget, files/agents grouping, diff pane, gateColor parked/killed/timeout added, mx:open-ledger — 2026-09-06
+- [Docs/Reports/RECEIPT-E3b-ask-timeout.md](Docs/Reports/RECEIPT-E3b-ask-timeout.md) — Job E3 item 6: TrackHub.ask times out on gate_wait_s, closed gate on timeout — 2026-09-06
+- [Docs/Reports/RECEIPT-E12-messenger.md](Docs/Reports/RECEIPT-E12-messenger.md) — Job E12: messenger widget, track rail send/view arms, chat cards, mark read, registry row — 2026-09-06
+- [Docs/Reports/RECEIPT-E8-timeline.md](Docs/Reports/RECEIPT-E8-timeline.md) — Job E8: timeline widget, lanes/spans/pips/root browser ported, mx:open-ledger and mx:open-devagent events, registry row — 2026-09-06
+- [Docs/Reports/RECEIPT-E10-ledger.md](Docs/Reports/RECEIPT-E10-ledger.md) — Job E10: ledger widget, turn table/rollup/per-agent totals, turns.js blocks in-row, mx:open-ledger listener, registry row — 2026-09-06
+- [Docs/Reports/RECEIPT-E6b-devagent-listener.md](Docs/Reports/RECEIPT-E6b-devagent-listener.md) — Job E6b: devagent widget listens for mx:open-devagent, selects region/track and re-renders — 2026-09-06
+- [Docs/Reports/RECEIPT-E9-queue.md](Docs/Reports/RECEIPT-E9-queue.md) — Job E9: queue log widget, track chips, column grid ported to frame contract, feed-rows import, provider-based Claude check, registry row — 2026-09-06
+- [Docs/Reports/RECEIPT-E13-transcript.md](Docs/Reports/RECEIPT-E13-transcript.md) — Job E13: transcript widget, live+retired regions and caches for the bound session, Suite page saved-sessions toggle link, registry row — 2026-09-06
+- [Docs/Reports/RECEIPT-E14-retire.md](Docs/Reports/RECEIPT-E14-retire.md) — Job E14: old ade pages/routes/JS deleted, arrange.js/region.js/cables.js moved to Docs/audit/arrange-old/, redpen checklist written — 2026-09-06
+- [Docs/Specs/SPEC-arrange-widget.md](Docs/Specs/SPEC-arrange-widget.md) — arrange widget build spec: plan in the doc gen file, left drawer, node window, five notch kinds, message wire, mini nodes, motion state, undo table — 2026-09-07
+- [Doc Generator/docs/SPEC-map-arrange-skin.md](../Doc%20Generator/docs/SPEC-map-arrange-skin.md) — doc gen map build spec: arrange skin as third renderer, edges from plan file cables — 2026-09-07
+- [Doc Generator/src/shared/types.ts](../Doc%20Generator/src/shared/types.ts) — PLAN section, the JSON the arrange widget and the doc gen map share — 2026-09-07
+- [Docs/Reports/SESSION-REVIEW-2026-09-07-arrange-scope.md](Docs/Reports/SESSION-REVIEW-2026-09-07-arrange-scope.md) — arrange scope session review, twelve decisions with reverses — 2026-09-07
+- [Docs/Reports/CHECKLIST-phase3-redpen.md](Docs/Reports/CHECKLIST-phase3-redpen.md) — manual checklist Brandon runs by hand against the Phase 3 scope and widget acceptance
+- [Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-build.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-build.md) — session review: six waves, seventeen builders, nothing run live, redpen checklist parked by Brandon
+- [Docs/audit/arrange-old/](Docs/audit/arrange-old/) — arrange.js, region.js, cables.js parked by E14, Phase 4 material
+- [Docs/Reports/RECEIPT-test-job0-recon.md](Docs/Reports/RECEIPT-test-job0-recon.md) — Job 0 recon: old ide-panes mapped to D-series widgets, generation confirmed pre-Phase-1 shells/ade
+- [Docs/Reports/RECEIPT-test-job1-setup.md](Docs/Reports/RECEIPT-test-job1-setup.md) / [Docs/tests/matrix_harness.py](Docs/tests/matrix_harness.py) — Job 1 setup: headed Playwright harness to mount one matrix widget and capture console + screenshots, anchor_chat proof in Docs/Reports/phase3-test/
+- [Docs/Reports/phase3-test/SPEC-test-queue.md](Docs/Reports/phase3-test/SPEC-test-queue.md) / [Docs/Reports/RECEIPT-test-job4-queue.md](Docs/Reports/RECEIPT-test-job4-queue.md) — Job 4 test: queue widget vs SPEC-D6 and the old pane, 5 pass / 0 fail / 7 untestable on an empty session, cq-queue class collision found
+- [Docs/Reports/phase3-test/SPEC-test-anchor_chat.md](Docs/Reports/phase3-test/SPEC-test-anchor_chat.md) / [Docs/Reports/RECEIPT-test-job2-anchor_chat.md](Docs/Reports/RECEIPT-test-job2-anchor_chat.md) — Job 2 test: anchor_chat widget vs old chat.js, transcript area collapsed (.mx-anchor-chat has no CSS rule), 0 pass / 2 fail / 2 untestable, 9 fixes listed
+- [Docs/Reports/phase3-test/SPEC-test-ledger.md](Docs/Reports/phase3-test/SPEC-test-ledger.md) / [Docs/Reports/RECEIPT-test-job5-ledger.md](Docs/Reports/RECEIPT-test-job5-ledger.md) — Job 5 test: ledger widget vs old ledgerview.js, loose end settled (names live in msg.tracks, widget reads msg.rows), legend/ql-edge CSS not carried over, 1 pass / 1 pass-with-defect / 1 fail, 11 fixes listed
+- [Docs/Reports/phase3-test/SPEC-test-queue_log.md](Docs/Reports/phase3-test/SPEC-test-queue_log.md) / [Docs/Reports/RECEIPT-test-job3-queue_log.md](Docs/Reports/RECEIPT-test-job3-queue_log.md) — Job 3 test: queue_log widget vs old queuelog.js, same msg.rows/msg.tracks defect kills the TTL and trim toggles, .tb-btn/.chip/.empty unstyled, 2 pass / 3 fail, 7 fixes listed
+- [Docs/Handoffs/HANDOFF-phase3-test.md](Docs/Handoffs/HANDOFF-phase3-test.md) — handoff from the Phase 3 build session to the test session: state, Brandon's asks, builder prompt shape, Playwright check — 2026-09-06
+- [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md) — thirteen remaining widget test jobs as specs, Waves B and C, shared setup, per-job checklist lines and estimates — 2026-09-06
+- [Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md) — session review: harness built, four widgets specced, three systemic defects, thirteen jobs specced for next session
+- [Docs/HOWTO-frames.md](Docs/HOWTO-frames.md) — client-to-server and server-to-client ADE frame tables, drawn from frames.py and web_io.py — 2026-09-07
+- [Docs/Reports/RECEIPT-F1-backend-frames.md](Docs/Reports/RECEIPT-F1-backend-frames.md) — Job F1: change_prompt broadcasts to the environment, create_track always returns a row, load_preset takes a mode — 2026-09-07
+- [static/js/widgets/shared/root-browser.js](static/js/widgets/shared/root-browser.js) — Job F2: MX.openRootBrowser, moved from devagent — 2026-09-07
+- [static/js/widgets/shared/add-controls.js](static/js/widgets/shared/add-controls.js) — Job F2: MX.mountAddControls (track/region/both), moved from devagent — 2026-09-07
+- [static/js/widgets/shared/settings-rows.js](static/js/widgets/shared/settings-rows.js) — Job F2: MX.settingsRows.create, region settings/context/gates/preset row builders, moved from devagent — 2026-09-07
+- [static/js/widgets/shared/derived.js](static/js/widgets/shared/derived.js) — Job F2: MX.derived, deriveFileHandoffs (deriveCables from cables.js) + deriveMessageHandoffs stub + mergeDerived — 2026-09-07
+- [Docs/Reports/RECEIPT-F2-shared-modules.md](Docs/Reports/RECEIPT-F2-shared-modules.md) — Job F2: mount widget and timeline head actions now call the shared add controls; timeline head actions no longer dispatch mx:open-devagent; mount matches track_created's row instead of guessing — 2026-09-07
+- [Docs/Reports/RECEIPT-F3-timeline-behavior.md](Docs/Reports/RECEIPT-F3-timeline-behavior.md) — Job F3: timeline lane menu rebuilt on presets, devagent dispatches gone, change prompt drawn on the span, file handoff ticks and lines — 2026-09-07
+- [static/js/widgets/arrange/](static/js/widgets/arrange/) — Job F4: the arrange widget, one file, plan read from and written to a doc generator project file — 2026-09-07
+- [Docs/Reports/RECEIPT-F4-arrange.md](Docs/Reports/RECEIPT-F4-arrange.md) — Job F4: arrange widget built, left drawer, node window, five notch kinds, message wire filled into shared/derived.js, mini nodes, loop glow, state motion, /api/fs/put added — 2026-09-07
+- [Docs/Reports/REVIEW-session-F-widgets.md](Docs/Reports/REVIEW-session-F-widgets.md) — session review: backend frames, four shared modules, timeline behavior, arrange widget built — F2 and F4 over their token caps — 2026-09-07

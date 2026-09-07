@@ -6,6 +6,7 @@ import json
 import os
 import pty
 import queue
+import shutil
 import signal
 import subprocess
 import termios
@@ -99,12 +100,12 @@ def set_roster_listener(fn):
     _roster_listener = fn
 
 
-def _fire_roster():
+def _fire_roster(environment):
     fn = _roster_listener
-    if fn is None:
+    if fn is None or environment is None:
         return
     try:
-        fn()
+        fn(environment)
     except Exception as e:
         print(f"[tracks._fire_roster] listener failed: {e}")
 
@@ -159,8 +160,8 @@ class MirrorView:
     def meters(self, d):
         self._tag("meters", {"d": d})
 
-    def term(self, data):
-        self._tag("term", {"data": data})
+    def term(self, data, shell="", region=""):
+        self._tag("term", {"data": data, "shell": shell})
 
     def status(self, phase):
         self._tag("status", {"phase": phase})
@@ -181,7 +182,7 @@ class MirrorView:
         self._tag("gatelog", {"records": records})
 
     def speak(self, text, *, engine="browser", voice=""):
-        return None
+        self._tag("speak", {"text": text, "engine": engine, "voice": voice})
 
     def _send(self, frame):
         self._tag("gate", {"frame": frame})
@@ -244,8 +245,8 @@ class TrackHub:
     def meters(self, d):
         self._fanout("meters", d)
 
-    def term(self, data):
-        self._fanout("term", data)
+    def term(self, data, shell="", region=""):
+        self._fanout("term", data, shell=shell, region=region or self.region_id or "")
 
     def status(self, phase):
         self._fanout("status", phase)
@@ -267,11 +268,24 @@ class TrackHub:
         gid = uuid.uuid4().hex[:8]
         with self._lock:
             self._pending_gate_id = gid
-        self._fanout("_send", {"type": "ask", "prompt": prompt, "id": gid})
-        answer = self._answer_queue.get()
+        self._fanout("_send", {"type": "ask", "prompt": prompt, "id": gid,
+                               "region": self.region_id or ""})
+        try:
+            answer = self._answer_queue.get(timeout=self._gate_wait_s())
+        except queue.Empty:
+            answer = ""
         with self._lock:
             self._pending_gate_id = None
         return answer
+
+    def _gate_wait_s(self):
+        reg = get_region(self.region_id) if self.region_id else None
+        sess = getattr(reg, "sess", None)
+        if sess is not None:
+            val = sess.settings.get("gate_wait_s")
+            if val is not None:
+                return val
+        return 150
 
     def resolve_gate(self, gid, text):
         with self._lock:
@@ -305,6 +319,8 @@ class Track:
         self.root    = root
         self.order   = order
         self.created = created or _now_iso()
+        # owning environment, set by the caller that registers this track
+        self.environment   = None
 
     def index_entry(self):
         return {
@@ -362,6 +378,8 @@ class Region:
         self.hub    = hub or TrackHub(region_id)
         self.track  = track
         self.node_id = node_id
+        # owning environment, set by the caller that registers this region
+        self.environment  = None
         self.carried = _carried(carried)
         self.muted = False
 
@@ -395,7 +413,8 @@ class Region:
         self._closed       = False
         self._reset_armed  = False
 
-        self._shell      = {"master": None, "proc": None}
+        # one PTY per shell key; "" is the region's unkeyed shell
+        self._shells     = {}
         self._shell_lock = threading.Lock()
 
         self.created   = self.sess.created
@@ -412,10 +431,12 @@ class Region:
         finally:
             rt._track_root.reset(token)
 
-    def shell_master(self):
+    def shell_master(self, key=""):
+        key = key or ""
         with self._shell_lock:
-            if self._shell["master"] is not None:
-                return self._shell["master"]
+            rec = self._shells.get(key)
+            if rec is not None and rec["master"] is not None:
+                return rec["master"]
 
             master, slave = pty.openpty()
             shell = os.environ.get("SHELL", "/bin/bash")
@@ -427,9 +448,9 @@ class Region:
 
             shell_cwd, root_note = rt.usable_root(self.root or rt.WORKSPACE_ROOT)
             if root_note:
-                self.hub.term(root_note + "\r\n")
+                self.hub.term(root_note + "\r\n", shell=key, region=self.id)
 
-            self._shell["proc"] = subprocess.Popen(
+            proc = subprocess.Popen(
                 [shell, "-i"],
                 stdin=slave, stdout=slave, stderr=slave,
                 cwd=shell_cwd,
@@ -438,7 +459,7 @@ class Region:
                 close_fds=True,
             )
             os.close(slave)
-            self._shell["master"] = master
+            self._shells[key] = {"master": master, "proc": proc}
 
             def _pump():
                 while True:
@@ -448,25 +469,33 @@ class Region:
                         break
                     if not data:
                         break
-                    self.hub.term(data.decode("utf-8", errors="replace"))
+                    self.hub.term(data.decode("utf-8", errors="replace"),
+                                  shell=key, region=self.id)
 
             threading.Thread(target=_pump, daemon=True).start()
-            return self._shell["master"]
+            return master
 
-    def close_shell(self):
+    # key None closes every shell on this region; a key closes that one
+    def close_shell(self, key=None):
         with self._shell_lock:
-            proc, master = self._shell["proc"], self._shell["master"]
-            self._shell = {"master": None, "proc": None}
-        if proc is not None:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except Exception:
-                pass
-        if master is not None:
-            try:
-                os.close(master)
-            except Exception:
-                pass
+            if key is None:
+                doomed = list(self._shells.values())
+                self._shells = {}
+            else:
+                rec = self._shells.pop(key or "", None)
+                doomed = [rec] if rec is not None else []
+        for rec in doomed:
+            proc, master = rec["proc"], rec["master"]
+            if proc is not None:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except Exception:
+                    pass
+            if master is not None:
+                try:
+                    os.close(master)
+                except Exception:
+                    pass
 
     def index_entry(self):
         return {
@@ -551,7 +580,8 @@ class Region:
                 f"{sender_display} alone — say which you are doing.]\n")
 
     def drain_messages(self):
-        pairs = waypoint.collect(self.id)
+        store = self.environment.waypoint if self.environment is not None else waypoint.default
+        pairs = store.collect(self.id)
         if not pairs:
             return 0
         displays = [display_name(pair["line"]["from"]) for pair in pairs]
@@ -609,11 +639,23 @@ class Region:
         return t == "setting" and item.get("key") in ("preset_name",
                                                       "reset_on_change")
 
+    def prompts_on_change(self, items):
+        # reset-on-change off, and at least one edit that touches model context
+        if self.sess.settings.get("reset_on_change"):
+            return False
+        return any(not self._in_place_only(i) for i in items)
+
     def apply_edits(self, items):
         if self.sess.settings.get("reset_on_change") and \
                 any(not self._in_place_only(i) for i in items):
             self._reset_with(items)
             return
+        self.apply_in_place(items)
+
+    def apply_with_reset(self, items):
+        self._reset_with(items)
+
+    def apply_in_place(self, items):
         with self._inbox_lock:
             if self._pumping:
                 held = []
@@ -747,7 +789,8 @@ class Region:
         for m in self.sess.messages:
             if "_turn" not in m:
                 m["_turn"] = self._turn_ordinal
-        autosave()
+        if self.environment is not None:
+            autosave(self.environment)
         self._check_context_cap(rec)
         return rec
 
@@ -802,7 +845,8 @@ class Region:
                         self._pumping = False
                     return
                 with self._inbox_lock:
-                    if not self.inbox and not waypoint.has_mail(self.id):
+                    store = self.environment.waypoint if self.environment is not None else waypoint.default
+                    if not self.inbox and not store.has_mail(self.id):
                         self._pumping = False
                         return
         except BaseException:
@@ -842,14 +886,164 @@ class Region:
         self.close_shell()
 
 
-_regions     = {}
-_tracks      = {}
-_tracks_lock = threading.Lock()
-_closed_rows = []
+class Environment:
+    # one session: its regions, tracks, closed rows, session record, stores
 
-_session = {"id": None, "name": None, "saved": False, "created": None,
-            "plan": None}
-_session_lock = threading.Lock()
+    def __init__(self, sid=None, name=None, saved=False, created=None,
+                 plan=None):
+        self.regions      = {}
+        self.tracks       = {}
+        self.closed_rows  = []
+        self.tracks_lock  = threading.Lock()
+        self.session      = {"id": sid, "name": name, "saved": saved,
+                             "created": created, "plan": plan, "saved_ts": None}
+        self.session_lock = threading.Lock()
+        self.archive_lock = threading.Lock()
+        # session tier root; seeded from the global, may diverge per session
+        self.root          = rt.WORKSPACE_ROOT
+        self.log_dir       = None
+        self.waypoint_path = waypoint.WAYPOINT_PATH
+        self.waypoint      = waypoint.default
+        self.floor_ms      = _now_ms()
+        # set by save_on_shutdown, cleared by the next ordinary save
+        self.shutdown      = False
+        # false for a environment registered from an archive at boot
+        self.hydrated      = True
+        # track count carried from an archive that has not been hydrated
+        self.archived_tracks = 0
+        # sockets bound to this environment; maintained by ade.frames
+        self.windows = 0
+        # session tier: unset keys inherit global, seeded at creation
+        self.settings = settings_table.session_defaults()
+
+    def sid(self):
+        with self.session_lock:
+            return self.session["id"]
+
+    def _point_stores_at(self, sid):
+        # log directory and this environment's own waypoint store
+        if sid is None:
+            self.log_dir       = None
+            self.waypoint_path = waypoint.WAYPOINT_PATH
+            self.waypoint      = waypoint.default
+        else:
+            d = session_dir(sid)
+            os.makedirs(d, exist_ok=True)
+            self.log_dir       = d
+            self.waypoint_path = os.path.join(d, "waypoint.jsonl")
+            self.waypoint      = waypoint.new_store(self.waypoint_path)
+
+    def halt(self):
+        for old in list(self.regions.values()):
+            with old._inbox_lock:
+                old._closed = True
+                old.inbox.clear()
+            old.hub.stop_requested.set()
+            old.hub.resolve_gate(None, "n")
+            old.close_shell()
+
+    def row(self):
+        with self.session_lock:
+            rec = dict(self.session)
+        return {
+            "id":       rec["id"],
+            "name":     rec["name"],
+            "saved":    bool(rec["saved"]),
+            "saved_ts": rec.get("saved_ts"),
+            "created":  rec["created"],
+            "tracks":  (len(self.tracks) if self.hydrated
+                        else self.archived_tracks),
+            "windows": self.windows,
+        }
+
+    def save_on_shutdown(self):
+        # writes the archive whether or not this environment was ever saved
+        with self.session_lock:
+            sid = self.session["id"]
+            if sid is None:
+                return None
+            name, created = self.session["name"], self.session["created"]
+            saved = self.session["saved"]
+        self.shutdown = True
+        _write_archive(self, sid, name, created, saved=saved, shutdown=True)
+        return session_dir(sid)
+
+
+_environments      = {}
+_environments_lock = threading.Lock()
+
+
+def register_environment(environment):
+    sid = environment.sid()
+    if sid is None:
+        return environment
+    with _environments_lock:
+        _environments[sid] = environment
+    return environment
+
+
+def unregister_environment(sid):
+    with _environments_lock:
+        return _environments.pop(sid, None)
+
+
+def get_environment(sid):
+    with _environments_lock:
+        return _environments.get(sid)
+
+
+def list_environments():
+    with _environments_lock:
+        return list(_environments.values())
+
+
+def environment_rows():
+    rows = [w.row() for w in list_environments()]
+    rows.sort(key=lambda r: r["created"] or "")
+    return rows
+
+
+def environment_of_region(region_id):
+    for w in list_environments():
+        with w.tracks_lock:
+            if region_id in w.regions:
+                return w
+    return None
+
+
+def _region_log_dir(region_id):
+    # ledger's directory resolver hook: region id to its environment's log_dir
+    w = environment_of_region(region_id)
+    return w.log_dir if w is not None else None
+
+
+ledger.set_log_dir_resolver(_region_log_dir)
+
+
+def list_regions(log_dir):
+    # region ids of the environment that owns this log_dir
+    for w in list_environments():
+        if w.log_dir == log_dir:
+            with w.tracks_lock:
+                return list(w.regions)
+    return []
+
+
+def environment_of_track(track_id):
+    for w in list_environments():
+        with w.tracks_lock:
+            if track_id in w.tracks:
+                return w
+    return None
+
+
+def _environment_waypoint(ident):
+    # lets out-of-lane callers land on the right environment's waypoint file
+    environment = environment_of_region(ident)
+    return environment.waypoint if environment is not None else None
+
+
+waypoint.set_store_resolver(_environment_waypoint)
 
 
 def default_overlay_rows():
@@ -886,44 +1080,37 @@ def gate_edge_list():
             for r in default_overlay_rows()]
 
 
-def _point_stores_at(sid):
-    if sid is None:
-        ledger.set_ade_log_dir(None)
-        waypoint.repoint(waypoint.WAYPOINT_PATH)
-    else:
-        d = session_dir(sid)
-        os.makedirs(d, exist_ok=True)
-        ledger.set_ade_log_dir(d)
-        waypoint.repoint(os.path.join(d, "waypoint.jsonl"))
-
-
-def _ensure_session():
-    with _session_lock:
-        is_new_session = _session["id"] is None
+def _ensure_session(environment):
+    with environment.session_lock:
+        is_new_session = environment.session["id"] is None
         if is_new_session:
-            _session["id"]      = uuid.uuid4().hex[:12]
-            _session["created"] = _now_iso()
-        sid = _session["id"]
+            environment.session["id"]      = uuid.uuid4().hex[:12]
+            environment.session["created"] = _now_iso()
+        sid = environment.session["id"]
     if is_new_session:
-        _point_stores_at(sid)
-        _move_floor(_now_ms())
+        environment._point_stores_at(sid)
+        _move_floor(_now_ms(), environment)
+        register_environment(environment)
     return sid
 
 
 def create_track(name, root=None, overlay_rows=None, provider=None,
                  loop_class=None, mechanism=None,
-                 model=None, seat=None, settings=None, region=None):
-    _ensure_session()
-    with _tracks_lock:
-        order = len(_tracks)
-    track = Track(uuid.uuid4().hex[:12], name, root=root, order=order)
-    with _tracks_lock:
-        _tracks[track.id] = track
+                 model=None, seat=None, settings=None, region=None,
+                 *, environment):
+    _ensure_session(environment)
+    with environment.tracks_lock:
+        order = len(environment.tracks)
+    track = Track(uuid.uuid4().hex[:12], name, root=root or environment.root,
+                 order=order)
+    track.environment = environment
+    with environment.tracks_lock:
+        environment.tracks[track.id] = track
     if model is not None or seat is not None or settings is not None or region:
         insert_region(track.id, name, model or "", root=root, seat=seat,
                       overlay_rows=overlay_rows, settings=settings,
                       provider=provider, loop_class=loop_class,
-                      mechanism=mechanism, region=region)
+                      mechanism=mechanism, region=region, environment=environment)
     return track
 
 
@@ -934,15 +1121,15 @@ def _split_stamp(nm):
     return nm, 1
 
 
-def _stamp_name(name):
+def _stamp_name(name, environment):
     typed = (name or "").strip()
     base, _ = _split_stamp(typed)
     if not base:
         return name
     highest = 0
-    with _tracks_lock:
-        used = [r.name for r in _regions.values()]
-        used += [row.get("name") or "" for row in _closed_rows]
+    with environment.tracks_lock:
+        used = [r.name for r in environment.regions.values()]
+        used += [row.get("name") or "" for row in environment.closed_rows]
     for other in used:
         ob, on = _split_stamp((other or "").strip())
         if ob == base and on > highest:
@@ -952,36 +1139,37 @@ def _stamp_name(name):
 
 def insert_region(track_id, name, model, root=None, seat=None,
                   overlay_rows=None, settings=None, provider=None,
-                  loop_class=None, mechanism=None, region=None):
-    _ensure_session()
-    with _tracks_lock:
-        track = _tracks.get(track_id)
+                  loop_class=None, mechanism=None, region=None, *, environment):
+    _ensure_session(environment)
+    with environment.tracks_lock:
+        track = environment.tracks.get(track_id)
     if track is None:
         return None
-    use_root = root or track.root or rt.WORKSPACE_ROOT
+    use_root = root or track.root or environment.root
     gates = overlay_rows if isinstance(overlay_rows, list) else default_overlay_rows()
-    name = _stamp_name(name)
+    name = _stamp_name(name, environment)
     reg = Region(uuid.uuid4().hex[:12], name, model, use_root,
                  seat=seat, overlay_rows=gates,
                  provider=provider, loop_class=loop_class,
                  mechanism=mechanism, track=track.id,
                  carried=(region or {}))
+    reg.environment = environment
     for key, val in (settings or {}).items():
         reg._apply_edit({"type": "setting", "key": key, "value": val})
-    with _tracks_lock:
-        _regions[reg.id] = reg
+    with environment.tracks_lock:
+        environment.regions[reg.id] = reg
         if reg.id not in track.regions:
             track.regions.append(reg.id)
-    _announce_new_track(reg)
+    _announce_new_track(reg, environment)
     return reg
 
 
-def _announce_new_track(track):
-    others = [t.id for t in list_regions() if t.id != track.id]
+def _announce_new_track(track, environment):
+    others = [t.id for t in list_regions(environment) if t.id != track.id]
     if not others:
         return
     try:
-        waypoint.append_message(
+        environment.waypoint.append_message(
             SYSTEM_SENDER, others,
             f"A new agent joined the room: {track.name} (id: {track.id}, "
             f"seat: {track.seat or 'no seat'}, model: {track.model}). "
@@ -991,44 +1179,43 @@ def _announce_new_track(track):
         pass
 
 
-_session_floor_ms = _now_ms()
+def session_started_ms(environment):
+    return environment.floor_ms
 
 
-def session_started_ms():
-    return _session_floor_ms
+def _move_floor(ms, environment):
+    environment.floor_ms = ms
 
 
-def _move_floor(ms):
-    global _session_floor_ms
-    _session_floor_ms = ms
+def session_meta(environment):
+    with environment.session_lock:
+        return {"id": environment.session["id"], "name": environment.session["name"],
+                "saved": environment.session["saved"], "plan": environment.session["plan"]}
 
 
-def session_meta():
-    with _session_lock:
-        return {"id": _session["id"], "name": _session["name"],
-                "saved": _session["saved"], "plan": _session["plan"]}
-
-
-def set_plan(plan):
+def set_plan(plan, environment):
     if plan is None:
         return
-    with _session_lock:
-        _session["plan"] = plan
+    with environment.session_lock:
+        environment.session["plan"] = plan
 
 
-def session_plan():
-    with _session_lock:
-        return _session["plan"]
+def session_plan(environment):
+    with environment.session_lock:
+        return environment.session["plan"]
 
 
 def _initiate_cable_walk(region_id):
-    with _tracks_lock:
-        caller = _regions.get(region_id)
+    environment = environment_of_region(region_id)
+    if environment is None:
+        return []
+    with environment.tracks_lock:
+        caller = environment.regions.get(region_id)
         node_id = caller.node_id if caller is not None else None
     if not node_id:
         return []
-    with _session_lock:
-        plan = _session["plan"]
+    with environment.session_lock:
+        plan = environment.session["plan"]
     if not isinstance(plan, dict):
         return []
     phases = [p for p in (plan.get("phases") or []) if isinstance(p, dict)]
@@ -1054,10 +1241,12 @@ def _initiate_cable_walk(region_id):
     return out
 
 
-def _initiate_by_node():
-    with _tracks_lock:
+def _initiate_by_node(environment):
+    if environment is None:
+        return {}
+    with environment.tracks_lock:
         by_node = {}
-        for reg in _regions.values():
+        for reg in environment.regions.values():
             if reg.node_id and reg.node_id not in by_node:
                 by_node[reg.node_id] = reg
         return by_node
@@ -1070,12 +1259,12 @@ def initiate_targets(region_id):
             wanted.append(target)
     if not wanted:
         return []
-    by_node = _initiate_by_node()
+    by_node = _initiate_by_node(environment_of_region(region_id))
     return [by_node[n] for n in wanted if n in by_node]
 
 
 def initiate_deliveries(region_id):
-    by_node = _initiate_by_node()
+    by_node = _initiate_by_node(environment_of_region(region_id))
     out = []
     for target, content in _initiate_cable_walk(region_id):
         if not isinstance(content, str) or not content:
@@ -1087,8 +1276,13 @@ def initiate_deliveries(region_id):
 
 
 def get_region(region_id):
-    with _tracks_lock:
-        return _regions.get(region_id)
+    # region ids are unique across environments
+    for w in list_environments():
+        with w.tracks_lock:
+            reg = w.regions.get(region_id)
+        if reg is not None:
+            return reg
+    return None
 
 
 def display_name(ident):
@@ -1100,39 +1294,53 @@ def display_name(ident):
     return reg.name if reg is not None else ident
 
 
-def list_regions():
-    with _tracks_lock:
-        return list(_regions.values())
+def list_regions(environment):
+    with environment.tracks_lock:
+        return list(environment.regions.values())
 
 
 def get_track(track_id):
-    with _tracks_lock:
-        return _tracks.get(track_id)
+    # track ids are unique across environments
+    for w in list_environments():
+        with w.tracks_lock:
+            track = w.tracks.get(track_id)
+        if track is not None:
+            return track
+    return None
 
 
-def list_tracks():
-    with _tracks_lock:
-        return list(_tracks.values())
+def list_tracks(environment):
+    with environment.tracks_lock:
+        return list(environment.tracks.values())
 
 
 def track_of(region_id):
-    with _tracks_lock:
-        reg = _regions.get(region_id)
-        return _tracks.get(reg.track) if reg is not None else None
+    environment = environment_of_region(region_id)
+    if environment is None:
+        return None
+    with environment.tracks_lock:
+        reg = environment.regions.get(region_id)
+        return environment.tracks.get(reg.track) if reg is not None else None
 
 
 def regions_of(track_id):
-    with _tracks_lock:
-        track = _tracks.get(track_id)
+    environment = environment_of_track(track_id)
+    if environment is None:
+        return []
+    with environment.tracks_lock:
+        track = environment.tracks.get(track_id)
         if track is None:
             return []
-        return [_regions[rid] for rid in track.regions if rid in _regions]
+        return [environment.regions[rid] for rid in track.regions
+                if rid in environment.regions]
 
 
-def _live_peers():
+def _live_peers(environment):
+    if environment is None:
+        return []
     return ([{"id": HUMAN_SENDER, "name": "Brandon", "seat": "the human"}] +
             [{"id": t.id, "name": t.name, "seat": t.seat}
-             for t in list_regions() if not t.muted])
+             for t in list_regions(environment) if not t.muted])
 
 
 def set_muted(region_id, muted):
@@ -1143,40 +1351,47 @@ def set_muted(region_id, muted):
     if reg.muted == muted:
         return reg
     reg.muted = muted
-    others = [t.id for t in list_regions() if t.id != reg.id and not t.muted]
+    others = [t.id for t in list_regions(reg.environment)
+              if t.id != reg.id and not t.muted]
     if others:
         word = "is no longer available" if muted else "is now available"
         try:
-            waypoint.append_message(
+            reg.environment.waypoint.append_message(
                 SYSTEM_SENDER, others, f"{reg.name or reg.id} {word}.", wake=False)
         except Exception:
             pass
-    _fire_roster()
+    _fire_roster(reg.environment)
     return reg
 
 
-def closed_rows():
-    with _tracks_lock:
-        return [dict(r) for r in _closed_rows]
+def closed_rows(environment):
+    with environment.tracks_lock:
+        return [dict(r) for r in environment.closed_rows]
 
 
 def remove_region(region_id):
-    with _tracks_lock:
-        reg = _regions.pop(region_id, None)
+    environment = environment_of_region(region_id)
+    if environment is None:
+        return None
+    with environment.tracks_lock:
+        reg = environment.regions.pop(region_id, None)
         if reg is not None:
-            track = _tracks.get(reg.track)
+            track = environment.tracks.get(reg.track)
             if track is not None and region_id in track.regions:
                 track.regions.remove(region_id)
         return reg
 
 
 def remove_track(track_id):
-    with _tracks_lock:
-        track = _tracks.pop(track_id, None)
+    environment = environment_of_track(track_id)
+    if environment is None:
+        return None
+    with environment.tracks_lock:
+        track = environment.tracks.pop(track_id, None)
         if track is None:
             return None
         for rid in list(track.regions):
-            _regions.pop(rid, None)
+            environment.regions.pop(rid, None)
         return track
 
 
@@ -1191,9 +1406,9 @@ def stop_region(region_id):
     return True
 
 
-def stop_all_regions():
+def stop_all_regions(environment):
     n = 0
-    for region in list_regions():
+    for region in list_regions(environment):
         try:
             if stop_region(region.id):
                 n += 1
@@ -1206,6 +1421,9 @@ def close_region(region_id):
     region = get_region(region_id)
     if region is None:
         return None
+    environment = region.environment
+    if environment is None:
+        return None
     with region._inbox_lock:
         region._closed = True
         region.inbox.clear()
@@ -1214,12 +1432,12 @@ def close_region(region_id):
     region.close()
     if al.router is not None:
         al.router.claude_close_track(region_id)
-    autosave()
+    autosave(environment)
     removed = remove_region(region_id)
     if removed is not None:
-        with _tracks_lock:
-            _closed_rows.append(removed.index_entry())
-    dropped = waypoint.dead_letter_all(region_id)
+        with environment.tracks_lock:
+            environment.closed_rows.append(removed.index_entry())
+    dropped = environment.waypoint.dead_letter_all(region_id)
     if dropped:
         name = removed.name if removed is not None else region_id
         by_sender = {}
@@ -1228,7 +1446,7 @@ def close_region(region_id):
                 by_sender[d["from"]] = by_sender.get(d["from"], 0) + 1
         for sender_id, n in by_sender.items():
             try:
-                waypoint.append_message(
+                environment.waypoint.append_message(
                     SYSTEM_SENDER, [sender_id],
                     f"{n} message(s) you sent to {name} were NOT delivered — "
                     f"that region was closed before it read them. No reply is "
@@ -1241,16 +1459,19 @@ def close_region(region_id):
 
 
 def _archive_reset_transcript(region_id, reset_n):
-    with _session_lock:
-        if not _session["saved"]:
+    environment = environment_of_region(region_id)
+    if environment is None:
+        return None
+    with environment.session_lock:
+        if not environment.session["saved"]:
             return None
-        sid = _session["id"]
+        sid = environment.session["id"]
     src = os.path.join(session_dir(sid), f"{region_id}.jsonl")
     if not os.path.isfile(src):
         return None
     dst_name = f"{region_id}.reset-{reset_n}.jsonl"
     try:
-        with _archive_lock:
+        with environment.archive_lock:
             os.replace(src, os.path.join(session_dir(sid), dst_name))
         return dst_name
     except Exception as e:
@@ -1274,15 +1495,18 @@ def _rebuild_from_row(row, hub=None):
 
 def _do_reset(old, row):
     track_id = row.get("track")
+    environment = old.environment
+    if environment is None:
+        return None
 
-    with _tracks_lock:
-        track = _tracks.get(track_id)
+    with environment.tracks_lock:
+        track = environment.tracks.get(track_id)
         slot = track.regions.index(old.id) if (
             track is not None and old.id in track.regions) else None
-        if _regions.get(old.id) is not old:
+        if environment.regions.get(old.id) is not old:
             return None
 
-    dropped = waypoint.dead_letter_all(old.id)
+    dropped = environment.waypoint.dead_letter_all(old.id)
 
     close_region(old.id)
 
@@ -1291,15 +1515,20 @@ def _do_reset(old, row):
         seat=row.get("seat"), overlay_rows=row.get("overlay_rows"),
         settings=row.get("settings"), provider=row.get("provider"),
         loop_class=row.get("loop_class"), mechanism=row.get("mechanism"),
-        region={k: row.get(k) for k in CARRIED_FIELDS})
+        region={k: row.get(k) for k in CARRIED_FIELDS}, environment=environment)
     if fresh is None:
         return None
+
+    old_context = os.path.join(SUITE_ROOT, "injections", "region", f"{old.id}.md")
+    if os.path.isfile(old_context):
+        new_context = os.path.join(SUITE_ROOT, "injections", "region", f"{fresh.id}.md")
+        shutil.copyfile(old_context, new_context)
 
     fresh.node_id = row.get("node_id")
 
     if slot is not None:
-        with _tracks_lock:
-            track = _tracks.get(track_id)
+        with environment.tracks_lock:
+            track = environment.tracks.get(track_id)
             if track is not None and fresh.id in track.regions:
                 track.regions.remove(fresh.id)
                 track.regions.insert(min(slot, len(track.regions)), fresh.id)
@@ -1317,7 +1546,7 @@ def _do_reset(old, row):
                 by_sender[d["from"]] = by_sender.get(d["from"], 0) + 1
         for sender_id, n in by_sender.items():
             try:
-                waypoint.append_message(
+                environment.waypoint.append_message(
                     SYSTEM_SENDER, [sender_id],
                     f"{n} message(s) you sent to {fresh.name} were NOT delivered "
                     f"— that region was RESET before it read them, and a reset "
@@ -1330,8 +1559,8 @@ def _do_reset(old, row):
 
 
     _fire_replaced(old.id, fresh.id)
-    _fire_roster()
-    autosave()
+    _fire_roster(environment)
+    autosave(environment)
 
     
     if fresh.sess.settings.get("start_turn_on_reset", True):
@@ -1401,25 +1630,26 @@ def detach(region_id, webio):
         region.hub.remove(webio)
 
 
-_archive_lock = threading.Lock()
-
-
 def _final_flush(track):
     twin = get_region(track.id)
     if twin is not None and twin is not track:
         return
-    with _session_lock:
-        if not _session["saved"]:
+    environment = track.environment
+    if environment is None:
+        return
+    with environment.session_lock:
+        if not environment.session["saved"]:
             return
-        sid = _session["id"]
-    with _archive_lock:
+        sid = environment.session["id"]
+    with environment.archive_lock:
         track.flush(session_dir(sid))
 
 
 SESSION_KIND  = "ade-session"
 TEMPLATE_KIND = "ade-template"
+SESSION_TEMPLATE_KIND = "ade-session-template"
 
-ARCHIVE_SCHEMA = 5
+ARCHIVE_SCHEMA = 6
 
 
 def _is_closed(row):
@@ -1427,23 +1657,25 @@ def _is_closed(row):
                for e in row.get("lifecycle", []))
 
 
-def _write_archive(sid, name, created):
-    with _archive_lock:
+def _write_archive(environment, sid, name, created, saved=True, shutdown=False):
+    with environment.archive_lock:
         d = session_dir(sid)
         os.makedirs(d, exist_ok=True)
-        regions = list_regions()
-        tracks  = list_tracks()
-        with _tracks_lock:
-            dead_rows = [dict(r) for r in _closed_rows]
-        plan = session_plan()
+        regions = list_regions(environment)
+        tracks  = list_tracks(environment)
+        with environment.tracks_lock:
+            dead_rows = [dict(r) for r in environment.closed_rows]
+        plan = session_plan(environment)
         master = {
             "schema":  ARCHIVE_SCHEMA,
             "kind":    SESSION_KIND,
             "id":      sid,
             "name":    name,
             "created": created,
-            "workspace_root": rt.WORKSPACE_ROOT,
+            "workspace_root": environment.root or rt.WORKSPACE_ROOT,
             "saved_ts": int(datetime.datetime.now().timestamp() * 1000),
+            "saved":   bool(saved),
+            "shutdown": bool(shutdown),
             "tracks":  [t.index_entry() for t in tracks],
             "regions": [r.index_entry() for r in regions] + dead_rows,
             "plan":    plan,
@@ -1457,6 +1689,10 @@ def _write_archive(sid, name, created):
 def _read_master(mpath):
     with open(mpath) as fh:
         master = json.load(fh)
+    if master.get("schema", 1) < 6:
+        # schema 6 added the shutdown flag and the saved flag
+        master.setdefault("shutdown", False)
+        master.setdefault("saved", True)
     if master.get("schema", 1) < 2 and "regions" not in master:
         rows, tracks, regions = master.get("tracks", []), [], []
         for row in rows:
@@ -1476,38 +1712,61 @@ def _read_master(mpath):
         master["tracks"]  = tracks
         master["regions"] = regions
     master.setdefault("plan", None)
+    master.setdefault("shutdown", False)
+    master.setdefault("saved", True)
     master["schema"] = ARCHIVE_SCHEMA
     return master
 
 
-def save_session(name):
-    with _session_lock:
-        if _session["id"] is None:
+def save_session(name, environment):
+    with environment.session_lock:
+        if environment.session["id"] is None:
             return None
-        _session["name"]  = name
-        _session["saved"] = True
-        sid, created = _session["id"], _session["created"]
-    _write_archive(sid, name, created)
+        environment.session["name"]     = name
+        environment.session["saved"]    = True
+        environment.session["saved_ts"] = _now_ms()
+        sid, created = environment.session["id"], environment.session["created"]
+    environment.shutdown = False
+    _write_archive(environment, sid, name, created)
     return session_dir(sid)
 
 
-def autosave():
-    with _session_lock:
-        if not _session["saved"]:
+def autosave(environment):
+    with environment.session_lock:
+        if not environment.session["saved"]:
             return
-        sid, name, created = _session["id"], _session["name"], _session["created"]
-    _write_archive(sid, name, created)
+        sid    = environment.session["id"]
+        name   = environment.session["name"]
+        created = environment.session["created"]
+        environment.session["saved_ts"] = _now_ms()
+    environment.shutdown = False
+    _write_archive(environment, sid, name, created)
+    write_session_settings(environment)
+
+
+def write_session_settings(environment):
+    # the session settings bag, beside the session record — one function,
+    # called by autosave and by the session-settings write route
+    with environment.session_lock:
+        sid = environment.session["id"]
+        bag = dict(environment.settings)
+    if sid is None:
+        return
+    with environment.archive_lock:
+        spath = os.path.join(session_dir(sid), "settings.json")
+        with open(spath, "w") as fh:
+            json.dump(bag, fh, indent=2)
 
 
 TEMPLATE_BLANKED = ("status", "stxt")
 
 
-def save_template(name):
-    with _session_lock:
-        if _session["id"] is None:
+def save_template(name, environment):
+    with environment.session_lock:
+        if environment.session["id"] is None:
             return None
-    regions, tracks = list_regions(), list_tracks()
-    plan    = session_plan()
+    regions, tracks = list_regions(environment), list_tracks(environment)
+    plan    = session_plan(environment)
     tid     = uuid.uuid4().hex[:12]
     created = _now_iso()
 
@@ -1540,11 +1799,71 @@ def save_template(name):
         "plan":     plan,
     }
     d = session_dir(tid)
-    with _archive_lock:
+    with environment.archive_lock:
         os.makedirs(d, exist_ok=True)
         with open(os.path.join(d, "master.json"), "w") as fh:
             json.dump(master, fh, indent=2)
     return d
+
+
+def save_session_template(name, environment):
+    # tracks and a plan slot, no region data
+    with environment.session_lock:
+        if environment.session["id"] is None:
+            return None
+    tid     = uuid.uuid4().hex[:12]
+    created = _now_iso()
+
+    track_rows = []
+    for t in list_tracks(environment):
+        row = t.index_entry()
+        row["regions"] = []
+        track_rows.append(row)
+
+    master = {
+        "schema":   ARCHIVE_SCHEMA,
+        "kind":     SESSION_TEMPLATE_KIND,
+        "id":       tid,
+        "name":     name,
+        "created":  created,
+        "saved_ts": _now_ms(),
+        "tracks":   track_rows,
+        "regions":  [],
+        "plan":     None,
+    }
+    d = session_dir(tid)
+    with environment.archive_lock:
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "master.json"), "w") as fh:
+            json.dump(master, fh, indent=2)
+    return d
+
+
+def list_session_templates():
+    d = archives_dir()
+    out = []
+    if not os.path.isdir(d):
+        return out
+    for entry in sorted(os.listdir(d)):
+        mpath = os.path.join(d, entry, "master.json")
+        if not os.path.isfile(mpath):
+            continue
+        try:
+            with open(mpath) as fh:
+                master = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        if master.get("kind") != SESSION_TEMPLATE_KIND:
+            continue
+        out.append({
+            "id":      master.get("id", ""),
+            "name":    master.get("name", ""),
+            "created": master.get("created", ""),
+            "saved":   master.get("saved_ts", 0),
+            "tracks":  len(master.get("tracks", [])),
+        })
+    out.sort(key=lambda x: x["saved"], reverse=True)
+    return out
 
 
 def _hydrate_region(track, sdir):
@@ -1565,17 +1884,11 @@ def _hydrate_region(track, sdir):
     track.sess.save_name = track.id
 
 
-def _halt_live_world():
-    for old in list_regions():
-        with old._inbox_lock:
-            old._closed = True
-            old.inbox.clear()
-        old.hub.stop_requested.set()
-        old.hub.resolve_gate(None, "n")
-        old.close_shell()
+def _halt_live_environment(environment):
+    environment.halt()
 
 
-def _world_from_master(master, hydrate_dir):
+def _environment_from_master(master, hydrate_dir):
     fresh_tracks = [Track(row["id"], row.get("name"),
                           regions=row.get("regions") or [],
                           root=row.get("root"),
@@ -1625,31 +1938,62 @@ def _world_from_master(master, hydrate_dir):
     return fresh_tracks, fresh, dead
 
 
+def _fill_environment(environment, master, fresh_tracks, fresh, closed, sid, name, saved,
+                created):
+    for t in fresh:
+        t.environment = environment
+    for tr in fresh_tracks:
+        tr.environment = environment
+    with environment.session_lock:
+        with environment.tracks_lock:
+            environment.regions.clear()
+            environment.regions.update({t.id: t for t in fresh})
+            environment.tracks.clear()
+            environment.tracks.update({tr.id: tr for tr in fresh_tracks})
+            environment.closed_rows[:] = closed
+        environment.session.update({"id": sid, "name": name, "saved": saved,
+                              "created": created,
+                              "saved_ts": master.get("saved_ts"),
+                              "plan": master.get("plan")})
+    environment.hydrated = True
+    environment.shutdown = False
+    return environment
+
+
 def reload_session(sid):
     mpath = os.path.join(session_dir(sid), "master.json")
     if not os.path.isfile(mpath):
         return None
     master = _read_master(mpath)
-    if master.get("kind") == TEMPLATE_KIND:
+    if master.get("kind") in (TEMPLATE_KIND, SESSION_TEMPLATE_KIND):
         return None
-    _halt_live_world()
-    saved_root = master.get("workspace_root")
-    if saved_root and saved_root != rt.WORKSPACE_ROOT:
-        al.set_and_persist_root(saved_root)
-    fresh_tracks, fresh, dead = _world_from_master(master, session_dir(sid))
-    with _session_lock:
-        with _tracks_lock:
-            _regions.clear()
-            _regions.update({t.id: t for t in fresh})
-            _tracks.clear()
-            _tracks.update({tr.id: tr for tr in fresh_tracks})
-            _closed_rows[:] = dead
-        _session.update({"id": master["id"], "name": master.get("name"),
-                         "saved": True, "created": master.get("created"),
-                         "plan": master.get("plan")})
-    _point_stores_at(master["id"])
-    _move_floor(0)
-    return list_regions()
+    live = get_environment(master["id"])
+    if live is not None and live.hydrated:
+        return live
+    saved_root = master.get("workspace_root") or rt.WORKSPACE_ROOT
+    fresh_tracks, fresh, closed = _environment_from_master(master, session_dir(sid))
+    environment = live if live is not None else Environment()
+    environment.root = saved_root
+    _fill_environment(environment, master, fresh_tracks, fresh, closed, master["id"],
+                master.get("name"), bool(master.get("saved", True)),
+                master.get("created"))
+    # a session archived before the settings bag existed has no file here;
+    # environment.settings then stays as seeded at construction, all
+    # unset, which inherits global the same as a brand new session
+    spath = os.path.join(session_dir(sid), "settings.json")
+    if os.path.isfile(spath):
+        try:
+            with open(spath) as fh:
+                bag = json.load(fh)
+        except (OSError, ValueError):
+            bag = None
+        if isinstance(bag, dict):
+            with environment.session_lock:
+                environment.settings.update(bag)
+    environment._point_stores_at(master["id"])
+    _move_floor(0, environment)
+    register_environment(environment)
+    return environment
 
 
 def instantiate_template(tid):
@@ -1657,28 +2001,22 @@ def instantiate_template(tid):
     if not os.path.isfile(mpath):
         return None
     master = _read_master(mpath)
-    if master.get("kind") != TEMPLATE_KIND:
+    if master.get("kind") not in (TEMPLATE_KIND, SESSION_TEMPLATE_KIND):
         return None
-    _halt_live_world()
-    fresh_tracks, fresh, dead = _world_from_master(master, None)
+    fresh_tracks, fresh, closed = _environment_from_master(master, None)
     sid, created = uuid.uuid4().hex[:12], _now_iso()
-    with _session_lock:
-        with _tracks_lock:
-            _regions.clear()
-            _regions.update({t.id: t for t in fresh})
-            _tracks.clear()
-            _tracks.update({tr.id: tr for tr in fresh_tracks})
-            _closed_rows[:] = dead
-        _session.update({"id": sid, "name": None, "saved": False,
-                         "created": created, "plan": master.get("plan")})
-    _point_stores_at(sid)
-    _move_floor(_now_ms())
-    return list_regions()
+    environment = Environment()
+    _fill_environment(environment, master, fresh_tracks, fresh, closed, sid, None, False,
+                created)
+    environment._point_stores_at(sid)
+    _move_floor(_now_ms(), environment)
+    register_environment(environment)
+    return environment
 
 
-def _reset_to_scratch():
-    autosave()
-    for old in list_regions():
+def _reset_to_scratch(environment):
+    autosave(environment)
+    for old in list_regions(environment):
         with old._inbox_lock:
             old._closed = True
             old.inbox.clear()
@@ -1686,36 +2024,105 @@ def _reset_to_scratch():
         old.hub.resolve_gate(None, "n")
         old.close_shell()
         dq.terminate_session(old.sess.sid)
-    with _session_lock:
-        with _tracks_lock:
-            _regions.clear()
-            _tracks.clear()
-            _closed_rows[:] = []
-        _session.update({"id": None, "name": None, "saved": False,
-                         "created": None, "plan": None})
-    _point_stores_at(None)
-    _move_floor(_now_ms())
-    return list_regions()
+    with environment.session_lock:
+        sid = environment.session["id"]
+        with environment.tracks_lock:
+            environment.regions.clear()
+            environment.tracks.clear()
+            environment.closed_rows[:] = []
+        environment.session.update({"id": None, "name": None, "saved": False,
+                              "created": None, "plan": None, "saved_ts": None})
+    if sid is not None:
+        unregister_environment(sid)
+    environment.shutdown = False
+    environment._point_stores_at(None)
+    _move_floor(_now_ms(), environment)
+    return list_regions(environment)
 
 
 def new_session():
-    return _reset_to_scratch()
+    # a blank environment alongside every environment already live
+    environment = Environment()
+    _ensure_session(environment)
+    return environment
 
 
-def end_session():
-    return _reset_to_scratch()
+def end_session(sid):
+    environment = get_environment(sid)
+    if environment is None:
+        return None
+    autosave(environment)
+    environment.halt()
+    for old in list_regions(environment):
+        dq.terminate_session(old.sess.sid)
+    live_sid = environment.sid()
+    if live_sid is not None:
+        unregister_environment(live_sid)
+    return environment
 
 
-def unsaved_summary():
-    with _session_lock:
-        if _session["id"] is None or _session["saved"]:
+def unsaved_summary(environment):
+    with environment.session_lock:
+        if environment.session["id"] is None or environment.session["saved"]:
             return None
-    regions = list_regions()
+        sid = environment.session["id"]
+    regions = list_regions(environment)
     if not regions:
         return None
-    return {"session_id": _session["id"],
+    return {"session_id": sid,
             "tracks": [{"id": t.id, "name": t.name} for t in regions]}
 
 
-def close():
-    autosave()
+def save_all_on_shutdown():
+    # every live environment writes its archive, saved before or not
+    out = []
+    for environment in list_environments():
+        try:
+            d = environment.save_on_shutdown()
+            if d:
+                out.append(environment.sid())
+        except Exception as e:
+            print(f"[tracks.save_all_on_shutdown] '{environment.sid()}': {e}")
+    return out
+
+
+def register_open_archives():
+    # environments that were open at the last shutdown, no windows, no connection
+    d = archives_dir()
+    found = []
+    if not os.path.isdir(d):
+        return found
+    for entry in sorted(os.listdir(d)):
+        mpath = os.path.join(d, entry, "master.json")
+        if not os.path.isfile(mpath):
+            continue
+        try:
+            with open(mpath) as fh:
+                master = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        if master.get("kind") != SESSION_KIND:
+            continue
+        if not master.get("shutdown"):
+            continue
+        sid = master.get("id") or entry
+        if get_environment(sid) is not None:
+            continue
+        environment = Environment(sid=sid, name=master.get("name"),
+                      saved=bool(master.get("saved", True)),
+                      created=master.get("created"),
+                      plan=master.get("plan"))
+        environment.root = master.get("workspace_root") or rt.WORKSPACE_ROOT
+        environment.shutdown = True
+        environment.hydrated = False
+        environment.archived_tracks = len(master.get("tracks", []))
+        environment.log_dir       = session_dir(sid)
+        environment.waypoint_path = os.path.join(session_dir(sid), "waypoint.jsonl")
+        environment.waypoint      = waypoint.new_store(environment.waypoint_path)
+        register_environment(environment)
+        found.append(sid)
+    return found
+
+
+def close(environment):
+    autosave(environment)

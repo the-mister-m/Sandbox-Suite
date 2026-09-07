@@ -1,0 +1,76 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Suite</title>
+<link rel="stylesheet" href="/static/css/skins/og.css">
+<link rel="stylesheet" href="/static/css/suite.css">
+
+<header class="suite-header">
+  <h1>Sandbox Suite</h1>
+  <nav class="suite-nav">
+    <button id="nav-suite-btn" class="active">Suite</button>
+    <button id="nav-library-btn" hidden>Library</button>
+  </nav>
+</header>
+
+<main id="view-suite" class="suite-view">
+
+  <section class="panel">
+    <h2>New / Open</h2>
+    <button id="new-session-btn" class="primary">New</button>
+    <button id="open-toggle-btn">Open</button>
+    <div id="open-list" hidden><ul id="open-list-body"></ul></div>
+  </section>
+
+  <section class="panel">
+    <h2>Open Sessions</h2>
+    <table class="rows">
+      <thead><tr><th>name</th><th>saved</th><th>tracks</th><th>windows</th><th></th></tr></thead>
+      <tbody id="open-sessions-body"></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Global Settings</h2>
+    <div id="global-form"></div>
+    <div class="modal-actions">
+      <button id="global-save-btn" class="primary">Save</button>
+      <button id="update-default-btn" disabled>Update Default</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- library hidden until it goes live -->
+<main id="view-library" class="suite-view" hidden>
+  <section class="panel">
+    <h2>Library</h2>
+    <div id="library-tabs" class="library-tabs"></div>
+    <div id="library-panels"></div>
+  </section>
+</main>
+
+<div id="end-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <p>End this session?</p>
+    <div class="modal-actions">
+      <button data-act="save">Save</button>
+      <button data-act="end">End</button>
+      <button data-act="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="update-default-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <p>Are you sure?</p>
+    <div class="modal-actions">
+      <button data-act="yes">Yes</button>
+      <button data-act="no">No</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/suite/api.js"></script>
+<script src="/static/js/suite/suite.js"></script>
+<script src="/static/js/suite/library.js"></script>
+<script src="/static/js/suite/main.js"></script>

@@ -11,9 +11,9 @@ def test_every_row_has_a_legal_tier_and_block():
         assert row.block in st.BLOCKS, row.key
 
 
-def test_reset_on_change_follows_provider_kind():
+def test_reset_on_change_defaults_on_for_every_provider_kind():
     assert st.region_defaults("cloud")["reset_on_change"] is True
-    assert st.region_defaults("local")["reset_on_change"] is False
+    assert st.region_defaults("local")["reset_on_change"] is True
 
 
 def test_preset_round_trip(tmp_path, monkeypatch):

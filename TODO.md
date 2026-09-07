@@ -2,3 +2,28 @@
 
 - Veto or confirm "closed" as the word for a retired region cache, before Agent A spawns. See [Docs/Specs/SPEC-A-foundation.md](Docs/Specs/SPEC-A-foundation.md) Part 4.
 - Spawn Agent A from [Docs/Handoffs/HANDOFF-phase1-session-agent.md](Docs/Handoffs/HANDOFF-phase1-session-agent.md).
+- Run [Docs/Reports/CHECKLIST-phase3-redpen.md](Docs/Reports/CHECKLIST-phase3-redpen.md) by hand after driving the matrix window.
+- Decide what a timeline lane draws when a track has more than one region.
+- Decide which Session corner button lives: the Phase 2 panel or the new rung.
+- Decide follow mode's home: an anchor chat mode or its own widget.
+- Dot and badge styles are missing on the matrix page for messenger and strip; matrix does not load ade.css.
+- New context file save resolves against the session root, not the project root; breaks only when the roots diverge.
+- Ask timeout returns empty text where the spec said the text queue; same result as no.
+- Decide picker column shape and claude_mode plus claude_partial on devagent, after driving.
+- Nothing committed; 124 changed paths on main.
+- Open the suite and try one edit round trip on timeline and devagent — first live check of F1 through F4.
+- Decide whether F2's overrun (261k tokens against a 180k cap) changes the cap or the spec size.
+- `/api/library/presets` returns `{"list": [...]}`; the F-series specs say `names`. Timeline's fetch reads both. Pick one and make the other match.
+- Arrange's node window subscribes to exactly five frames; `settings-rows.js` also reacts to `change_prompt`, `saved`, `out` — decide whether the subscribe list widens.
+- Decide whether arrange's live ghost nodes (unmatched server regions) come back, or authored nodes only.
+- Confirm `/api/fs/put` (new route, F4) as the write route the suite keeps, or fold it into `/api/fs/write`.
+- jobId wiring from the docset into the plan is a later spec.
+- Free PTYs with no region — named in chat, no code cause found this session.
+- "Devagent changes haphazardly" — named in chat, no code cause found, no symptom given.
+- Other widgets not audited for duplicate code, beyond what F2 moved out of devagent.
+- Timeline subway scope, later, reads derived.js from the arrange build.
+- Run Waves B and C from [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md), or reshape.
+- Decide the three systemic fixes as suite-wide calls or per widget: msg.rows versus msg.tracks, .mx-host flex, ade.css rules matrix.html never loads. See the four specs in [Docs/Reports/phase3-test/](Docs/Reports/phase3-test/).
+- Decide whether the old queue controls (awaiting-me filter, edit, delete, hold-to-fire) are the missing new queue. D6 never asked for them.
+- Register haiku or gemma4:e4B and drive a session before any live send test; both absent from the models registry.
+- Design fix jobs from Brandon's notes plus the specs. Not started.

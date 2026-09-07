@@ -1,0 +1,7 @@
+[
+  { "id": "ollama", "label": "Ollama", "kind": "local" },
+  { "id": "gemini", "label": "Gemini", "kind": "cloud" },
+  { "id": "claude", "label": "Claude", "kind": "cloud" },
+  { "id": "cloud",  "label": "Cloud",  "kind": "slot" },
+  { "id": "docker", "label": "Docker", "kind": "slot" }
+]

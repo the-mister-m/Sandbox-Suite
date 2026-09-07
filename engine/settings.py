@@ -7,7 +7,7 @@ import os
 from engine import SUITE_ROOT
 
 
-TIERS = ("global", "track", "region")
+TIERS = ("global", "session", "widget", "track", "region")
 BLOCKS = (None, "ollama", "gemini", "claude")
 
 _NUM = (int, float)
@@ -58,7 +58,7 @@ ROWS = [
     Row("model",               "region", str,  ""),
     Row("seat",                "region", str,  ""),
     Row("preset_name",         "region", str,  "",   preset=False, live=True),
-    Row("reset_on_change",     "region", bool, None, live=True, nullable=True),
+    Row("reset_on_change",     "region", bool, True, live=True, nullable=True),
     Row("gate_wait_s",         "region", _NUM, 150,  live=True, nullable=True),
     Row("max_tools",           "region", int,  None, live=True, nullable=True),
     Row("request_timeout",     "region", _NUM, 200,  live=True),
@@ -108,7 +108,7 @@ def region_defaults(provider_kind):
         if r.tier != "region" or r.key == OVERLAY_KEY:
             continue
         if r.key == "reset_on_change":
-            out[r.key] = (provider_kind == "cloud")
+            out[r.key] = True
         elif isinstance(r.default, (list, dict)):
             out[r.key] = json.loads(json.dumps(r.default))
         else:
@@ -171,6 +171,7 @@ GLOBAL_DEFAULTS = {
     "modal_mode_ade": "inherit",
     "gate_keyboard": True,
     "approve_hold": False,
+    "library_archives": True,
     "confirm": {k: "ask" for k in CONFIRM_KEYS},
     "killswitch": {"scope": "models", "hold_to_fire": True},
     "kill_holds": {"end_all_turns": False, "unload_weights": False,
@@ -179,6 +180,13 @@ GLOBAL_DEFAULTS = {
     "voices": {"tts_engine": "say", "tts_voice": "",
                "stt_engine": "parakeet_mlx", "listen_mode": "ptt"},
     "models": {"order": [], "hidden": []},
+    # one entry per widget type; the registry reads it, widgets carry none
+    "widget_defaults": {"chat": {}, "mini_queue": {}, "queue": {},
+                        "editor": {"showPreview": False, "tabs": [],
+                                   "active": ""},
+                        "terminal": {"region": "", "tabs": [], "active": ""},
+                        "browser": {},
+                        "viewer": {"path": "", "tabs": []}, "mount": {}},
 }
 
 GLOBAL_KEYS = tuple(GLOBAL_DEFAULTS)
@@ -349,6 +357,185 @@ def save_global_key(key, value):
 
 def modal_mode():
     return load_global().get("modal_mode", "fullscreen")
+
+
+# session tier — one row per global key, unset reads global
+
+SESSION_GLOBAL_PATH = {
+    "skin":            ("skin",),
+    "modal_mode":      ("modal_mode",),
+    "modal_mode_ade":  ("modal_mode_ade",),
+    "gate_keyboard":   ("gate_keyboard",),
+    "approve_hold":    ("approve_hold",),
+    "library_archives": ("library_archives",),
+    "confirm":         ("confirm",),
+    "killswitch":      ("killswitch",),
+    "kill_holds":      ("kill_holds",),
+    "kill_hosts":      ("kill_holds", "kill_hosts"),
+    "shutdown_suite":  ("kill_holds", "shutdown_suite"),
+    "voices":          ("voices",),
+    "stt_engine":      ("voices", "stt_engine"),
+    "models":          ("models",),
+}
+
+SESSION_KEYS = tuple(SESSION_GLOBAL_PATH)
+
+
+def _global_default_at(path):
+    node = GLOBAL_DEFAULTS
+    for part in path:
+        node = node[part]
+    return node
+
+
+def _type_of(value):
+    if isinstance(value, bool):
+        return bool
+    if isinstance(value, str):
+        return str
+    if isinstance(value, dict):
+        return dict
+    if isinstance(value, list):
+        return list
+    return _NUM
+
+
+SESSION_ROWS = [
+    Row(key, "session", _type_of(_global_default_at(path)),
+        _global_default_at(path), preset=False, live=True, nullable=True)
+    for key, path in SESSION_GLOBAL_PATH.items()
+]
+
+SESSION_BY_KEY = {r.key: r for r in SESSION_ROWS}
+
+
+def session_defaults():
+    # unset means inherit from global
+    return {k: None for k in SESSION_KEYS}
+
+
+def global_value(key, conf=None):
+    path = SESSION_GLOBAL_PATH.get(key)
+    if path is None:
+        return None
+    node = conf if conf is not None else load_global()
+    for part in path:
+        if not isinstance(node, dict) or part not in node:
+            return _global_default_at(path)
+        node = node[part]
+    return node
+
+
+def session_value(bag, key, conf=None):
+    value = (bag or {}).get(key)
+    if value is None:
+        return global_value(key, conf)
+    return value
+
+
+def session_effective(bag, conf=None):
+    conf = conf if conf is not None else load_global()
+    return {k: session_value(bag, k, conf) for k in SESSION_KEYS}
+
+
+def save_global_defaults(session_values):
+    # every set session value becomes the global default
+    written = []
+    for key in SESSION_KEYS:
+        value = (session_values or {}).get(key)
+        if value is None:
+            continue
+        path = SESSION_GLOBAL_PATH[key]
+        save_global_key(".".join(path), value)
+        written.append(key)
+    return written, load_global()
+
+
+# widget tier — rows keyed by widget type, per instance, no carryover
+
+WIDGET_ROWS = {
+    "chat": [
+        Row("speech_enabled", "widget", bool, False, preset=False, live=True),
+        Row("tts_engine",     "widget", str,  "say", preset=False, live=True),
+        Row("listen_mode",    "widget", str,  "ptt", preset=False, live=True),
+    ],
+    "queue": [
+        Row("claude_cache_ttl",       "widget", str,  "1h",  preset=False, live=True),
+        Row("claude_exclude_dynamic", "widget", bool, False, preset=False, live=True),
+    ],
+    "mini_queue": [],
+    "editor":     [],
+    "terminal":   [],
+    "browser":    [],
+    "viewer":     [],
+}
+
+
+def widget_types():
+    return tuple(WIDGET_ROWS)
+
+
+def _row_defaults(widget_type):
+    out = {}
+    for r in WIDGET_ROWS.get(widget_type, ()):
+        if isinstance(r.default, (list, dict)):
+            out[r.key] = json.loads(json.dumps(r.default))
+        else:
+            out[r.key] = r.default
+    return out
+
+
+# the session tier's widget block, outside the thirteen session keys
+WIDGET_DEFAULTS_KEY = "widget_defaults"
+
+
+def _widget_block(source, widget_type):
+    block = (source or {}).get(WIDGET_DEFAULTS_KEY)
+    if not isinstance(block, dict):
+        return {}
+    entry = block.get(widget_type)
+    return entry if isinstance(entry, dict) else {}
+
+
+# rows, then global.json, then the session bag — one entry wins per key
+def widget_defaults(widget_type, bag=None, conf=None):
+    out = _row_defaults(widget_type)
+    conf = conf if conf is not None else load_global()
+    out.update(_widget_block(conf, widget_type))
+    out.update(_widget_block(bag, widget_type))
+    return out
+
+
+def widget_defaults_all(bag=None, conf=None):
+    conf = conf if conf is not None else load_global()
+    return {t: widget_defaults(t, bag, conf) for t in WIDGET_ROWS}
+
+
+# registries
+
+REGISTRY_DIR = os.path.join(SUITE_ROOT, "library", "registry")
+
+
+def _load_registry(filename):
+    path = os.path.join(REGISTRY_DIR, filename)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return []
+    if isinstance(data, dict):
+        data = data.get("list", [])
+    if not isinstance(data, list):
+        return []
+    return [row for row in data if isinstance(row, dict)]
+
+
+def load_widget_registry():
+    return _load_registry("widgets.json")
+
+
+def load_provider_registry():
+    return _load_registry("providers.json")
 
 
 # presets

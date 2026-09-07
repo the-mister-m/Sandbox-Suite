@@ -18,17 +18,28 @@ PRIOR_TEXT_MAX = 8 * 1024 * 1024
 LOGS_DIR = os.path.join(SUITE_ROOT, "logs")
 LOG_PATH = os.path.join(SUITE_ROOT, "log.jsonl")
 
-_ade_log_dir = None
+# resolves a region id to its environment's log directory;
+# no match, no region, or shell not ade falls back to the shared LOG_PATH
+_log_dir_resolver = None
 
 
-def set_ade_log_dir(directory):
-    global _ade_log_dir
-    _ade_log_dir = directory
+def set_log_dir_resolver(fn):
+    global _log_dir_resolver
+    _log_dir_resolver = fn
 
 
-def _log_path_for(shell):
-    if shell == "ade" and _ade_log_dir is not None:
-        return os.path.join(_ade_log_dir, "log.jsonl")
+def _log_dir_for_region(region):
+    if region is not None and _log_dir_resolver is not None:
+        try:
+            return _log_dir_resolver(region)
+        except Exception:
+            return None
+    return None
+
+
+def _log_path_for(shell, log_dir=None):
+    if shell == "ade" and log_dir is not None:
+        return os.path.join(log_dir, "log.jsonl")
     return LOG_PATH
 
 
@@ -92,17 +103,19 @@ def new_id() -> str:
     return uuid.uuid4().hex[:12]
 
 
-def write_blob(rec_id, kind, text) -> str | None:
+def write_blob(rec_id, kind, text, directory=None) -> str | None:
     if kind not in _BLOB_KINDS:
         return None
     try:
         if not isinstance(text, str):
             text = str(text)
-        os.makedirs(LOGS_DIR, exist_ok=True)
+        target_dir = directory or LOGS_DIR
+        os.makedirs(target_dir, exist_ok=True)
         filename = f"{rec_id}.{kind}.txt"
-        with open(os.path.join(LOGS_DIR, filename), "w", encoding="utf-8") as f:
+        full = os.path.join(target_dir, filename)
+        with open(full, "w", encoding="utf-8") as f:
             f.write(text)
-        return f"logs/{filename}"
+        return os.path.relpath(full, SUITE_ROOT)
     except Exception:
         return None
 
@@ -114,7 +127,7 @@ def custody(sess, driver="model") -> dict:
         "machine": MACHINE,
         "session": getattr(sess, "sid", None),
         "shell": getattr(sess, "shell", None),
-        "root": rt.WORKSPACE_ROOT,
+        "root": getattr(sess, "root", None) or rt.WORKSPACE_ROOT,
         "driver": driver,
         "seat": getattr(sess, "nick", None),
         "vessel": vessel,
@@ -280,9 +293,11 @@ def append(record) -> None:
         line = json.dumps(record, ensure_ascii=False)
     except Exception:
         return
+    shell = record.get("shell")
+    log_dir = _log_dir_for_region(record.get("region")) if shell == "ade" else None
     try:
         with _LOG_LOCK:
-            with open(_log_path_for(record.get("shell")), "a", encoding="utf-8") as f:
+            with open(_log_path_for(shell, log_dir), "a", encoding="utf-8") as f:
                 f.write(line + "\n")
     except Exception:
         pass
@@ -318,10 +333,10 @@ def _migrated(r):
     return out
 
 
-def _scan_log(keep, shell=None):
+def _scan_log(keep, shell=None, log_dir=None):
     records = []
     try:
-        with open(_log_path_for(shell), encoding="utf-8") as f:
+        with open(_log_path_for(shell, log_dir), encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
                 if not raw:
@@ -341,8 +356,8 @@ def _scan_log(keep, shell=None):
     return records
 
 
-def read_log(limit=None, shell=None):
-    records = _scan_log(lambda r: r.get("kind") == "action", shell=shell)
+def read_log(limit=None, shell=None, log_dir=None):
+    records = _scan_log(lambda r: r.get("kind") == "action", shell=shell, log_dir=log_dir)
     return records[:limit] if limit else records
 
 
@@ -351,10 +366,16 @@ def _valid_id(rid):
             and all(c in "0123456789abcdef" for c in rid))
 
 
-def pending_as_records():
+def pending_as_records(log_dir=None):
     from engine import daemon_queue as dq
+    regions = None
+    if log_dir is not None:
+        from ade import tracks
+        regions = set(tracks.list_regions(log_dir))
     out = []
     for e in dq.pending():
+        if regions is not None and e.get("session") not in regions:
+            continue
         status = dq.condition_status(e)
         conditions = {name: {"answer": ok} for name, ok in status.items()}
         out.append({
@@ -493,9 +514,9 @@ def _translate_rail_c_write(E, O):
     E["action_type"] = "write"
 
 
-def snapshot(limit=None, shell=None):
+def snapshot(limit=None, shell=None, log_dir=None):
     by_id = {}
-    log_records = read_log(shell=shell)
+    log_records = read_log(shell=shell, log_dir=log_dir)
     _pair_gates(log_records)
     _pair_tool_use(log_records)
     for r in log_records:
@@ -504,7 +525,7 @@ def snapshot(limit=None, shell=None):
             continue
         if rid and rid not in by_id:
             by_id[rid] = r
-    for r in pending_as_records():
+    for r in pending_as_records(log_dir=log_dir):
         rid = r.get("id")
         if not rid:
             continue
@@ -548,10 +569,10 @@ def _derive_turn_usage(usage):
     return usage
 
 
-def ade_snapshot(limit=None, since=None):
-    records = [r for r in snapshot(shell="ade") if r.get("shell") == "ade"]
+def ade_snapshot(limit=None, since=None, log_dir=None):
+    records = [r for r in snapshot(shell="ade", log_dir=log_dir) if r.get("shell") == "ade"]
     turns   = _scan_log(lambda r: r.get("kind") == "turn" and r.get("shell") == "ade",
-                        shell="ade")
+                        shell="ade", log_dir=log_dir)
     for t in turns:
         _derive_turn_usage(t.get("usage"))
     merged  = sorted(records + turns,
@@ -564,9 +585,9 @@ def ade_snapshot(limit=None, since=None):
     return merged[:limit] if limit else merged
 
 
-def region_totals(since=None):
+def region_totals(since=None, log_dir=None):
     out = {}
-    for t in ade_snapshot(since=since):
+    for t in ade_snapshot(since=since, log_dir=log_dir):
         if t.get("kind") != "turn":
             continue
         reg = t.get("region")
@@ -593,8 +614,8 @@ def region_totals(since=None):
     return out
 
 
-def detail(rid, shell=None):
-    rec = _find_record(rid, shell)
+def detail(rid, shell=None, log_dir=None):
+    rec = _find_record(rid, shell, log_dir)
     if rec is None:
         return None
     d = dict(rec)
@@ -606,27 +627,27 @@ def detail(rid, shell=None):
     if isinstance(payload, dict) and payload.get("prior") is None and payload.get("prior_blob"):
         d["payload"] = dict(payload, prior=_read_blob(payload["prior_blob"]))
     if d.get("gate_prompt") is None and d.get("gate_id"):
-        g = _find_record(d["gate_id"], shell)
+        g = _find_record(d["gate_id"], shell, log_dir)
         if g is not None:
             d["gate_prompt"] = g.get("prompt") or _read_blob(g.get("prompt_blob"))
     return d
 
 
-def _find_record(rid, shell=None):
+def _find_record(rid, shell=None, log_dir=None):
     if not _valid_id(rid):
         return None
-    rec = next((r for r in pending_as_records() if r.get("id") == rid), None)
+    rec = next((r for r in pending_as_records(log_dir=log_dir) if r.get("id") == rid), None)
     if rec is None and shell is not None:
-        rec = next((r for r in read_log(shell=shell) if r.get("id") == rid), None)
+        rec = next((r for r in read_log(shell=shell, log_dir=log_dir) if r.get("id") == rid), None)
     if rec is None:
         rec = next((r for r in read_log() if r.get("id") == rid), None)
     return rec
 
 
-def _deny_orphan(entry_id):
+def _deny_orphan(entry_id, log_dir=None):
     orig = next((r for r in read_log() if r.get("id") == entry_id), None)
-    if orig is None and _ade_log_dir is not None:
-        orig = next((r for r in read_log(shell="ade") if r.get("id") == entry_id), None)
+    if orig is None and log_dir is not None:
+        orig = next((r for r in read_log(shell="ade", log_dir=log_dir) if r.get("id") == entry_id), None)
     if orig is None:
         return
     rec = dict(orig)

@@ -6,10 +6,13 @@ def _names_map(regions):
     names = {}
     try:
         from ade import tracks as _tracks
-        for row in _tracks.closed_rows():
-            rid = row.get("id")
-            if rid:
-                names[rid] = row.get("name") or rid
+        environments = {r.environment for r in (regions or [])
+                        if getattr(r, "environment", None) is not None}
+        for environment in environments:
+            for row in _tracks.closed_rows(environment):
+                rid = row.get("id")
+                if rid:
+                    names[rid] = row.get("name") or rid
     except Exception:
         pass
     for r in (regions or []):
@@ -51,6 +54,11 @@ def _track_row(track):
 
 
 class AdeSenders:
+    def send_session_refused(self, reason):
+        with self._send_lock:
+            self.ws.send(json.dumps({"type": "session_refused",
+                                     "reason": reason}))
+
     def send_crew_list(self, roster, current):
         with self._send_lock:
             self.ws.send(json.dumps({"type": "crew_list", "list": roster, "current": current}))
@@ -94,7 +102,7 @@ class AdeSenders:
         with self._send_lock:
             self.ws.send(json.dumps({
                 "type": "track_created",
-                "track": _region_row(region),
+                "track": _region_row(region) if region is not None else None,
                 "row":   _track_row(track) if track is not None else None,
             }))
 
@@ -122,34 +130,41 @@ class AdeSenders:
                 "records": records,
             }))
 
-    def send_transcript(self, track_id, messages):
+    def send_transcript(self, track_id, messages, inst=""):
         with self._send_lock:
             self.ws.send(json.dumps({
                 "type": "transcript",
                 "id": track_id,
+                "region": track_id,
+                "inst": inst,
                 "messages": messages,
             }))
 
-    def send_feed(self, records, totals=None):
+    def send_feed(self, records, totals=None, inst=""):
         with self._send_lock:
             self.ws.send(json.dumps({"type": "feed", "records": records,
+                                     "inst": inst,
                                      "totals": totals or {}}))
 
     def send_wp_feed(self, lines, counts):
         with self._send_lock:
             self.ws.send(json.dumps({"type": "wp_feed", "lines": lines, "counts": counts}))
 
-    def send_file(self, path, content):
+    def send_file(self, path, content, inst=""):
         with self._send_lock:
-            self.ws.send(json.dumps({"type": "file", "path": path, "content": content}))
+            self.ws.send(json.dumps({"type": "file", "path": path,
+                                     "inst": inst, "content": content}))
 
-    def send_tree(self, data):
+    def send_tree(self, data, inst=""):
         with self._send_lock:
-            self.ws.send(json.dumps({"type": "tree", "data": data}))
+            self.ws.send(json.dumps({"type": "tree", "data": data, "inst": inst}))
 
-    def send_saved(self, path, result):
+    # ok is the gate outcome: false when the write was refused or failed
+    def send_saved(self, path, result, inst="", ok=True):
         with self._send_lock:
-            self.ws.send(json.dumps({"type": "saved", "path": path, "result": result}))
+            self.ws.send(json.dumps({"type": "saved", "path": path,
+                                     "inst": inst, "ok": bool(ok),
+                                     "result": result}))
 
     def send_deleted(self, path, result):
         with self._send_lock:
@@ -196,7 +211,8 @@ class AdeSenders:
         with self._send_lock:
             self.ws.send(json.dumps({
                 "type": "gate_broadcast", "kind": kind, "id": gid,
-                "prompt": prompt, "track": track_id, "track_name": track_name,
+                "prompt": prompt, "track": track_id, "region": track_id,
+                "track_name": track_name,
             }))
 
     def on_write(self, path):

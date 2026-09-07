@@ -1,0 +1,79 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[probe layout empty] {"hostDisplay": "block", "rootClass": "mx-ledger ledgerRoot", "rootDisplay": "flex", "hostH": 597, "rootH": 288, "scrollH": 97}
+[probe filled] {
+ "headers": [
+  "Time \u25bc",
+  "Track",
+  "Turn",
+  "Call",
+  "Duration",
+  "Model",
+  "Stop",
+  "Actions",
+  "Cost $",
+  "Out",
+  "Read",
+  "Read Peak",
+  "Write 5m",
+  "Write 1h"
+ ],
+ "chips": [
+  "r-aaa",
+  "r-bbb"
+ ],
+ "rows": [
+  [
+   "\u25b819:16:40",
+   "r-bbb",
+   "2",
+   "\u2014",
+   "800ms",
+   "sonnet",
+   "tool_use",
+   "0",
+   "$0.0040",
+   "90",
+   "100",
+   "100",
+   "\u2014",
+   "\u2014"
+  ],
+  [
+   "\u25b819:06:40",
+   "r-aaa",
+   "1",
+   "\u2014",
+   "2.4s",
+   "opus",
+   "end_turn",
+   "1",
+   "$0.0123",
+   "300",
+   "800",
+   "950",
+   "50",
+   "10"
+  ]
+ ],
+ "emptyCell": null,
+ "rollup": [
+  "2Turns",
+  "3.2sDuration",
+  "$0.0163Cost",
+  "1Actions",
+  "390Out",
+  "900Read",
+  "1,050Read Peak",
+  "50Write 5m",
+  "10Write 1h",
+  ""
+ ],
+ "agentTotals": "\u25b8Per-Agent Totals2 agents \u00b7 peak 950",
+ "legend": true,
+ "colsBtn": true,
+ "trackAll": true,
+ "trackNone": true
+}
+[probe layout filled] {"hostH": 597, "rootH": 360, "hostScroll": 597, "scrollH": 128, "scrollScroll": 128}
+[probe sort cost] {"header": "Cost $", "firstRow": "\u25b819:16:40r-bbb2\u2014800mssonnettool_use0$0.004090100100\u2014\u2014"}
+[probe open-ledger] {"flashed": ["turn-2"], "openSub": 2, "ids": ["turn-2", "turn-1"]}

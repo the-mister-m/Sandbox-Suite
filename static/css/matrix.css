@@ -1,0 +1,268 @@
+/* matrix window — grid, widget frame chrome, corner panels */
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--plane, #111);
+  color: var(--text-1, #ddd);
+  font-family: var(--sans, system-ui, sans-serif);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* corner buttons — two, and only two */
+
+#mxCorners {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 40;
+  display: flex;
+  gap: 6px;
+}
+
+.mx-corner {
+  background: var(--surface-2, #141414);
+  color: var(--text-1, #ddd);
+  border: 1px solid var(--border, #383838);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-family: var(--sans, system-ui, sans-serif);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mx-corner:hover { border-color: var(--border-2, #444); }
+
+/* the grid */
+
+#mxGrid {
+  position: absolute;
+  inset: 0;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(var(--mx-cols, 12), 1fr);
+  grid-template-rows: repeat(var(--mx-rows, 12), 1fr);
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+#mxGrid.mx-lifting { cursor: grabbing; }
+
+/* one widget instance */
+
+.mx-widget {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--surface-1, #0e0e0e);
+  border: 1px solid var(--border, #383838);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mx-widget.mx-lifted {
+  outline: 1px dashed var(--accent, #2a6);
+  opacity: 0.55;
+}
+
+.mx-widget.mx-drop-target { outline: 1px solid var(--accent, #2a6); }
+
+.mx-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+  background: var(--surface-3, #161616);
+  border-bottom: 1px solid var(--gridline, #2a2a2a);
+  font-size: 11px;
+  color: var(--text-2, #aaa);
+  flex: 0 0 auto;
+}
+
+.mx-bar-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mx-bar-btn {
+  background: transparent;
+  color: var(--text-2, #aaa);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.mx-bar-btn:hover { border-color: var(--border, #383838); color: var(--text-1, #ddd); }
+
+.mx-move { cursor: grab; touch-action: none; }
+.mx-move:active { cursor: grabbing; }
+
+.mx-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px;
+}
+
+/* borders drag to resize */
+
+.mx-edge {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+}
+
+.mx-edge-e { top: 0; right: -3px; width: 7px; height: 100%; cursor: col-resize; }
+.mx-edge-s { left: 0; bottom: -3px; height: 7px; width: 100%; cursor: row-resize; }
+.mx-edge-se { right: -3px; bottom: -3px; width: 11px; height: 11px; cursor: nwse-resize; }
+
+.mx-edge:hover { background: var(--splitter-hot, #444); }
+.mx-edge-se:hover { background: transparent; }
+
+/* options panel on a widget */
+
+.mx-options {
+  position: absolute;
+  inset: auto 6px 6px 6px;
+  z-index: 20;
+  max-height: 70%;
+  overflow: auto;
+  background: var(--surface-2, #141414);
+  border: 1px solid var(--border-2, #444);
+  border-radius: 3px;
+  padding: 8px;
+}
+
+.mx-options h4 { margin: 0 0 6px; font-size: 11px; color: var(--text-3, #888); font-weight: 500; }
+
+.mx-opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.mx-opt-row label { flex: 0 0 40%; color: var(--text-2, #aaa); font-size: 11px; }
+
+.mx-options input[type="text"],
+.mx-options select {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--well, #222);
+  color: var(--text-1, #ddd);
+  border: 1px solid var(--border, #383838);
+  border-radius: 2px;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+/* overlays — session panel, widget picker, modals */
+
+.mx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 12px 12px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.mx-panel {
+  width: min(560px, 100%);
+  background: var(--surface-1, #0e0e0e);
+  border: 1px solid var(--border-2, #444);
+  border-radius: 4px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.mx-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-1, #ddd);
+}
+
+.mx-panel h4 {
+  margin: 12px 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3, #888);
+  border-top: 1px solid var(--gridline, #2a2a2a);
+  padding-top: 8px;
+}
+
+.mx-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--gridline, #2a2a2a);
+}
+
+.mx-row:last-child { border-bottom: none; }
+.mx-row .mx-grow { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mx-dim { color: var(--text-3, #888); font-size: 11px; }
+
+.mx-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.mx-btn {
+  background: var(--surface-2, #141414);
+  color: var(--text-1, #ddd);
+  border: 1px solid var(--border, #383838);
+  border-radius: 3px;
+  padding: 4px 9px;
+  font-family: var(--sans, system-ui, sans-serif);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mx-btn:hover { border-color: var(--border-2, #444); }
+.mx-btn.mx-go { border-color: var(--accent-bdr, #2a5a3a); color: var(--accent-dim, #4d9); }
+.mx-btn.mx-warn { border-color: var(--gate-red, #d03b3b); color: var(--gate-red, #d03b3b); }
+.mx-btn:disabled { opacity: 0.4; cursor: default; }
+
+.mx-panel input[type="text"] {
+  background: var(--well, #222);
+  color: var(--text-1, #ddd);
+  border: 1px solid var(--border, #383838);
+  border-radius: 2px;
+  padding: 3px 5px;
+  font-size: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* blank window — the session picker stands alone */
+
+#mxBlank {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+/* socket state */
+
+#mxState {
+  position: fixed;
+  left: 8px;
+  bottom: 6px;
+  z-index: 40;
+  font-size: 11px;
+  color: var(--text-4, #666);
+  font-family: var(--mono, monospace);
+}
+
+#mxState.mx-live { color: var(--gate-green, #0ca30c); }
+#mxState.mx-gone { color: var(--gate-red, #d03b3b); }
+
+/* stub widget */
+
+.mx-stub { font-family: var(--mono, monospace); font-size: 11px; color: var(--text-2, #aaa); }
+.mx-stub dt { color: var(--text-3, #888); }
+.mx-stub dd { margin: 0 0 6px; color: var(--text-1, #ddd); word-break: break-all; }

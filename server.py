@@ -64,7 +64,7 @@ def _execute_queue_entry(entry):
                 custody={k: entry.get(k) for k in
                          ("machine", "session", "shell", "root",
                           "driver", "seat", "vessel", "source",
-                          "track", "turn")},
+                          "region", "track", "turn")},
                 action_type=action_type,
                 edge=entry.get("edge") or action_type,
                 payload={"target": target},
@@ -151,7 +151,7 @@ def _execute_queue_entry(entry):
             custody={k: entry.get(k) for k in
                      ("machine", "session", "shell", "root",
                       "driver", "seat", "vessel", "source",
-                      "track", "turn")},
+                      "region", "track", "turn")},
             action_type=action_type,
             edge=entry.get("edge") or action_type,
             payload={"target": target,
@@ -184,19 +184,22 @@ def _gate_notifier(kind, entry, prompt=None):
     with _registry_lock:
         webios = list({id(d["webio"]): d["webio"] for d in _registry.values()
                        if getattr(d["sess"], "sid", None) == target_sid}.values())
+    track = ade_tracks.get_region(target_sid)
+    region_id = track.id if track is not None else ""
     for w in webios:
         try:
             if kind == "ask":
-                w.post_gate(entry["id"], prompt or entry.get("prompt") or "")
+                w.post_gate(entry["id"], prompt or entry.get("prompt") or "",
+                            region_id)
             elif kind == "resolved":
                 w.gate_resolved(entry["id"])
         except Exception:
             pass
 
-    track = ade_tracks.get_region(target_sid)
     if track is not None:
-        ade_frames.broadcast_gate(kind, entry["id"], prompt or entry.get("prompt") or "",
-                                   track.id, track.name)
+        ade_frames.broadcast_gate(track.environment, kind, entry["id"],
+                                  prompt or entry.get("prompt") or "",
+                                  track.id, track.name)
 
 
 dq.set_notifier(_gate_notifier)
@@ -227,14 +230,23 @@ def _waypoint_track_prober(track_ident):
     region = ade_tracks.get_region(track_ident)
     if region is not None:
         return "muted" if region.muted else "live"
-    for row in ade_tracks.closed_rows():
-        if row.get("id") == track_ident:
-            return "closed"
+    for environment in ade_tracks.list_environments():
+        for row in ade_tracks.closed_rows(environment):
+            if row.get("id") == track_ident:
+                return "closed"
     return "unknown"
 
 
+def _all_live_regions():
+    # suite level: every region in every live environment
+    out = []
+    for environment in ade_tracks.list_environments():
+        out += ade_tracks.list_regions(environment)
+    return out
+
+
 def _waypoint_track_resolver(receiver):
-    tracks = [t for t in ade_tracks.list_regions() if not t.muted]
+    tracks = [t for t in _all_live_regions() if not t.muted]
     for t in tracks:
         if t.id == receiver:
             return t.id
@@ -267,7 +279,7 @@ def _ade_initiator(region_ident):
 
 
 def _ade_room_reporter(sender, receivers):
-    rows = ade_tracks._live_peers()
+    rows = ade_tracks._live_peers(ade_tracks.environment_of_region(sender))
     if not rows:
         return ""
     reached = [ade_tracks.display_name(r) for r in receivers]
@@ -338,7 +350,9 @@ ade_tracks.set_roster_listener(ade_frames.broadcast_roster)
 ade_tracks.set_replaced_listener(ade_frames.broadcast_region_replaced)
 waypoint.set_track_prober(_waypoint_track_prober)
 waypoint.set_track_resolver(_waypoint_track_resolver)
-compiler.set_peers_provider(ade_tracks._live_peers)
+compiler.set_peers_provider(
+    lambda region_id: ade_tracks._live_peers(
+        ade_tracks.environment_of_region(region_id)))
 
 ledger.set_append_listener(lambda rec: ade_frames.mark_dirty("record")
                            if (rec or {}).get("shell") == "ade" else None)
@@ -370,13 +384,6 @@ def _sanitize_media(media):
             continue
         out.append({"kind": kind, "mime": mime, "data_b64": data})
     return out
-
-
-def _sessions_snapshot():
-    with _registry_lock:
-        return [{"id": sid, "model": d["sess"].settings["model"],
-                 "status": d["webio"].current_status}
-                for sid, d in _registry.items()]
 
 
 class MonitoredWebIO(WebIO):
@@ -413,30 +420,19 @@ def _serve_skinned(path):
 
 @app.route("/")
 def index():
-    if request.args.get("room") is not None:
-        return _serve_skinned("static/index.html")
-    return _serve_skinned("static/control.html")
+    return _serve_skinned("static/suite.html")
 
 
-@app.route("/ade")
-def ade_page():
-    return _serve_skinned("static/ade.html")
+@app.route("/suite")
+def suite_page():
+    return _serve_skinned("static/suite.html")
 
 
-@app.route("/ade/ledger")
-def ade_ledger_window():
-    return _serve_skinned("static/ade-ledger.html")
-
-
-@app.route("/ade/retired")
-def ade_retired_window():
-    return _serve_skinned("static/ade-retired.html")
-
-
-@app.route("/ade/arrange")
-def ade_arrange_window():
-    return _serve_skinned("static/ade-arrange.html")
-
+@app.route("/matrix")
+@app.route("/matrix/<sid>")
+def matrix_page(sid=None):
+    # the page binds itself to a session; the id is read there
+    return _serve_skinned("static/matrix.html")
 
 
 
@@ -452,7 +448,9 @@ def _pkill(pattern, exact=False):
 @app.route("/api/end-all-turns", methods=["POST"])
 def api_end_all_turns():
     try:
-        return jsonify({"turns_ended": ade_tracks.stop_all_regions()})
+        ended = sum(ade_tracks.stop_all_regions(w)
+                    for w in ade_tracks.list_environments())
+        return jsonify({"turns_ended": ended})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -476,11 +474,27 @@ def api_kill_hosts():
 
 @app.route("/api/shutdown-suite", methods=["POST"])
 def api_shutdown_suite():
+    body = request.get_json(silent=True) or {}
+    for entry in body.get("sessions", []):
+        sid = entry.get("id")
+        environment = ade_tracks.get_environment(sid)
+        if environment is None:
+            continue
+        if entry.get("save"):
+            name = (entry.get("name") or "").strip() or sid
+            ade_tracks.save_session(name, environment)
+        else:
+            with environment.session_lock:
+                environment.session["saved"] = False
+        ade_tracks.end_session(sid)
+        ade_frames.close_conns(environment)
     results = _end_all_sessions()
     try:
         ade_frames.broadcast_reload("suite shutting down")
     except Exception:
         pass
+    # os._exit skips atexit — call the shutdown function by hand first
+    _shutdown_children()
     threading.Timer(0.5, lambda: os._exit(0)).start()
     results["suite"] = "going dark"
     return jsonify(results)
@@ -489,7 +503,7 @@ def api_shutdown_suite():
 def _end_all_sessions():
     results = {}
     killed = 0
-    for rid in [r.id for r in ade_tracks.list_regions()]:
+    for rid in [r.id for r in _all_live_regions()]:
         try:
             if ade_tracks.close_region(rid) is not None:
                 killed += 1
@@ -513,6 +527,20 @@ def api_end_all():
     except Exception as e:
         results["tabs"] = f"ERROR {e}"
     return jsonify(results)
+
+
+# global workspace root; lives in its own config file, not global.json
+@app.route("/api/workspace-root")
+def api_workspace_root_get():
+    return jsonify({"root": rt.WORKSPACE_ROOT, "default": rt.DEFAULT_WORKSPACE_ROOT})
+
+
+@app.route("/api/workspace-root", methods=["POST"])
+def api_workspace_root_post():
+    body = request.get_json(silent=True) or {}
+    result = agent_loop.set_and_persist_root(body.get("path", ""))
+    ok = result.startswith("[workspace root")
+    return jsonify({"ok": ok, "result": result, "root": rt.WORKSPACE_ROOT})
 
 
 @app.route("/api/global")
@@ -692,11 +720,6 @@ def api_policy_record_tool_outcome():
     except Exception:
         pass
     return jsonify({"ok": True})
-
-
-@app.route("/api/sessions")
-def api_sessions():
-    return jsonify({"list": _sessions_snapshot()})
 
 
 @app.route("/api/voices")
@@ -956,7 +979,8 @@ def api_ade_sessions():
         try:
             with open(mpath) as fh:
                 master = json.load(fh)
-            if master.get("kind") == ade_tracks.TEMPLATE_KIND:
+            if master.get("kind") in (ade_tracks.TEMPLATE_KIND,
+                                      ade_tracks.SESSION_TEMPLATE_KIND):
                 continue
             rows = master.get("regions", master.get("tracks", []))
             live_count = sum(
@@ -1075,8 +1099,8 @@ def api_delete_ade_session(sid):
     import re, shutil
     if not re.fullmatch(r'[\w\-]+', sid):
         return jsonify({"error": "invalid id"}), 400
-    if sid == ade_tracks.session_meta()["id"]:
-        return jsonify({"error": "cannot delete the live session"}), 400
+    if ade_tracks.get_environment(sid) is not None:
+        return jsonify({"error": "cannot delete a live session"}), 400
     sdir = ade_tracks.session_dir(sid)
     if not os.path.isdir(sdir):
         return jsonify({"error": "not found"}), 404
@@ -1134,18 +1158,556 @@ def api_delete_ade_template(tid):
     return jsonify({"ok": True})
 
 
-@app.route("/api/ade-sessions/save", methods=["POST"])
-def api_save_ade_session():
+def _live_region_ids():
+    # sid -> set of region ids currently open in that environment
+    out = {}
+    for w in ade_tracks.list_environments():
+        with w.session_lock:
+            sid_ = w.session.get("id")
+        if not sid_:
+            continue
+        with w.tracks_lock:
+            out[sid_] = set(w.regions)
+    return out
+
+
+def _transcript_session(mpath, live_ids):
+    sdir = os.path.dirname(mpath)
+    sid_ = os.path.basename(sdir)
+    with open(mpath) as fh:
+        master = json.load(fh)
+    if master.get("kind") == ade_tracks.TEMPLATE_KIND:
+        return None
+    live_set = live_ids.get(sid_, set())
+    regions = []
+    for r in master.get("regions", master.get("tracks", [])):
+        rid = r.get("id") or ""
+        if not _archive_id_ok(rid):
+            continue
+        regions.append({
+            "id":      rid,
+            "name":    r.get("name") or rid,
+            "seat":    r.get("seat") or "",
+            "vessel":  r.get("vessel") or "",
+            "created": r.get("created") or "",
+            "live":    rid in live_set,
+            "caches":  _retired_caches(sdir, rid),
+        })
+    if not regions:
+        return None
+    return {
+        "id":      sid_,
+        "name":    master.get("name") or "(unnamed)",
+        "regions": regions,
+    }
+
+
+@app.route("/api/transcripts")
+def api_transcripts():
+    import glob as _glob
+    live_ids = _live_region_ids()
+    sid = (request.args.get("sid") or "").strip()
+    out = []
+    if sid:
+        if _archive_id_ok(sid):
+            mpath = os.path.join(ade_tracks.session_dir(sid), "master.json")
+            if os.path.isfile(mpath):
+                try:
+                    session = _transcript_session(mpath, live_ids)
+                    if session is not None:
+                        out.append(session)
+                except Exception:
+                    pass
+    else:
+        d = ade_tracks.archives_dir()
+        if os.path.isdir(d):
+            for mpath in _glob.glob(os.path.join(d, "*", "master.json")):
+                try:
+                    session = _transcript_session(mpath, live_ids)
+                    if session is not None:
+                        out.append(session)
+                except Exception:
+                    pass
+    return jsonify({"sessions": out})
+
+
+@app.route("/api/sessions/open")
+def api_sessions_open():
+    return jsonify({"list": ade_tracks.environment_rows()})
+
+
+@app.route("/api/sessions/<sid>/save", methods=["POST"])
+def api_session_save(sid):
+    environment = ade_tracks.get_environment(sid)
+    if environment is None:
+        return jsonify({"error": "not found"}), 404
     data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
-    if not name:
-        return jsonify({"error": "name required"}), 400
-    if ade_tracks.session_meta()["id"] is None:
-        return jsonify({"error": "no live ADE session to save"}), 400
-    ade_tracks.save_session(name)
-    ade_frames._broadcast("send_ade_init", ade_tracks.session_meta(),
-                          ade_tracks.list_regions(), ade_tracks.list_tracks())
-    return jsonify({"ok": True, "session": ade_tracks.session_meta()})
+    name = (data.get("name") or "").strip() or environment.row()["name"] or ""
+    d = ade_tracks.save_session(name, environment)
+    if d is None:
+        return jsonify({"error": "no live session to save"}), 400
+    ade_frames._broadcast(environment, "send_ade_init",
+                          ade_tracks.session_meta(environment),
+                          ade_tracks.list_regions(environment),
+                          ade_tracks.list_tracks(environment))
+    return jsonify({"ok": True, "session": ade_tracks.session_meta(environment)})
+
+
+@app.route("/api/sessions/<sid>/end", methods=["POST"])
+def api_session_end(sid):
+    environment = ade_tracks.get_environment(sid)
+    if environment is None:
+        return jsonify({"error": "not found"}), 404
+    ade_tracks.end_session(sid)
+    closed = ade_frames.close_conns(environment)
+    return jsonify({"ok": True, "list": ade_tracks.environment_rows(), "closed": closed})
+
+
+@app.route("/api/session-templates")
+def api_session_templates():
+    return jsonify({"list": ade_tracks.list_session_templates()})
+
+
+# matrix templates and the widget registry — one window's grid and widget list
+
+MATRIX_TEMPLATES_DIR = os.path.join(SUITE_ROOT, "library", "matrix-templates")
+
+
+def _matrix_template_name(name):
+    name = (name or "").strip()
+    if not name or "/" in name or "\\" in name or name in (".", ".."):
+        return None
+    return name
+
+
+def _matrix_template_path(safe):
+    return os.path.join(MATRIX_TEMPLATES_DIR, safe + ".json")
+
+
+def _matrix_template_body(name, data):
+    # slot layout, widget types, and each instance's options at save time
+    grid = data.get("grid")
+    if not isinstance(grid, dict):
+        grid = {}
+    widgets = data.get("widgets")
+    if not isinstance(widgets, list):
+        widgets = []
+    rows = []
+    for w in widgets:
+        if not isinstance(w, dict):
+            continue
+        slot = w.get("slot")
+        opts = w.get("options")
+        rows.append({"type": str(w.get("type") or ""),
+                     "slot": slot if isinstance(slot, dict) else {},
+                     "options": opts if isinstance(opts, dict) else {}})
+    return {"name": name, "grid": grid, "widgets": rows}
+
+
+@app.route("/api/matrix-templates")
+def api_matrix_templates():
+    try:
+        names = sorted(f[:-5] for f in os.listdir(MATRIX_TEMPLATES_DIR)
+                       if f.endswith(".json") and not f.startswith("."))
+    except OSError:
+        names = []
+    return jsonify({"list": names})
+
+
+@app.route("/api/matrix-templates/<name>")
+def api_matrix_template_read(name):
+    safe = _matrix_template_name(name)
+    if not safe:
+        return jsonify({"error": f"invalid template name: {name!r}"}), 400
+    try:
+        with open(_matrix_template_path(safe), "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except OSError:
+        return jsonify({"error": "not found"}), 404
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    if not isinstance(data, dict):
+        return jsonify({"error": "expected a JSON object at top level"}), 400
+    return jsonify({"template": _matrix_template_body(safe, data)})
+
+
+@app.route("/api/matrix-templates/<name>", methods=["POST"])
+def api_matrix_template_write(name):
+    safe = _matrix_template_name(name)
+    if not safe:
+        return jsonify({"error": f"invalid template name: {name!r}"}), 400
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "expected a JSON object"}), 400
+    body = _matrix_template_body(safe, data)
+    try:
+        os.makedirs(MATRIX_TEMPLATES_DIR, exist_ok=True)
+        with open(_matrix_template_path(safe), "w", encoding="utf-8") as fh:
+            json.dump(body, fh, indent=2)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True, "name": safe})
+
+
+@app.route("/api/matrix-templates/<name>", methods=["DELETE"])
+def api_matrix_template_delete(name):
+    safe = _matrix_template_name(name)
+    if not safe:
+        return jsonify({"error": f"invalid template name: {name!r}"}), 400
+    try:
+        os.remove(_matrix_template_path(safe))
+    except OSError:
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"ok": True, "name": safe})
+
+
+@app.route("/api/widget-registry")
+def api_widget_registry():
+    # defaults trickle global to session to widget; sid names the session tier
+    sid = request.args.get("sid") or ""
+    environment = ade_tracks.get_environment(sid) if sid else None
+    bag = dict(environment.settings) if environment is not None else {}
+    rows = engine_settings.load_widget_registry()
+    defaults = {}
+    for row in rows:
+        wtype = row.get("type")
+        if wtype:
+            defaults[wtype] = engine_settings.widget_defaults(wtype, bag)
+    return jsonify({"list": rows, "defaults": defaults})
+
+
+# library routes — Job 4, Suite Page and Library
+
+@app.route("/api/sessions/new", methods=["POST"])
+def api_session_new():
+    environment = ade_tracks.new_session()
+    return jsonify({"sid": environment.sid()})
+
+
+@app.route("/api/sessions/<sid>/open", methods=["POST"])
+def api_session_open(sid):
+    environment = ade_tracks.reload_session(sid)
+    if environment is None:
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"sid": environment.sid()})
+
+
+@app.route("/api/global/update-default", methods=["POST"])
+def api_global_update_default():
+    body = request.get_json(silent=True) or {}
+    written, conf = engine_settings.save_global_defaults(body)
+    return jsonify({"written": written, "global": conf})
+
+
+@app.route("/api/library/presets")
+def api_library_presets():
+    return jsonify({"list": engine_settings.list_presets()})
+
+
+@app.route("/api/library/presets/<name>")
+def api_library_preset_read(name):
+    fields, warnings = engine_settings.read_preset(name)
+    return jsonify({"fields": fields, "warnings": warnings})
+
+
+@app.route("/api/library/presets/<name>", methods=["POST"])
+def api_library_preset_write(name):
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return jsonify({"error": "expected a JSON object"}), 400
+    ok, result = engine_settings.write_preset(name, body)
+    if not ok:
+        return jsonify({"error": result}), 400
+    return jsonify({"ok": True, "path": result, "list": engine_settings.list_presets()})
+
+
+@app.route("/api/library/presets/<name>", methods=["DELETE"])
+def api_library_preset_delete(name):
+    ok, result = engine_settings.delete_preset(name)
+    if not ok:
+        return jsonify({"error": result}), 400
+    return jsonify({"ok": True, "list": engine_settings.list_presets()})
+
+
+@app.route("/api/library/presets/<name>/rename", methods=["POST"])
+def api_library_preset_rename(name):
+    body = request.get_json(silent=True) or {}
+    ok, result = engine_settings.rename_preset(name, body.get("new", ""))
+    if not ok:
+        return jsonify({"error": result}), 400
+    return jsonify({"ok": True, "list": engine_settings.list_presets()})
+
+
+@app.route("/api/library/providers")
+def api_library_providers():
+    return jsonify({"list": engine_settings.load_provider_registry()})
+
+
+@app.route("/api/library/models")
+def api_library_models():
+    hidden = engine_settings.load_global().get("models", {}).get("hidden", [])
+    return jsonify({"list": client.list_models(), "hidden": hidden})
+
+
+@app.route("/api/session-templates/<tid>/load", methods=["POST"])
+def api_session_template_load(tid):
+    environment = ade_tracks.instantiate_template(tid)
+    if environment is None:
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"sid": environment.sid()})
+
+
+@app.route("/api/session-templates/<tid>", methods=["DELETE"])
+def api_session_template_delete(tid):
+    import shutil
+    mpath = os.path.join(ade_tracks.session_dir(tid), "master.json")
+    if not os.path.isfile(mpath):
+        return jsonify({"error": "not found"}), 404
+    try:
+        with open(mpath) as fh:
+            kind = (json.load(fh) or {}).get("kind")
+    except Exception:
+        return jsonify({"error": "unreadable"}), 400
+    if kind != ade_tracks.SESSION_TEMPLATE_KIND:
+        return jsonify({"error": "not a session template"}), 400
+    shutil.rmtree(ade_tracks.session_dir(tid))
+    return jsonify({"ok": True})
+
+
+_CONTEXT_KINDS = ("global", "session", "track", "region", "models")
+
+
+@app.route("/api/library/context-files")
+def api_library_context_files():
+    out = []
+    for kind in _CONTEXT_KINDS:
+        d = os.path.join(SUITE_ROOT, "injections", kind)
+        if not os.path.isdir(d):
+            continue
+        for fname in sorted(os.listdir(d)):
+            full = os.path.join(d, fname)
+            if os.path.isfile(full):
+                out.append({"kind": kind, "name": fname, "path": full})
+    return jsonify({"list": out})
+
+
+@app.route("/api/fs/write", methods=["POST"])
+def api_fs_write():
+    body = request.get_json(silent=True) or {}
+    path = os.path.abspath(body.get("path") or "")
+    if not os.path.isfile(path):
+        return jsonify({"error": f"not a file: {path}"}), 400
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(body.get("text", ""))
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True, "path": path})
+
+
+# write to an arbitrary path, creating the file and its parent folders.
+# a relative path resolves against the suite root.
+@app.route("/api/fs/put", methods=["POST"])
+def api_fs_put():
+    body = request.get_json(silent=True) or {}
+    raw = body.get("path") or ""
+    if not raw:
+        return jsonify({"error": "no path"}), 400
+    expanded = os.path.expanduser(raw)
+    path = (os.path.abspath(expanded) if os.path.isabs(expanded)
+            else os.path.abspath(os.path.join(SUITE_ROOT, expanded)))
+    if os.path.isdir(path):
+        return jsonify({"error": f"is a directory: {path}"}), 400
+    try:
+        parent = os.path.dirname(path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(body.get("text", ""))
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True, "path": path})
+
+
+# browser and viewer routes — Job 8, File Browser and Viewer
+
+@app.route("/api/fs/stat")
+def api_fs_stat():
+    path = os.path.abspath(request.args.get("path") or "")
+    if not os.path.exists(path):
+        return jsonify({"error": f"no such path: {path}"}), 404
+    if os.path.isdir(path):
+        return jsonify({"path": path, "isDir": True, "size": None})
+    return jsonify({"path": path, "isDir": False, "size": os.path.getsize(path)})
+
+
+@app.route("/api/fs/raw")
+def api_fs_raw():
+    import mimetypes
+    from flask import send_file
+    path = os.path.abspath(request.args.get("path") or "")
+    if not os.path.isfile(path):
+        return jsonify({"error": f"not a file: {path}"}), 404
+    mime, _ = mimetypes.guess_type(path)
+    return send_file(path, mimetype=mime or "application/octet-stream", conditional=True)
+
+
+def _duplicate_name(path):
+    base, ext = os.path.splitext(path)
+    candidate = f"{base} copy{ext}"
+    n = 2
+    while os.path.exists(candidate):
+        candidate = f"{base} copy {n}{ext}"
+        n += 1
+    return candidate
+
+
+@app.route("/api/fs/duplicate", methods=["POST"])
+def api_fs_duplicate():
+    import shutil
+    body = request.get_json(silent=True) or {}
+    path = os.path.abspath(body.get("path") or "")
+    if not os.path.exists(path):
+        return jsonify({"error": f"no such path: {path}"}), 404
+    dst = _duplicate_name(path)
+    try:
+        if os.path.isdir(path):
+            shutil.copytree(path, dst)
+        else:
+            shutil.copy2(path, dst)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True, "path": dst, "name": os.path.basename(dst)})
+
+
+@app.route("/api/fs/reveal", methods=["POST"])
+def api_fs_reveal():
+    body = request.get_json(silent=True) or {}
+    path = os.path.abspath(body.get("path") or "")
+    if not os.path.exists(path):
+        return jsonify({"error": f"no such path: {path}"}), 404
+    try:
+        subprocess.Popen(["open", "-R", path])
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True})
+
+
+# grid state and session settings — Job 10, tabs and targets
+
+GRIDS_DIR = os.path.join(SUITE_ROOT, "library", "grids")
+
+
+def _grid_name(part):
+    part = (part or "").strip()
+    if not part or os.sep in part or "/" in part or part in (".", ".."):
+        return None
+    return part
+
+
+def _grid_path(sid, window_id):
+    return os.path.join(GRIDS_DIR, sid, window_id + ".json")
+
+
+# one window's stored grid: cols, rows, and its widget list
+def _grid_body(body):
+    widgets = []
+    for w in (body.get("widgets") or []):
+        if not isinstance(w, dict) or not w.get("type"):
+            continue
+        slot = w.get("slot") if isinstance(w.get("slot"), dict) else {}
+        widgets.append({
+            "id":      w.get("id") or "",
+            "type":    w["type"],
+            "slot":    {k: slot.get(k) for k in ("col", "row", "w", "h")},
+            "options": w.get("options") if isinstance(w.get("options"), dict) else {},
+        })
+    return {
+        "cols": body.get("cols") or 12,
+        "rows": body.get("rows") or 12,
+        "widgets": widgets,
+    }
+
+
+@app.route("/api/grid/<sid>/<window_id>", methods=["GET"])
+def api_grid_read(sid, window_id):
+    sid_n, win_n = _grid_name(sid), _grid_name(window_id)
+    if sid_n is None or win_n is None:
+        return jsonify({"error": "bad name"}), 400
+    try:
+        with open(_grid_path(sid_n, win_n), "r", encoding="utf-8") as fh:
+            return jsonify({"grid": json.load(fh)})
+    except (OSError, ValueError):
+        return jsonify({"grid": None})
+
+
+@app.route("/api/grid/<sid>/<window_id>", methods=["PUT", "POST"])
+def api_grid_write(sid, window_id):
+    sid_n, win_n = _grid_name(sid), _grid_name(window_id)
+    if sid_n is None or win_n is None:
+        return jsonify({"error": "bad name"}), 400
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be an object"}), 400
+    path = _grid_path(sid_n, win_n)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(_grid_body(body), fh, indent=2)
+    return jsonify({"ok": True, "sid": sid_n, "window": win_n})
+
+
+@app.route("/api/grid/<sid>/<window_id>", methods=["DELETE"])
+def api_grid_delete(sid, window_id):
+    sid_n, win_n = _grid_name(sid), _grid_name(window_id)
+    if sid_n is None or win_n is None:
+        return jsonify({"error": "bad name"}), 400
+    try:
+        os.remove(_grid_path(sid_n, win_n))
+    except OSError:
+        return jsonify({"error": "no stored grid"}), 404
+    return jsonify({"ok": True})
+
+
+@app.route("/api/session-settings/<sid>", methods=["GET"])
+def api_session_settings_read(sid):
+    environment = ade_tracks.get_environment(sid)
+    if environment is None:
+        return jsonify({"error": f"no open session {sid}"}), 404
+    bag = dict(environment.settings)
+    # root is a field on the environment, not a settings key; it rides in
+    # effective so the session panel reads it beside the settings rows
+    effective = engine_settings.session_effective(bag)
+    effective["root"] = environment.root
+    return jsonify({"sid": sid, "keys": list(engine_settings.SESSION_KEYS),
+                    "bag": bag, "effective": effective})
+
+
+@app.route("/api/session-settings/<sid>", methods=["POST"])
+def api_session_settings_write(sid):
+    environment = ade_tracks.get_environment(sid)
+    if environment is None:
+        return jsonify({"error": f"no open session {sid}"}), 404
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be an object"}), 400
+    written = []
+    for key, value in body.items():
+        if key not in engine_settings.SESSION_KEYS:
+            continue
+        environment.settings[key] = value
+        written.append(key)
+    bag = dict(environment.settings)
+    ade_tracks.write_session_settings(environment)
+    return jsonify({"ok": True, "written": written, "bag": bag,
+                    "effective": engine_settings.session_effective(bag)})
+
+
+@app.route("/api/widget-defaults", methods=["GET"])
+def api_widget_defaults():
+    sid = request.args.get("sid") or ""
+    environment = ade_tracks.get_environment(sid) if sid else None
+    bag = dict(environment.settings) if environment is not None else {}
+    return jsonify({"defaults": engine_settings.widget_defaults_all(bag)})
 
 
 def agent_respond_safe(sess):
@@ -1165,14 +1727,22 @@ def _ade_live_runner(sess):
     return {"usage": usage, "cost_usd": usage["cost_usd"], "stop_reason": "stop"}
 
 
-@sock.route("/ws/ade")
-def ws_ade_handler(ws):
+@sock.route("/ws/ade/<sid>")
+def ws_ade_handler(ws, sid):
     webio    = AdeMemberWebIO(ws)
     conn_sid = "ade-" + uuid.uuid4().hex[:8]
 
+    environment = ade_tracks.get_environment(sid)
+    if environment is None:
+        ade_frames.refuse(webio, f"no open session {sid}")
+        return
+    if not environment.hydrated:
+        ade_tracks.reload_session(sid)
+        environment = ade_tracks.get_environment(sid) or environment
+
     with _registry_lock:
         _registry[conn_sid] = {"ws": ws, "sess": None, "webio": webio}
-    ade_frames.register_conn(webio)
+    ade_frames.register_conn(webio, environment)
 
     def _rebind(sess):
         with _registry_lock:
@@ -1183,11 +1753,12 @@ def ws_ade_handler(ws):
     webio.send_crew_list(compiler.roster_entries(), None)
     webio.send_gate_edges(ade_tracks.gate_edge_list())
     webio.send_rail_catalog(ade_rails.catalog())
-    webio.send_ade_init(ade_tracks.session_meta(), ade_tracks.list_regions(),
-                        ade_tracks.list_tracks())
+    webio.send_ade_init(ade_tracks.session_meta(environment),
+                        ade_tracks.list_regions(environment),
+                        ade_tracks.list_tracks(environment))
 
     ctx = ade_frames.AdeCtx(webio, conn_sid, _ade_live_runner, _rebind,
-                            _sanitize_media)
+                            environment, _sanitize_media)
 
     try:
         while True:
@@ -1222,12 +1793,19 @@ if __name__ == "__main__":
                     print("ollama ready")
                     break
 
+    # sessions open at the last shutdown come back listed, with no windows
+    ade_tracks.register_open_archives()
+
     _reaped = False
     def _shutdown_children():
         global _reaped
         if _reaped:
             return
         _reaped = True
+        try:
+            ade_tracks.save_all_on_shutdown()
+        except Exception as e:
+            print(f"[shutdown] session autosave failed: {e}")
         if _ollama_proc is not None and _ollama_proc.poll() is None:
             try:
                 _ollama_proc.terminate()

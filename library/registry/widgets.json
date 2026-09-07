@@ -1,0 +1,21 @@
+[
+  { "type": "chat",       "label": "Chat",         "path": "/static/js/widgets/chat/chat.js" },
+  { "type": "mini_queue", "label": "Mini Queue",   "path": "/static/js/widgets/mini-queue/mini-queue.js" },
+  { "type": "queue",      "label": "Queue",        "path": "/static/js/widgets/queue/queue.js" },
+  { "type": "editor",     "label": "Editor",       "path": "/static/js/widgets/editor/editor.js" },
+  { "type": "terminal",   "label": "Terminal",     "path": "/static/js/widgets/terminal/terminal.js" },
+  { "type": "browser",    "label": "File Browser", "path": "/static/js/widgets/browser/browser.js" },
+  { "type": "viewer",     "label": "Viewer",       "path": "/static/js/widgets/viewer/viewer.js" },
+  { "type": "mount",      "label": "Mount",        "path": "/static/js/widgets/mount/mount.js" },
+  { "type": "strip",      "label": "Agent Strip",  "path": "/static/js/widgets/strip/strip.js" },
+  { "type": "anchor_chat", "label": "Anchor Chat", "path": "/static/js/widgets/anchor-chat/anchor-chat.js" },
+  { "type": "gate_list",   "label": "Gate List",   "path": "/static/js/widgets/gate-list/gate-list.js" },
+  { "type": "devagent",    "label": "Dev Agent",   "path": "/static/js/widgets/devagent/devagent.js" },
+  { "type": "changes",     "label": "Changes",     "path": "/static/js/widgets/changes/changes.js" },
+  { "type": "messenger",   "label": "Messenger",   "path": "/static/js/widgets/messenger/messenger.js" },
+  { "type": "timeline",    "label": "Timeline",    "path": "/static/js/widgets/timeline/timeline.js" },
+  { "type": "ledger",      "label": "Ledger",      "path": "/static/js/widgets/ledger/ledger.js" },
+  { "type": "queue_log",   "label": "Queue Log",   "path": "/static/js/widgets/queue-log/queue-log.js" },
+  { "type": "transcript",  "label": "Transcript",  "path": "/static/js/widgets/transcript/transcript.js" },
+  { "type": "arrange",     "label": "Arrange",     "path": "/static/js/widgets/arrange/arrange.js" }
+]

@@ -1,0 +1,28 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "timeline-mtqqufcy-1",
+      "type": "timeline",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 5,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "devagent-mtqqv6yi-1",
+      "type": "devagent",
+      "slot": {
+        "col": 6,
+        "row": 1,
+        "w": 4,
+        "h": 11
+      },
+      "options": {}
+    }
+  ]
+}

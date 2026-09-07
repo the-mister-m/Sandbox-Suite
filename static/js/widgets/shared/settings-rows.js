@@ -1,0 +1,507 @@
+// shared settings rows — region settings / context / gates / preset tab bodies
+//
+// MX.settingsRows.create(frame, opts) returns { renderSettings(region, host),
+// renderContext(kind, id, host), renderGates(region, host),
+// renderPreset(region, host), onFrame(msg) }.
+//
+// opts.state is an object the caller owns. Required keys: gateEdges,
+// policyHooks, modelRows, presetNames, outputStyles, changePrompt, contexts,
+// collapsedBlocks, blocksTouched, lastOut. opts.rerender is a function this
+// module calls after any state change it makes.
+//
+// Moved from devagent.js as is.
+
+(function () {
+  "use strict";
+
+  const MX = window.MX = window.MX || {};
+  MX.settingsRows = MX.settingsRows || {};
+
+  // every region-tier key in engine/settings.py ROWS, grouped by its own
+  // block field. overlay is region-tier too but draws in the gates tab.
+  const HARNESS_KEYS = ["model", "seat", "preset_name", "reset_on_change",
+    "gate_wait_s", "max_tools", "request_timeout", "allow_agent_reset",
+    "context_reset_cap_k", "start_turn_on_reset", "reset_instruction"];
+
+  const OLLAMA_KEYS = ["num_ctx", "think", "keep_alive", "temperature",
+    "top_k", "top_p", "min_p", "repeat_penalty", "repeat_last_n", "seed",
+    "num_predict", "mirostat", "mirostat_tau", "mirostat_eta", "num_gpu",
+    "num_thread"];
+
+  const CLAUDE_KEYS = ["claude_mode", "claude_effort", "claude_partial",
+    "claude_cache_ttl", "claude_keep_warm", "claude_exclude_dynamic",
+    "claude_tools", "claude_disallowed_tools", "claude_add_dirs",
+    "claude_hook_ask_blocking", "claude_setting_sources",
+    "claude_system_prompt", "claude_bare", "claude_config_dir",
+    "claude_memory_enabled", "claude_md_excludes", "claude_output_style",
+    "claude_settings_file"];
+
+  const BLOCKS = [
+    { name: "harness", keys: HARNESS_KEYS, provider: null },
+    { name: "ollama", keys: OLLAMA_KEYS, provider: "ollama" },
+    { name: "claude", keys: CLAUDE_KEYS, provider: "claude" },
+  ];
+
+  // keys whose value set is fixed. Anything not listed here draws as text.
+  const CHOICES = {
+    claude_cache_ttl: ["5m", "1h"],
+    claude_effort: ["low", "medium", "high", "xhigh", "max"],
+  };
+
+  // keys holding a filesystem path — text field plus a browse button.
+  // ext narrows the file list; null browses folders only.
+  const PATH_KEYS = {
+    claude_settings_file: ".json",
+    claude_config_dir: null,
+  };
+
+  // keys whose value set is fetched at mount and cached on dev state
+  const CHOICES_LIVE = {
+    claude_output_style: "outputStyles",
+    preset_name: "presetNames",
+  };
+
+  function choicesFor(state, key) {
+    if (CHOICES[key]) return CHOICES[key];
+    const bucket = CHOICES_LIVE[key];
+    const live = bucket ? state[bucket] : null;
+    return Array.isArray(live) && live.length ? live : null;
+  }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function sendFrame(frame, obj) {
+    obj.inst = frame.id;
+    frame.send(obj);
+  }
+
+  function controlKind(v) {
+    if (Array.isArray(v)) return "list";
+    if (typeof v === "boolean") return "bool";
+    if (typeof v === "number") return "num";
+    return "str";
+  }
+
+  // ---- context file boxes (track + region context textareas) ----
+
+  function contextKey(kind, id) { return kind + ":" + id; }
+
+  function ensureContextBox(state, kind, id) {
+    const key = contextKey(kind, id);
+    if (!state.contexts[key]) {
+      const path = (kind === "track" ? "injections/track/" : "injections/region/") + id + ".md";
+      state.contexts[key] = { locked: true, text: "", loaded: false, path: path, absPath: null };
+    }
+    return state.contexts[key];
+  }
+
+  function loadContext(frame, state, rerender, kind, id) {
+    const box = ensureContextBox(state, kind, id);
+    if (box.loaded) return;
+    box.loaded = true; // one fetch per box; re-fetched only after a reset (new id -> new box)
+    fetch("/api/fs/read?path=" + encodeURIComponent(box.path))
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && typeof d.text === "string") {
+          box.text = d.text;
+          box.absPath = d.path;
+        }
+        rerender();
+      })
+      .catch(() => { /* missing file shows empty; Save creates it */ });
+  }
+
+  function saveContext(frame, state, kind, id, text) {
+    const box = ensureContextBox(state, kind, id);
+    box.text = text;
+    // the save frame needs a path that resolves the same way the read did —
+    // use the absolute path handed back by fs/read when we have one
+    sendFrame(frame, { type: "save", path: box.absPath || box.path, content: text });
+  }
+
+  // ---- widget css ----
+  //
+  // Each row is its own grid element, so the label / control / edit columns
+  // line up across rows only at explicit widths — content sizing would let
+  // every row pick its own. Relies on the --dv-* variables devagent.js
+  // defines on .mx-devagent; this module only ever renders inside that tree.
+
+  const CSS_ID = "mx-settings-rows-css";
+  const CSS = `
+.mx-dev-row{ display:grid; grid-template-columns:var(--dv-key) var(--dv-ctl) auto;
+  align-items:center; column-gap:8px; padding-left:var(--dv-indent); }
+.mx-dev-row + .mx-dev-row{ margin-top:var(--dv-gap); }
+.mx-dev-row > .mx-dev-key{ min-width:0; overflow-wrap:anywhere; }
+.mx-dev-row > input,
+.mx-dev-row > select,
+.mx-dev-row > .mx-dev-model-host{ min-width:0; }
+.mx-dev-row > .mx-btn{ justify-self:start; }
+.mx-dev-row > input[type="text"],
+.mx-dev-row > input[type="number"],
+.mx-dev-row > select{ width:100%; }
+.mx-dev-row > input[type="checkbox"]{ width:14px; height:14px; margin:0; justify-self:start; }
+
+/* model picker — three selects sized to content inside one cell */
+.mx-dev-model-host{ display:flex; align-items:center; gap:4px; overflow:hidden; }
+.mx-dev-model-host select{ width:auto; min-width:0; flex:0 1 auto; }
+
+/* section heads carry the spacing; their rows sit indented under them */
+.mx-dev-block{ margin-top:var(--dv-sec); }
+.mx-dev-block-title,
+.mx-dev-block-head{ margin:var(--dv-sec) 0 var(--dv-gap); padding-bottom:3px;
+  border-bottom:1px solid var(--gridline); }
+.mx-dev-block > .mx-dev-block-title:first-child{ margin-top:0; }
+.mx-dev-block-head{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+.mx-dev-caret{ flex:0 0 auto; }
+
+/* button groups */
+.mx-dev-context-actions,
+.mx-dev-preset-actions,
+.mx-dev-change-choices{ display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+  margin-top:var(--dv-gap); }
+
+/* loose children of a tab body — the gates apply, the preset select */
+.mx-dev-tab-body{ margin-top:var(--dv-gap); }
+.mx-dev-tab-body > select{ width:var(--dv-ctl); margin-left:var(--dv-indent); }
+.mx-dev-tab-body > .mx-btn{ margin:var(--dv-sec) 0 0 var(--dv-indent); }
+.mx-dev-tab-body > .mx-dim{ padding-left:var(--dv-indent); }
+.mx-dev-textarea{ box-sizing:border-box; width:100%; min-height:90px; }
+.mx-dev-status{ margin-top:var(--dv-gap); padding-left:var(--dv-indent); }
+
+/* gates rows put the scope after the hook picker, not in the label */
+.mx-dev-row > .mx-dim{ min-width:0; overflow-wrap:anywhere; }
+
+/* context and preset action rows sit under their block head */
+.mx-dev-context-actions,
+.mx-dev-preset-actions{ padding-left:var(--dv-indent); }
+.mx-dev-change-prompt{ margin-top:var(--dv-sec); padding-left:var(--dv-indent); }
+`;
+
+  function ensureCss() {
+    if (document.getElementById(CSS_ID)) return;
+    const style = document.createElement("style");
+    style.id = CSS_ID;
+    style.textContent = CSS;
+    document.head.appendChild(style);
+  }
+
+  // ---- track / region rung helpers ----
+
+  // a provider block the region does not use starts closed; every other
+  // block starts open. A caret click pins the block's state either way.
+  function blockCollapsed(state, region, block) {
+    const key = region.id + ":" + block.name;
+    if (state.blocksTouched.has(key)) return state.collapsedBlocks.has(key);
+    return !!block.provider && block.provider !== region.provider;
+  }
+
+  function toggleBlock(state, region, block) {
+    const key = region.id + ":" + block.name;
+    const now = blockCollapsed(state, region, block);
+    state.blocksTouched.add(key);
+    if (now) state.collapsedBlocks.delete(key); else state.collapsedBlocks.add(key);
+  }
+
+  function modelDisplay(state, region) {
+    const row = (state.modelRows || []).find((m) => m.id === region.model);
+    if (row) return [row.provider, row.model, row.version].filter(Boolean).join(" / ");
+    return [region.provider, region.model].filter(Boolean).join(" / ");
+  }
+
+  function buildSettingRow(frame, state, region, key) {
+    const value = region.settings ? region.settings[key] : undefined;
+    const row = el("div", "mx-dev-row");
+    row.appendChild(el("label", "mx-dev-key", key));
+
+    if (key === "model") {
+      const host = el("div", "mx-dev-model-host");
+      row.appendChild(host);
+      MX.mountModelPicker(host, {
+        value: value,
+        onPick: (id) => sendFrame(frame, { type: "edit_track", track: region.id, fields: { model: id } }),
+      });
+      return row;
+    }
+
+    // a path key draws a text field plus a browse button; the browse
+    // commits, and typing still commits through the row's own button
+    if (Object.prototype.hasOwnProperty.call(PATH_KEYS, key)) {
+      const wrap = el("div", "mx-dev-rootfield");
+      const input = el("input");
+      input.type = "text";
+      input.value = value === null || value === undefined ? "" : String(value);
+      const browse = el("button", "mx-btn", "browse");
+      browse.type = "button";
+      browse.addEventListener("click", () => {
+        MX.openRootBrowser(input.value || "/", (path) => {
+          input.value = path;
+          sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: path } });
+        }, { ext: PATH_KEYS[key] });
+      });
+      wrap.appendChild(input);
+      wrap.appendChild(browse);
+      row.appendChild(wrap);
+
+      const commit = el("button", "mx-btn", "apply");
+      commit.type = "button";
+      commit.addEventListener("click", () => {
+        sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: input.value } });
+      });
+      row.appendChild(commit);
+      return row;
+    }
+
+    // a fixed value set draws as a dropdown and commits on change
+    const choices = choicesFor(state, key);
+    if (choices) {
+      const sel = el("select");
+      const current = value === null || value === undefined ? "" : String(value);
+      const list = choices.indexOf(current) < 0 ? [current].concat(choices) : choices;
+      for (const c of list) {
+        const o = el("option", "", c || "—");
+        o.value = c;
+        if (c === current) o.selected = true;
+        sel.appendChild(o);
+      }
+      sel.addEventListener("change", () => {
+        sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: sel.value } });
+      });
+      row.appendChild(sel);
+      return row;
+    }
+
+    const kind = controlKind(value);
+    let input;
+    if (kind === "bool") {
+      input = el("input"); input.type = "checkbox"; input.checked = !!value;
+    } else if (kind === "num") {
+      input = el("input"); input.type = "number"; input.value = value === null || value === undefined ? "" : value;
+    } else if (kind === "list") {
+      input = el("input"); input.type = "text"; input.value = (value || []).join(", ");
+    } else {
+      input = el("input"); input.type = "text"; input.value = value === null || value === undefined ? "" : String(value);
+    }
+    row.appendChild(input);
+
+    const btn = el("button", "mx-btn", "apply");
+    btn.type = "button";
+    btn.addEventListener("click", () => {
+      let out;
+      if (kind === "bool") out = input.checked;
+      else if (kind === "num") out = input.value === "" ? null : Number(input.value);
+      else if (kind === "list") out = input.value.split(",").map((s) => s.trim()).filter(Boolean);
+      else out = input.value;
+      sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: out } });
+    });
+    row.appendChild(btn);
+    return row;
+  }
+
+  function renderChangePrompt(frame, state, rerender, region, container) {
+    const cp = state.changePrompt;
+    if (!cp || cp.region !== region.id) return;
+    const box = el("div", "mx-dev-change-prompt");
+    box.appendChild(el("div", "mx-dim", cp.text || "How would you like to change?"));
+    const choices = el("div", "mx-dev-change-choices");
+    for (const choice of (cp.choices || [])) {
+      const b = el("button", "mx-btn", choice);
+      b.type = "button";
+      b.addEventListener("click", () => {
+        sendFrame(frame, { type: "change_answer", token: cp.token, choice: choice });
+        state.changePrompt = null;
+        rerender();
+      });
+      choices.appendChild(b);
+    }
+    box.appendChild(choices);
+    container.appendChild(box);
+  }
+
+  function renderSettingsTab(frame, state, rerender, region, container) {
+    for (const block of BLOCKS) {
+      const collapsed = blockCollapsed(state, region, block);
+      const head = el("div", "mx-dev-block-head");
+      const caret = el("span", "mx-dev-caret", collapsed ? "▸" : "▾");
+      head.appendChild(caret);
+      head.appendChild(el("span", "", block.name + " (" + block.keys.length + ")"));
+      head.addEventListener("click", () => {
+        toggleBlock(state, region, block);
+        rerender();
+      });
+      container.appendChild(head);
+      if (collapsed) continue;
+      for (const k of block.keys) {
+        container.appendChild(buildSettingRow(frame, state, region, k));
+      }
+    }
+
+    renderChangePrompt(frame, state, rerender, region, container);
+  }
+
+  function renderContextBlockImpl(frame, state, rerender, kind, id, container) {
+    loadContext(frame, state, rerender, kind, id);
+    const box = ensureContextBox(state, kind, id);
+    const ta = el("textarea", "mx-dev-textarea");
+    ta.value = box.text;
+    ta.readOnly = box.locked;
+    ta.addEventListener("input", () => { box.text = ta.value; });
+    container.appendChild(ta);
+
+    const actions = el("div", "mx-dev-context-actions");
+    if (box.locked) {
+      const unlock = el("button", "mx-btn", "unlock");
+      unlock.type = "button";
+      unlock.addEventListener("click", () => { box.locked = false; rerender(); });
+      actions.appendChild(unlock);
+    } else {
+      const save = el("button", "mx-btn", "save");
+      save.type = "button";
+      save.addEventListener("click", () => saveContext(frame, state, kind, id, ta.value));
+      actions.appendChild(save);
+    }
+    container.appendChild(actions);
+  }
+
+  // the gate_edges frame carries {edge, scope} only — hooks come from
+  // /api/policy, and every row the backend stores is
+  // {edge, driver, scope, hook}, so driver rides along and no row is dropped
+  const GATE_DRIVER = "model";
+  const GATE_DEFAULT_HOOK = "ask";
+
+  function renderGatesTab(frame, state, region, container) {
+    const edges = Array.isArray(state.gateEdges) ? state.gateEdges : [];
+    const hooks = Array.isArray(state.policyHooks) ? state.policyHooks : [];
+    const overlay = Array.isArray(region.overlay) ? region.overlay : [];
+    const rowCtrls = [];
+
+    if (!edges.length) {
+      container.appendChild(el("div", "mx-dim", "no gate edges"));
+      return;
+    }
+
+    for (const e of edges) {
+      const edgeKey = e.edge || "";
+      const scope = e.scope || "";
+      const current = overlay.find((o) => o.edge === edgeKey && o.scope === scope);
+      const hook = current ? (current.hook || GATE_DEFAULT_HOOK) : GATE_DEFAULT_HOOK;
+
+      const row = el("div", "mx-dev-row");
+      row.appendChild(el("label", "mx-dev-key", edgeKey));
+
+      const sel = el("select");
+      const list = hooks.indexOf(hook) < 0 ? [hook].concat(hooks) : hooks;
+      for (const h of list) {
+        const o = el("option", "", h);
+        o.value = h;
+        if (h === hook) o.selected = true;
+        sel.appendChild(o);
+      }
+      row.appendChild(sel);
+      row.appendChild(el("span", "mx-dim", scope));
+
+      container.appendChild(row);
+      rowCtrls.push({ edge: edgeKey, scope: scope, input: sel });
+    }
+
+    const apply = el("button", "mx-btn", "apply");
+    apply.type = "button";
+    apply.addEventListener("click", () => {
+      const fullOverlay = rowCtrls.map((c) => ({
+        edge: c.edge, driver: GATE_DRIVER, scope: c.scope, hook: c.input.value,
+      }));
+      sendFrame(frame, { type: "edit_track", track: region.id, fields: { overlay: fullOverlay } });
+    });
+    container.appendChild(apply);
+  }
+
+  function renderPresetTab(frame, state, rerender, region, container) {
+    if (!state.presetsLoaded) {
+      state.presetsLoaded = true;
+      fetch("/api/library/presets").then((r) => r.json()).then((d) => {
+        state.presetNames = (d && d.names) || [];
+        rerender();
+      }).catch(() => {});
+    }
+
+    const active = (region.settings && region.settings.preset_name) || "";
+    const sel = el("select");
+    for (const name of state.presetNames) {
+      const o = el("option", "", name);
+      o.value = name;
+      if (name === active) o.selected = true;
+      sel.appendChild(o);
+    }
+    container.appendChild(sel);
+
+    const current = () => sel.value || "";
+    const actions = el("div", "mx-dev-preset-actions");
+
+    const load = el("button", "mx-btn", "load");
+    load.type = "button";
+    load.addEventListener("click", () => {
+      if (current()) sendFrame(frame, { type: "load_preset", track: region.id, name: current() });
+    });
+    actions.appendChild(load);
+
+    const save = el("button", "mx-btn", "save");
+    save.type = "button";
+    save.addEventListener("click", () => {
+      const name = window.prompt("preset name?");
+      if (name) sendFrame(frame, { type: "save_preset", track: region.id, name: name.trim() });
+    });
+    actions.appendChild(save);
+
+    const rename = el("button", "mx-btn", "rename");
+    rename.type = "button";
+    rename.addEventListener("click", () => {
+      if (!current()) return;
+      const name = window.prompt("new name for " + current() + "?");
+      if (name) sendFrame(frame, { type: "rename_preset", old_name: current(), new_name: name.trim() });
+    });
+    actions.appendChild(rename);
+
+    const del = el("button", "mx-btn", "delete");
+    del.type = "button";
+    del.addEventListener("click", () => {
+      if (current() && window.confirm("delete preset " + current() + "?")) {
+        sendFrame(frame, { type: "delete_preset", name: current() });
+      }
+    });
+    actions.appendChild(del);
+
+    container.appendChild(actions);
+
+    if (state.lastOut) container.appendChild(el("div", "mx-dim", state.lastOut));
+  }
+
+  MX.settingsRows.create = function (frame, opts) {
+    opts = opts || {};
+    const state = opts.state || {};
+    const rerender = typeof opts.rerender === "function" ? opts.rerender : function () {};
+    ensureCss();
+
+    return {
+      renderSettings(region, host) { renderSettingsTab(frame, state, rerender, region, host); },
+      renderContext(kind, id, host) { renderContextBlockImpl(frame, state, rerender, kind, id, host); },
+      renderGates(region, host) { renderGatesTab(frame, state, region, host); },
+      renderPreset(region, host) { renderPresetTab(frame, state, rerender, region, host); },
+      onFrame(msg) {
+        if (msg.type !== "saved") return;
+        if (msg.inst !== frame.id) return;
+        for (const key of Object.keys(state.contexts || {})) {
+          const box = state.contexts[key];
+          if (box.absPath === msg.path || box.path === msg.path) {
+            box.locked = true;
+            if (msg.ok && !box.absPath) box.absPath = msg.path;
+          }
+        }
+        rerender();
+      },
+    };
+  };
+})();

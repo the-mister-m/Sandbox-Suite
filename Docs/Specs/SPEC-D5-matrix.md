@@ -116,3 +116,10 @@ Docs/Reports/RECEIPT-D5-matrix.md. Sections: EDITS, DELETED, TESTS,
 QUESTIONS, PHASE 3, STRAY FILES. State the frame contract in four
 lines. State the matrix template routes. Wave 4 copies both from your
 receipt.
+
+## ADDED 2026-09-06, after Job 1
+
+Job 1 built the widget registry with a field named "rows" for the
+widget tier row group. Rename that field to "type". Update every
+reader of it that you touch. The word "rows" stays only where it names
+an actual table row in settings.py.
