@@ -1,0 +1,22 @@
+[
+  {
+    "item": "13-setup",
+    "status": "SEEN",
+    "note": "region=68c843510e47 track=22c0e74d6d35"
+  },
+  {
+    "item": "13-gate-broadcast-seen",
+    "status": "FAILED",
+    "note": "null"
+  },
+  {
+    "item": "13-queue-log-command-text",
+    "status": "FAILED",
+    "note": "\u2723\nQueue Log \u00b7 queue_log-mtrvv7dk-3\noptions\n\u00d7\nuntitled\nsonnet\n5m\n1h\ntrim:off\nw4fsonnet\nsonnet\n5m\n1h\ntrim:off\nall\nnone\nTIME\nACTION\nTARGET\nTRACK\nSUMMARY\nMODEL\n19:33:14\nrun_command\necho hello-w4f > /tmp/w4fgate.txt\nw4bsonnet\nrun_command echo hello-w4f > /tmp/w4fgate.txt\nsonnet\n19:29:58\nrun_command\necho hello-w4d > /tmp/w4dgate.txt\nw4bsonnet\nrun_command echo hello-w4d > /tmp/w4dgate.txt\nsonnet\n19:25:10\nwrite_file\n/tmp/w4bgate.txt\nw4bsonnet\nwrite_file /tmp/w4bgate.txt\nsonnet\n19:13:58\nwrite_file\nw2proo"
+  },
+  {
+    "item": "cleanup-13",
+    "status": "SEEN",
+    "note": "killed 68c843510e47, deleted 22c0e74d6d35"
+  }
+]

@@ -1,0 +1,61 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "strip-mtrnb5ko-1",
+      "type": "strip",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "changes-mtrnb5l5-2",
+      "type": "changes",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "queue_log-mtrnb5l9-3",
+      "type": "queue_log",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "messenger-mtrnb5le-4",
+      "type": "messenger",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "ledger-mtrnb5lq-5",
+      "type": "ledger",
+      "slot": {
+        "col": 5,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

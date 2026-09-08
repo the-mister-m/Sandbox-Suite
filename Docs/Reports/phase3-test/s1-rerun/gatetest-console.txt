@@ -1,0 +1,11 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[driver] turn sent
+[driver] gate seen: {"id": "eddd99ea15da", "track": "5c84d83e0ea5"}
+[driver] approved gate eddd99ea15da
+[driver] gate seen: {"id": "97d684f3dc8b", "track": "5c84d83e0ea5"}
+[driver] approved gate 97d684f3dc8b
+[driver] gate seen: {"id": "51a5fda987d2", "track": "5c84d83e0ea5"}
+[driver] approved gate 51a5fda987d2
+[driver] turn appears idle, stopping poll
+[driver] frame types seen: ["track_status", "track_status", "track_status", "gate_broadcast", "feed_dirty", "gate_broadcast", "feed_dirty", "track_status", "track_status", "gate_broadcast", "gate_broadcast", "feed_dirty", "track_status", "track_status", "gate_broadcast", "feed_dirty", "gate_broadcast", "feed_dirty", "track_status", "track_status", "feed_dirty"]
+[driver] approved gate ids: ["eddd99ea15da", "97d684f3dc8b", "51a5fda987d2"]

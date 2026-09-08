@@ -1,0 +1,13 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[state] denied 5 stray pending send gates before starting
+[shot] queuelog-40-cleared-strays.png
+[state] write_file gate: NOT FOUND within 45s
+[shot] queuelog-41-write-approved.png
+[state] read_file gate: NOT FOUND within 45s
+[shot] queuelog-42-read-approved.png
+[state] run_command gate: NOT FOUND within 45s
+[shot] queuelog-43-run_command-approved.png
+[state] gate cycle settled inline: write_file=False read_file=False run_command=False
+[shot] queuelog-44-feed-final.png
+[shot] queuelog-45-detail-open.png
+[state] clicked write_file row to expand detail: True

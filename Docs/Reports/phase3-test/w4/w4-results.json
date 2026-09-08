@@ -1,0 +1,97 @@
+[
+  {
+    "item": "7-mount-root",
+    "status": "SEEN",
+    "note": "/Users/moth3rship/Desktop"
+  },
+  {
+    "item": "setup-w4sonnet",
+    "status": "FAILED",
+    "note": "track=e6bae442a222 region=None"
+  },
+  {
+    "item": "setup-w4gemma",
+    "status": "SEEN",
+    "note": "region=8146d40fb936"
+  },
+  {
+    "item": "4-chat-isolation-text",
+    "status": "FAILED",
+    "note": "crossA=True crossB=False"
+  },
+  {
+    "item": "4-frames-per-region",
+    "status": "SEEN",
+    "note": "{\"(untagged)\": 156}"
+  },
+  {
+    "item": "14-gate-list-live-row",
+    "status": "FAILED",
+    "note": "settle buttons drew within 30s: False"
+  },
+  {
+    "item": "14-gate-pending-frame",
+    "status": "NOT DRIVEN",
+    "note": "{\"frame\": null, \"bound\": null}"
+  },
+  {
+    "item": "14-gate-list-dom",
+    "status": "SEEN",
+    "note": "\u2723\nGate List \u00b7 gate_list-mtrv427y-4\noptions\n\u00d7\nno gates on this track"
+  },
+  {
+    "item": "6-gate-list-history",
+    "status": "SEEN",
+    "note": "\u2723\nGate List \u00b7 gate_list-mtrv427y-4\noptions\n\u00d7\nno gates on this track"
+  },
+  {
+    "item": "13-queue-log-command",
+    "status": "SEEN",
+    "note": "\u2723\nQueue Log \u00b7 queue_log-mtrv4r93-5\noptions\n\u00d7\nuntitled\nsonnet\n5m\n1h\ntrim:off\nw4sonnet\nsonnet\n5m\n1h\ntrim:off\nw4gemma\ngemma4:e4b-it-q8_0\nall\nnone\nTIME\nACTION\nTARGET\nTRACK\nSUMMARY\nMODEL\n19:13:58\nwrite_file\nw2proof.txt\nw2g1\nwrite_file w2proof.txt\nsonnet\n17:35:03\nsend_message\nCaptain\nc5540782cd1c\n118 chars to 1 receiver(s)\nsonnet\n17:35:00\nrun_command\nrm d1test.txt\nc5540782cd1c\n[exit 0, no output]\nsonnet"
+  },
+  {
+    "item": "5-anchor-region-list",
+    "status": "SEEN",
+    "note": "[\"\\u2014 region \\u2014\", \"untitled\", \"w4sonnet\", \"w4gemma\"]"
+  },
+  {
+    "item": "5-anchor-send-turn",
+    "status": "SEEN",
+    "note": ""
+  },
+  {
+    "item": "5-anchor-stop-fired",
+    "status": "SEEN",
+    "note": ""
+  },
+  {
+    "item": "11-strip-label",
+    "status": "SEEN",
+    "note": "stop"
+  },
+  {
+    "item": "8-picker-anchor-box",
+    "status": "SEEN",
+    "note": "{\"x\": 1231.0859375, \"y\": 8, \"width\": 90.90625, \"height\": 26}"
+  },
+  {
+    "item": "8-picker-onscreen",
+    "status": "NOT DRIVEN",
+    "note": "dropdown element not matched by selector"
+  },
+  {
+    "item": "9-devagent-selected",
+    "status": "SEEN",
+    "note": ""
+  },
+  {
+    "item": "10-timeline-zoom-clip",
+    "status": "SEEN",
+    "note": "{\"zoom\": {\"x\": 951.328125, \"y\": 637, \"width\": 86.859375, \"height\": 17.1953125}, \"frame\": {\"x\": 935.328125, \"y\": 602, \"width\": 458.6640625, \"height\": 292}}"
+  },
+  {
+    "item": "cleanup",
+    "status": "SEEN",
+    "note": "kill_track x2, delete_track e6bae442a222"
+  }
+]

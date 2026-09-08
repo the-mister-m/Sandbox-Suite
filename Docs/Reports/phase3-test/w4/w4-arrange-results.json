@@ -1,0 +1,62 @@
+[
+  {
+    "item": "1-open-library-map",
+    "status": "SEEN",
+    "note": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/maps/Music History.2.json"
+  },
+  {
+    "item": "1-phase-switch",
+    "status": "SEEN",
+    "note": "selPhase=kmtrvo5171"
+  },
+  {
+    "item": "1-node-ids",
+    "status": "SEEN",
+    "note": "{\"runmap\": \"kmtrvo5173\", \"briefs\": \"kmtrvo5174\"}"
+  },
+  {
+    "item": "1-add-notches",
+    "status": "SEEN",
+    "note": "{\"runmap_notches\": 2, \"briefs_notches\": 2}"
+  },
+  {
+    "item": "1-draw-cable",
+    "status": "SEEN",
+    "note": "cables=1"
+  },
+  {
+    "item": "1-set-cable-path",
+    "status": "SEEN",
+    "note": "test/cable/path.txt"
+  },
+  {
+    "item": "1-save",
+    "status": "FAILED",
+    "note": "null"
+  },
+  {
+    "item": "1-reopen-cable-and-path",
+    "status": "SEEN",
+    "note": "[{\"path\": \"test/cable/path.txt\", \"wire\": \"message\"}]"
+  },
+  {
+    "item": "2-job-setup",
+    "status": "SEEN",
+    "note": "{\"ok\": true, \"jobId\": \"w4pipejob01\", \"groupId\": \"w4pipegroup01\", \"provider\": \"claude\", \"model\": \"sonnet\", \"track\": \"528b80a75803\"}"
+  },
+  {
+    "item": "2-pipe-console",
+    "status": "SEEN",
+    "note": "clean"
+  },
+  {
+    "item": "2-region-node-id",
+    "status": "SEEN",
+    "note": "[{\"id\": \"7c595f133e54\", \"track\": \"61b82efd39a1\", \"node_id\": \"w4pipejob01\", \"name\": \"w4pipejob\", \"model\": \"sonnet\", \"seat\": null, \"root\": \"/Users/moth3rship/Desktop\", \"created\": \"2026-09-07T19:37:19\", \"provider\": \"claude\", \"loop_class\": \"user-loop\", \"mechanism\": \"cli\", \"muted\": false, \"settings\": {\"model\": \"sonnet\", \"seat\": \"\", \"preset_name\": \"\", \"reset_on_change\": true, \"gate_wait_s\": 150, \"max_tools\": null, \"request_timeout\": 200, \"allow_agent_reset\": true, \"context_reset_cap_k\": 300, \"start_turn_on_reset\": true, \"reset_instruction\": \"You have been reset, message The Captain directly or agents in chat for instructions\", \"num_ctx\": 32768, \"think\": true, \"keep_alive\": 30, \"temperature\": 0.8, \"top_k\": 40, \"top_p\": 0.9, \"min_p\": 0, \"repeat_penalty\": 1.1, \"repeat_last_n\": 64, \"seed\": 0, \"num_predict\": -1, \"mirostat\": 0, \"mirostat_tau\": 5, \"mirostat_eta\": 0.1, \"num_gpu\": null, \"num_thread\": null, \"claude_mode\": \"persistent\", \"claude_effort\": null, \"claude_partial\": true, \"claude_cache_ttl\": \"1h\", \"claude_keep_warm\": false, \"claude_exclude_dynamic\": false, \"claude_tools\": [], \"claude_disallowed_tools\": [], \"claude_add_dirs\": [], \"claude_hook_ask_blocking\": true, \"claude_setting_sources\": null, \"claude_system_prompt\": \"\", \"claude_bare\": false, \"claude_config_dir\": \"\", \"claude_memory_enabled\": false, \"claude_md_excludes\": [], \"claude_output_style\": \"\", \"claude_settings_file\": \"\"}, \"overlay\": [{\"edge\": \"write_file\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"send_message\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"remember\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"run_command\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"check_read\", \"driver\": \"model\", \"scope\": \"inside\", \"hook\": \"ask\"}, {\"edge\": \"check_read\", \"driver\": \"model\", \"scope\": \"outside\", \"hook\": \"ask\"}, {\"edge\": \"screen_capture\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"fetch_url\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"recall\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"web_open\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"web_read\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"web_screenshot\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"web_act\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"web_eval\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"initiate\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"reset_region\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"reset_self\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}, {\"edge\": \"request_messages\", \"driver\": \"model\", \"scope\": \"any\", \"hook\": \"ask\"}], \"region\": {\"job\": null, \"input\": null, \"output\": null, \"git\": null, \"notes\": \"\", \"status\": \"blank\", \"stxt\": \"\"}}]"
+  },
+  {
+    "item": "2-group-does-not-pipe",
+    "status": "SEEN",
+    "note": "[]"
+  }
+]

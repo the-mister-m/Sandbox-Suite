@@ -155,7 +155,9 @@
         options: MX.startingOptions(type),
       };
       this.instances.push(inst);
-      this.render();
+      // mount only the new instance; render() rebuilds every widget's
+      // frame from scratch and would wipe every other widget's live state
+      if (this.el) this.el.appendChild(this._build(inst));
       this.save();
       return inst;
     },

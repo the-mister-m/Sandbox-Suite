@@ -1552,6 +1552,101 @@ def api_fs_raw():
     return send_file(path, mimetype=mime or "application/octet-stream", conditional=True)
 
 
+# native macOS file chooser — returns the picked path, null on cancel
+@app.route("/api/fs/pick")
+def api_fs_pick():
+    ext = (request.args.get("ext") or "json").strip().lower()
+    utype = {"json": "public.json"}.get(ext, "public.data")
+    # Finder owns the dialog when choose file runs inside its tell block
+    script = ('tell application "Finder"\nactivate\n'
+              'POSIX path of (choose file of type {"%s"})\nend tell' % utype)
+    try:
+        r = subprocess.run(["osascript", "-e", script],
+                           capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.SubprocessError):
+        return jsonify({"path": None})
+    picked = (r.stdout or "").strip()
+    if r.returncode != 0 or not picked:
+        return jsonify({"path": None})
+    return jsonify({"path": picked})
+
+
+# archived doc generator maps — one json per map
+MAPS_DIR = os.path.join(SUITE_ROOT, "library", "maps")
+
+
+# name collision stamp — mirrors ade/tracks.py _stamp_name
+def _maps_stamp(base, used):
+    if base not in used:
+        return base
+    n = 2
+    while f"{base}.{n}" in used:
+        n += 1
+    return f"{base}.{n}"
+
+
+def _maps_row(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    return {"name": os.path.splitext(os.path.basename(path))[0],
+            "path": path,
+            "source": doc.get("source"),
+            "root": doc.get("root"),
+            "archived_at": doc.get("archived_at")}
+
+
+@app.route("/api/library/maps")
+def api_library_maps():
+    rows = []
+    if os.path.isdir(MAPS_DIR):
+        for nm in sorted(os.listdir(MAPS_DIR)):
+            if not nm.endswith(".json"):
+                continue
+            row = _maps_row(os.path.join(MAPS_DIR, nm))
+            if row:
+                rows.append(row)
+    return jsonify({"list": rows})
+
+
+@app.route("/api/library/maps/archive", methods=["POST"])
+def api_library_maps_archive():
+    body = request.get_json(silent=True) or {}
+    src = os.path.abspath(os.path.expanduser(body.get("source") or ""))
+    if not os.path.isfile(src) or os.path.basename(src) != "database.json":
+        return jsonify({"error": f"not a database.json: {src}"}), 400
+    try:
+        with open(src, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError) as e:
+        return jsonify({"error": str(e)}), 400
+    root = None
+    rec = os.path.join(os.path.dirname(src), "export-record.json")
+    if os.path.isfile(rec):
+        try:
+            with open(rec, encoding="utf-8") as fh:
+                root = (json.load(fh) or {}).get("rootPath")
+        except (OSError, ValueError):
+            root = None
+    base = ((doc.get("docsetRoot") or {}).get("label") or "").strip() or "map"
+    base = base.replace("/", "-")
+    os.makedirs(MAPS_DIR, exist_ok=True)
+    used = {os.path.splitext(n)[0] for n in os.listdir(MAPS_DIR)
+            if n.endswith(".json")}
+    out = os.path.join(MAPS_DIR, _maps_stamp(base, used) + ".json")
+    payload = {"source": src, "root": root,
+               "archived_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+               "doc": doc}
+    try:
+        with open(out, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2, sort_keys=True)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify(_maps_row(out))
+
+
 def _duplicate_name(path):
     base, ext = os.path.splitext(path)
     candidate = f"{base} copy{ext}"
@@ -1765,11 +1860,13 @@ def ws_ade_handler(ws, sid):
             raw = ws.receive()
             if raw is None:
                 break
+            msg = None
             try:
                 msg = json.loads(raw)
                 ade_frames.handle(ctx, msg)
             except Exception as e:
-                webio.out(f"[frame error — skipped: {e}]", dim=True)
+                ftype = msg.get("type") if isinstance(msg, dict) else msg
+                webio.out(f"[frame error — skipped: {ftype}: {e}]", dim=True)
     finally:
         with _registry_lock:
             _registry.pop(conn_sid, None)

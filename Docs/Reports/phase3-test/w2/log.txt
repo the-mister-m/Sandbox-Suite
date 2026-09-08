@@ -1,0 +1,20 @@
+page loaded, frame + send taps installed
+track w2track = 952b8011cf10
+region w2claude = 7bc404eeb8ab
+anchor_chat mounted = anchor_chat-mtruqsu1-1
+select options: ['|— region —', '07ef4d527e34|untitled', '7bc404eeb8ab|w2claude']
+after pick: {"bound": "7bc404eeb8ab", "following": "7bc404eeb8ab", "live": "live", "script": "no turns on this track"}
+frames after pick: {"transcript": 1, "mirrorTranscript": 1, "anchorSent": 0, "followSent": 1}
+turn sent
+stream running
+stop clicked, cp-stop-fired = True
+out frames at click 10, +6s 12
+write turn sent
+gate_list mounted = gate_list-mtrurcu7-2, bound to 7bc404eeb8ab
+chat_history sent 1, replies [0, 0]
+gate-list buttons: ['✣', 'options', '×']
+approve clicked
+chat_history replies now [0, 0, 0]
+gate-list text: ✣Gate List · gate_list-mtrurcu7-2options×no gates on this track
+anchor frames sent by widgets, whole run: 0
+roster after cleanup: ['07ef4d527e34|untitled']

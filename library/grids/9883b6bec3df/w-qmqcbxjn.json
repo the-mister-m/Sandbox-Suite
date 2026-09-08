@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "mini_queue-mtrr9uyf-1",
+      "type": "mini_queue",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 6,
+        "h": 8
+      },
+      "options": {}
+    }
+  ]
+}

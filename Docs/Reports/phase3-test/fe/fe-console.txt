@@ -1,0 +1,8 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[dialog] prompt 'preset name?' -> accept=True text='fehtest'
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[dialog] prompt 'preset name?' -> accept=True text='fehnum'
+=== phase2 checkpoint written ===
+[console:log] mermaid loaded from vendored ESM build: /static/vendor/mermaid/dist/mermaid.esm.min.mjs
+[console:log] mermaid loaded from vendored ESM build: /static/vendor/mermaid/dist/mermaid.esm.min.mjs

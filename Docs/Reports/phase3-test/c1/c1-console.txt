@@ -1,0 +1,5 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)

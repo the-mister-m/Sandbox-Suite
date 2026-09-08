@@ -1,0 +1,12 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+track created: ffsonnettrack
+region created: ffsonnet (claude/sonnet) on ffsonnettrack
+track created: fftrack
+region created: ffgemma (ollama/gemma4) on fftrack
+claude lane: .tl-ttl=1 .ade-exclude-dynamic=1
+gemma lane: .tl-ttl=0 .ade-exclude-dynamic=0
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+[console:error] Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+readback text: 'ff-context-roundtrip 1788819168'
+round trip match: True

@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "changes-mtrj7996-1",
+      "type": "changes",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 6,
+        "h": 12
+      },
+      "options": {}
+    }
+  ]
+}

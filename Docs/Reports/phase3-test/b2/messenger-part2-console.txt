@@ -1,0 +1,13 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[state] tracks on remount: [{'id': '32f1ec929f4a', 'name': 'gfsf'}, {'id': '9f2051a42f39', 'name': 'b3claude2'}, {'id': 'b063adc1befc', 'name': 'gemma4b2'}, {'id': '90db982504a6', 'name': 'sonnetb2'}]
+[shot] messenger-40-remount.png
+[shot] messenger-41-after-approve-both.png
+[state] counts (unread mail per sender) after approvals+refresh: {'32f1ec929f4a': 12, '9f2051a42f39': 5, 'b063adc1befc': 2, 'Captain': 2}
+[state] opened a card containing the reply: True
+[shot] messenger-42-chat-open-unread.png
+[state] s.unread before mark-read click: [49]
+[state] mark-read control clicked: row-button
+[shot] messenger-43-after-mark-read-click-no-refresh.png
+[state] remaining [data-read] buttons before forced refresh: 1
+[shot] messenger-44-after-mark-read-forced-refresh.png
+[state] counts after forced refresh post mark-read: {'32f1ec929f4a': 12, '9f2051a42f39': 5, 'b063adc1befc': 2, 'Captain': 1}

@@ -1,0 +1,119 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "mount-mtrv3i74-1",
+      "type": "mount",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "chat-mtrv3kru-2",
+      "type": "chat",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "speech_enabled": false,
+        "tts_engine": "say",
+        "region": "07ef4d527e34"
+      }
+    },
+    {
+      "id": "chat-mtrv3l8u-3",
+      "type": "chat",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "speech_enabled": false,
+        "tts_engine": "say",
+        "region": "8146d40fb936"
+      }
+    },
+    {
+      "id": "gate_list-mtrv427y-4",
+      "type": "gate_list",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": null
+      }
+    },
+    {
+      "id": "queue_log-mtrv4r93-5",
+      "type": "queue_log",
+      "slot": {
+        "col": 5,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "anchor_chat-mtrv4tb0-6",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 9,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": "8146d40fb936"
+      }
+    },
+    {
+      "id": "strip-mtrv51yr-7",
+      "type": "strip",
+      "slot": {
+        "col": 1,
+        "row": 9,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "devagent-mtrv55m4-8",
+      "type": "devagent",
+      "slot": {
+        "col": 5,
+        "row": 9,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "timeline-mtrv57ot-9",
+      "type": "timeline",
+      "slot": {
+        "col": 9,
+        "row": 9,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

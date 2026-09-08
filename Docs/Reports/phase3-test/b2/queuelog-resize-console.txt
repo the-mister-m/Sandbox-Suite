@@ -1,0 +1,9 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[state] column order after reorder: ['model', 'time', 'action', 'target', 'track', 'summary']
+[shot] queuelog-20-before-resize.png
+[state] grip bounding box: {'x': 204, 'y': 80, 'width': 11, 'height': 24}
+[state] time col width after +60px drag (default 62): 122
+[shot] queuelog-21-after-resize.png
+[state] localStorage ade.queuelog.cols before reload: [{"key":"model","w":110},{"key":"time","w":122},{"key":"action","w":118},{"key":"target","w":240},{"key":"track","w":130},{"key":"summary","w":280}]
+[shot] queuelog-30-after-reload.png
+[state] cols after reload: [{'key': 'model', 'w': 110}, {'key': 'time', 'w': 122}, {'key': 'action', 'w': 118}, {'key': 'target', 'w': 240}, {'key': 'track', 'w': 130}, {'key': 'summary', 'w': 280}]

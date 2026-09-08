@@ -9,14 +9,27 @@ from engine import daemon_queue as dq
 from engine import ledger
 from engine import read_tool as rt
 from engine import settings as st
+from engine.providers import ClaudeProvider
 from ade import rails
 from ade import tracks
+
+# provider default model, used when insert_region gets no model of its own;
+# ollama's is its __init__ default (engine/ollama_provider.py:38), claude's
+# is ClaudeProvider.DEFAULT_MODEL (engine/providers.py:498)
+_DEFAULT_MODEL_BY_PROVIDER = {
+    "claude": ClaudeProvider.DEFAULT_MODEL,
+    "ollama": "gemma4:26b-mxfp8",
+}
 
 
 def _human_path(environment, path):
     path = path or "."
     expanded = os.path.expanduser(path)
     if os.path.isabs(expanded):
+        return os.path.abspath(expanded)
+    # context files (injections/track, injections/region) live at the
+    # project root, resolved the same way /api/fs/read resolves them
+    if expanded == "injections" or expanded.startswith("injections/"):
         return os.path.abspath(expanded)
     return os.path.abspath(os.path.join(environment.root, expanded))
 
@@ -253,10 +266,10 @@ def _track_gatelog(track_id):
     w = tracks.environment_of_region(track_id)
     log_dir = w.log_dir if w is not None else None
     return [_name_receivers(r) for r in ledger.ade_snapshot(since=0, log_dir=log_dir)
-            if r.get("kind") == "action" and r.get("track") == track_id]
+            if r.get("kind") == "action" and r.get("region") == track_id]
 
 
-def _anchor(ctx, track):
+def _join_hub(ctx, track):
     _detach(ctx)
     track.hub.add(ctx.webio, ctx.conn_sid)
     ctx.anchored = track
@@ -319,7 +332,7 @@ def _do_create_track(msg, environment):
                   or bool(msg.get("region")))
     return tracks.create_track(
         name,
-        root=msg.get("root") or rt.WORKSPACE_ROOT,
+        root=msg.get("root"),
         overlay_rows=msg.get("overlay", msg.get("overlay_rows")),
         provider=msg.get("provider"), loop_class=msg.get("loop_class"),
         mechanism=msg.get("mechanism"),
@@ -436,15 +449,21 @@ def _do_save_preset(region, name, pending=None):
 
 def _do_insert_region(msg, environment):
     r = msg.get("region") or {}
+    provider = r.get("provider") or msg.get("provider")
+    model = r.get("model") or msg.get("model") or ""
+    if not model:
+        # no preset, no explicit model: default to the provider's own
+        # default rather than "", which left the region unable to run
+        model = _DEFAULT_MODEL_BY_PROVIDER.get(provider or "claude", "")
     return tracks.insert_region(
         msg.get("track", ""),
         (r.get("name") or msg.get("name") or "untitled").strip() or "untitled",
-        r.get("model") or msg.get("model") or "",
+        model,
         root=r.get("wt") or r.get("root") or msg.get("root"),
         seat=(r.get("agent") or r.get("seat") or "").strip() or None,
         overlay_rows=r.get("overlay_rows"),
         settings=msg.get("settings"),
-        provider=r.get("provider") or msg.get("provider"),
+        provider=provider,
         loop_class=r.get("loop_class") or msg.get("loop_class"),
         mechanism=r.get("mechanism") or msg.get("mechanism"),
         region=r, environment=environment)
@@ -477,7 +496,7 @@ def _do_duplicate_region(region_id, environment, name=None):
 
 
 
-_PLAN_NODE_FIELDS   = ("wt", "notes", "status", "stxt")
+_PLAN_NODE_FIELDS   = ("wt", "notes", "status", "stxt", "provider")
 _PLAN_DETAIL_FIELDS = ("agent",)
 
 
@@ -501,6 +520,8 @@ def _plan_rows(plan):
     index = {}
     for node in (chosen.get("nodes") or []):
         if not isinstance(node, dict):
+            continue
+        if node.get("kind") in ("group", "branch", "merge"):
             continue
         own = (node.get("name").strip()
                if isinstance(node.get("name"), str) else "") or "untitled"
@@ -554,6 +575,16 @@ def handle(ctx, msg):
                    tracks.list_regions(ctx.environment),
                    tracks.list_tracks(ctx.environment))
 
+    if t == "roster":
+        _roster()
+        return
+
+    if t == "gate_edges":
+        # same send the socket-open path uses (server.py); a devagent
+        # mounted after open never saw that one-time send
+        webio.send_gate_edges(tracks.gate_edge_list())
+        return
+
     if t == "create_track":
         track = _do_create_track(msg, ctx.environment)
         made = tracks.regions_of(track.id)
@@ -562,7 +593,7 @@ def handle(ctx, msg):
         webio.send_track_created(made[0] if made else None, track)
         _roster()
         if made:
-            _anchor(ctx, made[0])
+            _join_hub(ctx, made[0])
 
     elif t == "insert_region":
         reg = _do_insert_region(msg, ctx.environment)
@@ -574,18 +605,7 @@ def handle(ctx, msg):
         _apply_spawn_presets(reg, msg, webio)
         webio.send_track_created(reg, tracks.get_track(reg.track))
         _roster()
-        _anchor(ctx, reg)
-
-    elif t == "anchor":
-        target = msg.get("track", "")
-        track = tracks.get_region(target)
-        if track is None:
-            kids = tracks.regions_of(target)
-            track = kids[0] if kids else None
-        if track is None:
-            webio.out("[anchor: unknown track]", dim=True)
-            return
-        _anchor(ctx, track)
+        _join_hub(ctx, reg)
 
     elif t == "user":
         raw = msg.get("track")
@@ -657,7 +677,7 @@ def handle(ctx, msg):
             return
         webio.send_track_created(reg, track)
         _roster()
-        _anchor(ctx, reg)
+        _join_hub(ctx, reg)
 
     elif t == "edit_track_row":
         row = tracks.get_track(msg.get("track", ""))
@@ -795,6 +815,7 @@ def handle(ctx, msg):
         region_id = msg.get("id") or ""
         if region_id:
             tracks.set_muted(region_id, msg.get("muted"))
+            broadcast_roster(ctx.environment)
 
     elif t == "wp_read":
         ids = [i for i in (msg.get("ids") or []) if isinstance(i, int)]
@@ -805,6 +826,12 @@ def handle(ctx, msg):
         track = tracks.get_region(msg.get("track", ""))
         if track is not None:
             webio.send_transcript(track.id, track.sess.messages, inst=_inst)
+
+    # gate history for one region, asked for by the widget that binds it
+    elif t == "chat_history":
+        track = tracks.get_region(msg.get("track", ""))
+        if track is not None:
+            webio.send_chat_history(track.id, _track_gatelog(track.id))
 
     elif t == "gate_action":
         _do_gate_action(msg.get("action"), msg.get("id"), ctx.environment.log_dir)

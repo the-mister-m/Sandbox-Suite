@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "queue_log-mtrjyipy-1",
+      "type": "queue_log",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 10,
+        "h": 11
+      },
+      "options": {}
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "terminal-mtrnzwlu-1",
+      "type": "terminal",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": "",
+        "tabs": [],
+        "active": ""
+      }
+    }
+  ]
+}

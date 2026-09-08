@@ -1,0 +1,38 @@
+[
+  {
+    "type": "roster",
+    "inst": "terminal-mtrohwm9-1"
+  },
+  {
+    "type": "insert_region",
+    "track": "5a031370bf1c",
+    "region": {
+      "name": "c3sonnet",
+      "provider": "claude",
+      "model": "sonnet"
+    }
+  },
+  {
+    "type": "follow",
+    "track": "3e50df9becde",
+    "inst": "terminal-mtrohwm9-1"
+  },
+  {
+    "type": "input",
+    "track": "3e50df9becde",
+    "shell": "terminal-mtrohwm9-1-sh1",
+    "data": "\n",
+    "inst": "terminal-mtrohwm9-1"
+  },
+  {
+    "type": "close_shell",
+    "track": "3e50df9becde",
+    "shell": "terminal-mtrohwm9-1-sh1",
+    "inst": "terminal-mtrohwm9-1"
+  },
+  {
+    "type": "unfollow",
+    "track": "3e50df9becde",
+    "inst": "terminal-mtrohwm9-1"
+  }
+]

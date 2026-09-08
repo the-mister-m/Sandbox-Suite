@@ -1,0 +1,2 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[driver] popover html: <div class="ag-pop-head"><span class="ag-pop-name">sonnet2</span><span class="ag-pop-phase">idle</span></div><div class="ag-pop-empty">no records for this agent</div>

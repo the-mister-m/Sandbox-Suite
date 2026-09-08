@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "messenger-mtrkdgl3-1",
+      "type": "messenger",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 8,
+        "h": 11
+      },
+      "options": {}
+    }
+  ]
+}

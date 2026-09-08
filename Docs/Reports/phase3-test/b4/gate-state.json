@@ -1,0 +1,44 @@
+{
+  "gates": [
+    {
+      "id": "7617d9f177e5",
+      "hist": false,
+      "settled": true,
+      "outcome": "approved",
+      "prompt": "write  b4test.txt  [create]\nb4ok\n\napply? [y/N] ",
+      "edge": null,
+      "target": null
+    }
+  ],
+  "outFrames": 25,
+  "statusFrames": [
+    "waiting",
+    "thinking",
+    "working",
+    "working",
+    "working",
+    "idle"
+  ],
+  "meterFrames": 2,
+  "lastMeters": {
+    "ctx_used": 13200,
+    "ctx_max": 200000,
+    "ts_now": 20.39951928124823,
+    "ts_avg": 78.42989577467574,
+    "in_tokens": 2,
+    "out_tokens": 32,
+    "cached": 13198
+  },
+  "metersText": "idlectx 13.2K/200Kcache 13.2Kt/s 20.4avg 78.4",
+  "askFrames": [
+    {
+      "id": "7617d9f177e5",
+      "region": "481ac26ee513",
+      "prompt": "write  b4test.txt  [create]\nb4ok\n\napply? [y/N] "
+    }
+  ],
+  "gatePending": 1,
+  "thinkingBlocks": 1,
+  "fences": 0,
+  "turnblocks": 3
+}

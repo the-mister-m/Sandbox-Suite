@@ -1,0 +1,326 @@
+{
+  "timeline_cold": {
+    "names": [
+      "test",
+      "JHJKHKL",
+      "jj",
+      "kljoiu",
+      "lkj;"
+    ],
+    "roots": [
+      "no root of its own \u2014 workspace default",
+      "\u2026/moth3rship/Desktop",
+      "no root of its own \u2014 workspace default",
+      "no root of its own \u2014 workspace default",
+      "no root of its own \u2014 workspace default"
+    ]
+  },
+  "strip_cold": [
+    {
+      "track": "32f1ec929f4a",
+      "title": ""
+    }
+  ],
+  "chat_cold": [
+    "\u2014 region \u2014",
+    "gfsf"
+  ],
+  "mount_model_default": {
+    "provider": "ollama",
+    "model": "gemma4",
+    "version": "e4b-it-q8_0"
+  },
+  "frames_after_mount_click": [
+    "models",
+    "crew_list",
+    "gate_edges",
+    "rail_catalog",
+    "ade_init",
+    "track_list",
+    "feed",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "mirror",
+    "mirror",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "track_created",
+    "track_list",
+    "track_created",
+    "track_list",
+    "track_transcript",
+    "chat_history",
+    "feed_dirty"
+  ],
+  "created": {
+    "track": {
+      "id": "931fc1e3400e",
+      "name": "s2test",
+      "regions": [
+        "e8d87cf22e69"
+      ],
+      "root": "/Users/moth3rship/Desktop",
+      "order": 5,
+      "created": "2026-09-07T15:18:59"
+    },
+    "region": {
+      "id": "e8d87cf22e69",
+      "track": "931fc1e3400e",
+      "node_id": null,
+      "name": "s2region",
+      "model": "gemma4:e4b-it-q8_0",
+      "seat": null,
+      "root": "/Users/moth3rship/Desktop",
+      "created": "2026-09-07T15:18:59",
+      "provider": "ollama",
+      "loop_class": "user-loop",
+      "mechanism": "native",
+      "muted": false,
+      "settings": {
+        "model": "gemma4:e4b-it-q8_0",
+        "seat": "",
+        "preset_name": "",
+        "reset_on_change": true,
+        "gate_wait_s": 150,
+        "max_tools": null,
+        "request_timeout": 200,
+        "allow_agent_reset": true,
+        "context_reset_cap_k": 300,
+        "start_turn_on_reset": true,
+        "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+        "num_ctx": 32768,
+        "think": true,
+        "keep_alive": 30,
+        "temperature": 0.8,
+        "top_k": 40,
+        "top_p": 0.9,
+        "min_p": 0,
+        "repeat_penalty": 1.1,
+        "repeat_last_n": 64,
+        "seed": 0,
+        "num_predict": -1,
+        "mirostat": 0,
+        "mirostat_tau": 5,
+        "mirostat_eta": 0.1,
+        "num_gpu": null,
+        "num_thread": null,
+        "claude_mode": "persistent",
+        "claude_effort": null,
+        "claude_partial": true,
+        "claude_cache_ttl": "1h",
+        "claude_keep_warm": false,
+        "claude_exclude_dynamic": false,
+        "claude_tools": [],
+        "claude_disallowed_tools": [],
+        "claude_add_dirs": [],
+        "claude_hook_ask_blocking": true,
+        "claude_setting_sources": null,
+        "claude_system_prompt": "",
+        "claude_bare": false,
+        "claude_config_dir": "",
+        "claude_memory_enabled": false,
+        "claude_md_excludes": [],
+        "claude_output_style": "",
+        "claude_settings_file": ""
+      },
+      "overlay": [
+        {
+          "edge": "write_file",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "send_message",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "remember",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "run_command",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "inside",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "outside",
+          "hook": "ask"
+        },
+        {
+          "edge": "screen_capture",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "fetch_url",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "recall",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_open",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_read",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_screenshot",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_act",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_eval",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "initiate",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_region",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_self",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "request_messages",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        }
+      ],
+      "region": {
+        "job": null,
+        "input": null,
+        "output": null,
+        "git": null,
+        "notes": null,
+        "status": null,
+        "stxt": null
+      }
+    }
+  },
+  "timeline_after_mount": {
+    "names": [
+      "test",
+      "JHJKHKL",
+      "jj",
+      "kljoiu",
+      "lkj;",
+      "s2test"
+    ],
+    "roots": [
+      {
+        "text": "no root of its own \u2014 workspace default",
+        "title": "this lane has no root set, so it runs wherever the workspace default points at the time it runs"
+      },
+      {
+        "text": "\u2026/moth3rship/Desktop",
+        "title": "/Users/moth3rship/Desktop\n\nclick to pick a folder"
+      },
+      {
+        "text": "no root of its own \u2014 workspace default",
+        "title": "this lane has no root set, so it runs wherever the workspace default points at the time it runs"
+      },
+      {
+        "text": "no root of its own \u2014 workspace default",
+        "title": "this lane has no root set, so it runs wherever the workspace default points at the time it runs"
+      },
+      {
+        "text": "no root of its own \u2014 workspace default",
+        "title": "this lane has no root set, so it runs wherever the workspace default points at the time it runs"
+      },
+      {
+        "text": "\u2026/moth3rship/Desktop",
+        "title": "/Users/moth3rship/Desktop\n\nclick to pick a folder"
+      }
+    ]
+  },
+  "region_id_for_kill": "e8d87cf22e69",
+  "frame_types_final": [
+    "models",
+    "crew_list",
+    "gate_edges",
+    "rail_catalog",
+    "ade_init",
+    "track_list",
+    "feed",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "mirror",
+    "mirror",
+    "track_list",
+    "feed",
+    "track_list",
+    "track_list",
+    "track_created",
+    "track_list",
+    "track_created",
+    "track_list",
+    "track_transcript",
+    "chat_history",
+    "feed_dirty",
+    "track_removed",
+    "track_list",
+    "feed"
+  ],
+  "region_names_after_cleanup": [
+    "gfsf"
+  ]
+}

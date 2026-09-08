@@ -1,0 +1,238 @@
+[
+ {
+  "step": "mounted",
+  "t": "16:15:44",
+  "inst": "devagent-mtrokaj4-1"
+ },
+ {
+  "step": "presets_endpoint_raw",
+  "t": "16:15:44",
+  "body": "{\"list\":[\"Agent Opus\",\"Agent Sonnet\",\"Music History Sonnet\",\"User Fable\",\"c1test\",\"test sonnet\"]}\n"
+ },
+ {
+  "step": "presets_in_widget",
+  "t": "16:15:44",
+  "presets": []
+ },
+ {
+  "step": "preset_tab_no_region",
+  "t": "16:15:45",
+  "text": "no region selected"
+ },
+ {
+  "step": "fs_read_existing_file",
+  "t": "16:15:45",
+  "status": 200,
+  "path": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/injections/region/PLACEHOLDER.md",
+  "err": null
+ },
+ {
+  "step": "track_made",
+  "t": "16:15:47",
+  "id": "0dc9aec4cae4"
+ },
+ {
+  "step": "region_made",
+  "t": "16:15:52",
+  "regions": [
+   "gfsf",
+   "c1r2"
+  ],
+  "id": "82358b55e6f5",
+  "selR": "82358b55e6f5"
+ },
+ {
+  "step": "selected_other_region",
+  "t": "16:15:52",
+  "selR": "32f1ec929f4a"
+ },
+ {
+  "step": "dots_before_turn",
+  "t": "16:15:52",
+  "rows": [
+   "\u25cf gfsf",
+   "\u25cb c1r2"
+  ]
+ },
+ {
+  "step": "dots_during_turn",
+  "t": "16:15:53",
+  "phase": "waiting",
+  "rows": [
+   "\u25cf gfsf",
+   "\u25cf c1r2"
+  ]
+ },
+ {
+  "step": "turn_done",
+  "t": "16:16:07",
+  "phases": [
+   "waiting",
+   "thinking",
+   "idle"
+  ],
+  "dots_after": [
+   "\u25cf gfsf",
+   "\u25cb c1r2"
+  ],
+  "fetch_total": 0,
+  "models_fetches": 0,
+  "presets_fetches": 0,
+  "fetch_urls": [],
+  "frame_counts": {
+   "status": 4,
+   "track_status": 4,
+   "out": 12,
+   "meters": 1,
+   "activity": 1,
+   "feed_dirty": 1
+  }
+ },
+ {
+  "step": "gates_before_replay",
+  "t": "16:16:08",
+  "text": "no gate edges"
+ },
+ {
+  "step": "gates_replayed",
+  "t": "16:16:08",
+  "n": 18,
+  "rows": 18
+ },
+ {
+  "step": "gates_applied",
+  "t": "16:16:11",
+  "before_overlay": [],
+  "after_overlay": [
+   {
+    "edge": "write_file",
+    "driver": "model",
+    "scope": "any",
+    "hook": "open"
+   }
+  ],
+  "selR": "82358b55e6f5",
+  "lastOut": ""
+ },
+ {
+  "step": "presets_injected",
+  "t": "16:16:12",
+  "names": [
+   "Agent Opus",
+   "Agent Sonnet",
+   "Music History Sonnet",
+   "User Fable",
+   "c1test",
+   "test sonnet"
+  ]
+ },
+ {
+  "step": "preset_options_after_inject",
+  "t": "16:16:14",
+  "options": [
+   "Agent Opus",
+   "Agent Sonnet",
+   "Music History Sonnet",
+   "User Fable",
+   "c1test",
+   "test sonnet"
+  ]
+ },
+ {
+  "step": "preset_load_prompt",
+  "t": "16:16:16",
+  "lastOut": "",
+  "tab": "preset"
+ },
+ {
+  "step": "load_change_prompt",
+  "t": "16:16:16",
+  "count": 1,
+  "text": "How would you like to change?\nreset_region\nrewrite_cache\ncancel"
+ },
+ {
+  "step": "preset_loaded",
+  "t": "16:16:19",
+  "lastOut": "[preset 'c1test'] preset 'c1test': 'max_tools' dropped \u2014 wrong type",
+  "selR": "82358b55e6f5",
+  "preset": "c1test",
+  "max_tools": null
+ },
+ {
+  "step": "dialog",
+  "t": "16:16:20",
+  "kind": "prompt",
+  "msg": "new name for c1test?",
+  "answer": "'c1test2'"
+ },
+ {
+  "step": "preset_renamed",
+  "t": "16:16:22",
+  "lastOut": "[preset renamed: /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/presets/c1test2.json]"
+ },
+ {
+  "step": "presets_on_disk_after_rename",
+  "t": "16:16:22",
+  "names": [
+   "Agent Opus",
+   "Agent Sonnet",
+   "Music History Sonnet",
+   "User Fable",
+   "c1test2",
+   "test sonnet"
+  ]
+ },
+ {
+  "step": "delete_target",
+  "t": "16:16:23",
+  "target": "c1test2",
+  "options": [
+   "Agent Opus",
+   "Agent Sonnet",
+   "Music History Sonnet",
+   "User Fable",
+   "c1test2",
+   "test sonnet"
+  ]
+ },
+ {
+  "step": "dialog",
+  "t": "16:16:23",
+  "kind": "confirm",
+  "msg": "delete preset c1test2?",
+  "answer": "True"
+ },
+ {
+  "step": "preset_deleted",
+  "t": "16:16:25",
+  "lastOut": "[preset deleted: /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/presets/c1test2.json]",
+  "names_on_disk": [
+   "Agent Opus",
+   "Agent Sonnet",
+   "Music History Sonnet",
+   "User Fable",
+   "test sonnet"
+  ]
+ },
+ {
+  "step": "dialog",
+  "t": "16:16:25",
+  "kind": "confirm",
+  "msg": "delete region c1r2?",
+  "answer": "True"
+ },
+ {
+  "step": "cleanup",
+  "t": "16:16:29",
+  "tracks": [
+   "test",
+   "JHJKHKL",
+   "jj",
+   "kljoiu",
+   "lkj;"
+  ],
+  "regions": [
+   "gfsf@a104ecc9ea23"
+  ]
+ }
+]

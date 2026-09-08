@@ -1,0 +1,14 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[state] cleanup-pass-1: approved 1 pending write row(s)
+[state] cleanup-pass-2: approved 1 pending write row(s)
+[shot] queuelog-60-write-backlog-cleared.png
+[state] read pending row NEVER appeared within 40s
+[state] read-approve: approved 0 pending read row(s)
+[shot] queuelog-61-read-approved.png
+[state] run pending row NEVER appeared within 40s
+[state] run-approve: approved 0 pending run row(s)
+[shot] queuelog-62-run-approved.png
+[state] got_read=False got_run=False
+[shot] queuelog-63-feed-final.png
+[shot] queuelog-64-detail-open.png
+[state] clicked read_file row to expand detail: False

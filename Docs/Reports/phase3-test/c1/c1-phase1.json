@@ -1,0 +1,110 @@
+[
+ {
+  "step": "open",
+  "t": "16:09:44",
+  "hooked": true,
+  "early_types": [
+   "models",
+   "gate_edges",
+   "ade_init"
+  ]
+ },
+ {
+  "step": "gate_edges_at_open",
+  "t": "16:09:44",
+  "present": true,
+  "body": "{\"type\":\"gate_edges\",\"edges\":[{\"edge\":\"write_file\",\"scope\":\"any\"},{\"edge\":\"send_message\",\"scope\":\"any\"},{\"edge\":\"remember\",\"scope\":\"any\"},{\"edge\":\"run_command\",\"scope\":\"any\"},{\"edge\":\"check_read\",\"scope\":\"inside\"},{\"edge\":\"check_read\",\"scope\":\"outside\"},{\"edge\":\"screen_capture\",\"scope\":\"any\"},{\"edge\":\"fetch_url\",\"scope\":\"any\"},{\"edge\":\"recall\",\"scope\":\"any\"},{\"edge\":\"web_open\",\"scope\":\"any\"},{\"edge\":\"web_read\",\"scope\":\"any\"},{\"edge\":\"web_screenshot\",\"scope\":\"any\"},{\"edge\":\"web_act\",\"scope\":\"any\"},{\"edge\":\"web_eval\",\"scope\":\"any\"},{\"edge\":\"initiate\",\"scope\":\"any\"},{\"edge\":\"reset_region\",\"scope\":\"any\"},{\"edge\":\"reset_self\",\"scope\":\"any\"},{\"edge\":\"request_messages\",\"scope\":\"any\"}]}"
+ },
+ {
+  "step": "mounted",
+  "t": "16:09:47",
+  "inst": "devagent-mtrocmpv-1"
+ },
+ {
+  "step": "state_after_mount",
+  "t": "16:09:47",
+  "tracks": [
+   {
+    "id": "5a031370bf1c",
+    "name": "test",
+    "root": "/Users/moth3rship/Desktop",
+    "order": 0
+   },
+   {
+    "id": "a104ecc9ea23",
+    "name": "JHJKHKL",
+    "root": "/Users/moth3rship/Desktop",
+    "order": 1
+   },
+   {
+    "id": "2ec9b663f955",
+    "name": "jj",
+    "root": "/System/Volumes",
+    "order": 2
+   },
+   {
+    "id": "8d0b223aeea9",
+    "name": "kljoiu",
+    "root": "/Users/moth3rship/Desktop",
+    "order": 3
+   },
+   {
+    "id": "18aa66bf5f38",
+    "name": "lkj;",
+    "root": "/bin",
+    "order": 4
+   }
+  ],
+  "regions": [
+   {
+    "id": "32f1ec929f4a",
+    "name": "gfsf",
+    "track": "a104ecc9ea23",
+    "model": "gemma4:e4b-it-q8_0",
+    "provider": "ollama"
+   }
+  ],
+  "gateEdges": null,
+  "selT": "5a031370bf1c",
+  "selR": null,
+  "modelRows": 22,
+  "presets": [],
+  "hooks": [
+   "open",
+   "ask",
+   "queue",
+   "locked"
+  ],
+  "sessionRoot": "/Users/moth3rship/Desktop",
+  "workspaceRoot": "/Users/moth3rship/Desktop"
+ },
+ {
+  "step": "gates_tab_late_mount",
+  "t": "16:09:47",
+  "text": "no region selected"
+ },
+ {
+  "step": "fetches_through_mount",
+  "t": "16:09:48",
+  "n": 17,
+  "urls": [
+   "/api/widget-registry",
+   "/api/grid/9883b6bec3df/w-qh6qmkwp",
+   "/api/library/models",
+   "/api/library/presets",
+   "/api/policy",
+   "/api/claude/output-styles",
+   "/api/workspace-root",
+   "/api/session-settings/9883b6bec3df",
+   "/api/library/models",
+   "/api/grid/9883b6bec3df/w-qh6qmkwp",
+   "/api/library/models",
+   "/api/library/models",
+   "/api/library/models",
+   "/api/library/models",
+   "/api/library/models",
+   "/api/library/models",
+   "/api/library/models"
+  ]
+ }
+]

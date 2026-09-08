@@ -87,18 +87,26 @@ Rules: GLOBAL-RULES.md. Closer-only file. Lean: no superseded history.
 - `/api/fs/put` (new route) writes any path and creates parent folders; `/api/fs/write` still refuses a path that is not already a file. Arrange's plan file goes through `/api/fs/raw` (uncapped read) and `/api/fs/put` (write).
 - `deriveMessageHandoffs` is filled in: one entry per from/to pair off `wp_feed` lines, `dead`/`denied` and self-addressed lines skipped, `paths` left empty.
 - `/api/library/presets` returns `{"list": [...]}`; the F-series specs assumed `names`. Timeline's fetch reads `names` then falls back to `list`.
+- Server frames: `tracks` are region rows, `rows` are track container rows. Five widgets read the wrong one — strip, changes, messenger, queue-log, ledger. [SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md).
+- No client frame re-requests the roster; S2 adds a `roster` frame. `frames.py:322` blocks the session root; S2's fix F6 corrects it. [SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md).
+- HOWTO-frames.md covers ade/web_io.py senders only; engine/web_io.py senders are undocumented — S1's fix F3 adds them. [Docs/HOWTO-frames.md](Docs/HOWTO-frames.md), [SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md).
+- Widget folders regroup into six groups — chat, queue, usertools, agent, adetools, shared — in S3. [SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md).
+- Widget folders are physically grouped under static/js/widgets/<group>/ (chat, queue, usertools, agent, adetools, shared) — done in S3, picker dropdown updated to match. [RECEIPT-phase4-S3.md](Docs/Reports/RECEIPT-phase4-S3.md).
+- library/maps/ holds archived doc generator maps (Music History.json, Music History.2.json, Desktop.json) — housekeeping list, Brandon's call, nothing moved yet. [SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md).
+- The anchor frame is gone; anchor-chat is now a region switcher on follow and mirror. [RECEIPT-phase4-W2.md](Docs/Reports/RECEIPT-phase4-W2.md).
+- Raw out/status/meters fan-out is deleted; the mirror is the one tagged stream. [RECEIPT-phase4-W5.md](Docs/Reports/RECEIPT-phase4-W5.md).
+- Archive writes master.prev before overwriting; shutdown skips unhydrated environments. [RECEIPT-phase4-W1.md](Docs/Reports/RECEIPT-phase4-W1.md).
+- Injections context files resolve against the project root, not the session root — reverted from the session-root resolution tried mid-phase. [RECEIPT-phase4-F-F.md](Docs/Reports/RECEIPT-phase4-F-F.md).
+- Ollama's default model is gemma4:26b-mxfp8.
+- Rule conflict, unresolved: the harness bypass notice tells agents to read and edit through Bash; the project rules say Read and Edit tools so Brandon sees edits. Every Phase 4 box followed the project rules. [SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md).
 
 ## LAST WEEK
-- 2026-09-07: Arrange widget scoped, shared PLAN JSON landed in the Doc Generator's project file, two build specs written, nothing spawned — [SESSION-REVIEW-2026-09-07-arrange-scope.md](Docs/Reports/SESSION-REVIEW-2026-09-07-arrange-scope.md).
+- 2026-09-05: Phase 1 read, specced, and built (foundation, engine, tools/context) — [SESSIONLOG.md](SESSIONLOG.md).
+- 2026-09-06: Phase 2 scoped and built in four waves (settings, environments, sockets, suite/matrix, widgets); Phase 3 scoped (14 E-specs) and built (17 builders, nothing run live); Phase 3 test pass started, four widgets graded, thirteen specced as jobs — [SESSIONLOG.md](SESSIONLOG.md).
+- 2026-09-07: Arrange widget scoped and its shared PLAN JSON landed in the Doc Generator; Session F built backend frame fixes, shared widget modules, timeline behavior, and the arrange widget (nothing run live); devagent CSS written; Phase 4 scoped from a read pass, then built and tested headed across twenty-seven boxes, five fix waves — [SESSIONLOG.md](SESSIONLOG.md).
 
-## WARM START — 2026-09-06 (close)
-- Situation: Phase 3 built and unrun; test pass started this session. Four widgets specced (anchor_chat, queue_log, queue, ledger) by Opus spec agents against old code and the redpen checklist — they wrote what's wrong, did not fix. Thirteen remaining widgets specced as jobs for the next session.
-- Last state: fixes not yet designed. Brandon's shape for fix work is his own notes plus the four specs. Nothing fixed, nothing committed, server never restarted this session.
-- Next move: Brandon's call — run Waves B and C from [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md), or design fix jobs first.
-- Links: [Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md) · [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md) · [TODO.md](TODO.md)
-
-## WARM START — 2026-09-07 (close, Session F)
-- Situation: Session F (widgets) ran four Goto builders — backend frame edits, four shared modules pulled out of devagent, timeline's right-click/presets/change-prompt/handoff rebuild, and the arrange widget built whole. Nothing run live: no server restarted, no browser opened by any of the four.
-- Last state: F1–F3 clean under cap. F2 (shared modules) ran 261k against a 180k cap; F4 (arrange) ran 198k against its spec's 150k ceiling — both noted, neither investigated. `node --check`/`ast.parse`/import checks clean across all four; no Python test suite rerun by F2–F4.
-- Next move: Brandon opens the suite and tries one edit round trip on timeline and devagent, then decides the six open items in [TODO.md](TODO.md) — F2's cap vs spec size, the `/api/library/presets` `list`/`names` field, arrange's frame subscribe list, live ghost nodes, and `/api/fs/put` vs `/api/fs/write`.
-- Links: [Docs/Reports/REVIEW-session-F-widgets.md](Docs/Reports/REVIEW-session-F-widgets.md) · [SESSIONLOG.md](SESSIONLOG.md) · [TODO.md](TODO.md)
+## WARM START — 2026-09-07 (close, Phase 4 done)
+- Situation: Phase 4 done — all nineteen widgets driven headed against a live server, not screenshotted idle; five fix waves (S, B, C, D, W) landed and re-driven.
+- Last state: nineteen of nineteen widgets driven; every Wave B/C/D finding fixed and re-driven except two logged open; timeline built to [SPEC-phase4-timeline-target.md](Docs/Specs/SPEC-phase4-timeline-target.md); arrange gained browse, archive, library, update, disk paths on nodes; anchor-chat is a region switcher, anchor frame gone; raw out/status/meters fan-out deleted, mirror is the stream; archive writes master.prev; shutdown skips unhydrated environments.
+- Next move: chooser proof first — Brandon restarts the server, opens arrange, clicks browse, says whether the native dialog comes up in front (server.py:1560 fix is unproven). Housekeeping second — library/maps/, library/grids/9883b6bec3df/, Docs/Reports/phase3-test/, two empty 2026-09-06 sessions, archives/9883b6bec3df/ region jsonl files, all Brandon's call, nothing removed yet.
+- Links: [Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md) · [SESSIONLOG.md](SESSIONLOG.md) · [TODO.md](TODO.md)

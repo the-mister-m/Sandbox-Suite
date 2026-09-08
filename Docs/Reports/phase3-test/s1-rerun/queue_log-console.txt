@@ -1,0 +1,4 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[driver] queue_log pending approve buttons round 0: 0
+[driver] queue_log pending approve buttons round 1: 0
+[driver] queue_log pending approve buttons round 2: 0

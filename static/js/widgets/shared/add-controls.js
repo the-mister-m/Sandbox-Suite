@@ -24,6 +24,19 @@
   const CSS_ID = "mx-add-controls-css";
   const CSS = `
 .mx-add-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:4px; }
+.mx-add-controls-caption{ flex:0 0 auto; color:var(--text-3, #888); font-size:11px; }
+.mx-add-controls-wrap + .mx-add-controls-wrap{ border-top:1px solid var(--border, #383838);
+  margin-top:6px; padding-top:6px; }
+
+/* text inputs and native selects read the same surface, border, radius */
+.mx-add-controls input[type="text"],
+.mx-add-controls select{ box-sizing:border-box; height:22px; background:var(--surface-1, #0e0e0e);
+  color:var(--text-1, #ddd); border:1px solid var(--border, #383838); border-radius:3px;
+  padding:0 5px; }
+
+/* model picker — three selects on one line, shrinking instead of wrapping */
+.mx-model-picker{ display:flex; align-items:center; flex-wrap:nowrap; gap:4px; min-width:0; }
+.mx-model-picker select{ min-width:0; flex:1 1 0; }
 `;
 
   function ensureCss() {
@@ -88,6 +101,7 @@
 
     if (mode === "track" || mode === "both") {
       const row = el("div", "mx-add-controls");
+      if (mode === "track") row.appendChild(el("span", "mx-add-controls-caption", "add track"));
       const tName = el("input"); tName.type = "text"; tName.placeholder = "track name";
       row.appendChild(tName);
       const tRoot = rootField(inheritedRoot(), "root path");
@@ -151,6 +165,7 @@
 
     if (mode === "region") {
       const row = el("div", "mx-add-controls");
+      row.appendChild(el("span", "mx-add-controls-caption", "add region"));
       const rName = el("input"); rName.type = "text"; rName.placeholder = "region name";
       row.appendChild(rName);
       const rRoot = rootField(inheritedRoot(), "root path");

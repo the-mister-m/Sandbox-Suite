@@ -1,0 +1,71 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "strip-mtrqh50s-1",
+      "type": "strip",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "viewer-mtrqh6kd-2",
+      "type": "viewer",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "path": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/CLAUDE.md",
+        "tabs": [
+          "/private/tmp/claude-501/-Users-moth3rship-Desktop-AI-Design-Sandbox-Suite/af5599e6-5613-45ed-a555-46de3ad50a8b/scratchpad/feh-mermaid-test.mmd",
+          "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/CLAUDE.md"
+        ]
+      }
+    },
+    {
+      "id": "devagent-mtrqh77k-3",
+      "type": "devagent",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "timeline-mtrqhipx-4",
+      "type": "timeline",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "editor-mtrqhrei-1",
+      "type": "editor",
+      "slot": {
+        "col": 5,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "showPreview": false,
+        "tabs": [],
+        "active": ""
+      }
+    }
+  ]
+}

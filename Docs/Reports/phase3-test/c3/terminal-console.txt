@@ -1,0 +1,10 @@
+[1788812030.810][console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[check] region picker options: [{'v': '32f1ec929f4a', 't': 'gfsf'}, {'v': '3e50df9becde', 't': 'c3sonnet'}]
+[check] new processes after New Tab click:
+  15670 13580 /bin/zsh -i
+  15672     1 /System/Library/PrivateFrameworks/UniversalAccess.framework/Versions/A/Resources/AXVisualSupportAgent.app/Contents/MacOS/AXVisualSupportAgent launchd -s
+  15675 15647 ps -eo pid,ppid,command
+[check] first xterm line in the tab: '                                                '
+[check] processes present before close, gone after close:
+  15670 13580 /bin/zsh -i
+  15676 15647 ps -eo pid,ppid,command

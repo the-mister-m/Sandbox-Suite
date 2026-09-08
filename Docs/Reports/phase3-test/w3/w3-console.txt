@@ -1,0 +1,9 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[w3] mount root field value = '/Users/moth3rship/Desktop'
+[w3] w3region present after create click = True (25af4c6e2366)
+[w3] strip chip kill label before click = 'stop'
+[w3] w3track chip still present after stop click = True
+[w3] timeline zoom-group fit at 340px = {'zoomRight': 108.875, 'padRight': 263, 'fits': True}
+[w3] picker box at 480px viewport = {'left': 148.984375, 'right': 401.984375, 'top': 35, 'bottom': 177, 'vw': 480, 'vh': 700, 'onscreen': True}
+[w3] roster lookup before cleanup = {'region': '25af4c6e2366', 'track': 'bf3e9ce5845e'}
+[w3] roster after cleanup = {'regions': [], 'tracks': [['528b80a75803', 'untitled']]}

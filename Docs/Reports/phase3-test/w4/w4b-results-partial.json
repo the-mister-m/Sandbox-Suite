@@ -1,0 +1,42 @@
+[
+  {
+    "item": "setup-w4bsonnet",
+    "status": "SEEN",
+    "note": "track=f319b85f89f3 region=d04ed6c660eb model_selected=sonnet"
+  },
+  {
+    "item": "setup-w4bgemma",
+    "status": "SEEN",
+    "note": "region=f96332e5c43f"
+  },
+  {
+    "item": "4-chat-isolation-text",
+    "status": "SEEN",
+    "note": "crossA=False crossB=False"
+  },
+  {
+    "item": "4-frames-per-region",
+    "status": "SEEN",
+    "note": "{\"sonnet\": \"d04ed6c660eb\", \"gemma\": \"f96332e5c43f\", \"counts\": {\"(untagged)\": 133}}"
+  },
+  {
+    "item": "14-gate-list-live-row",
+    "status": "FAILED",
+    "note": "settle buttons drew within 30s: False, gate_pending frame seen: False"
+  },
+  {
+    "item": "14-gate-pending-frame",
+    "status": "NOT DRIVEN",
+    "note": "no gate_pending frame observed in 30s window"
+  },
+  {
+    "item": "14-gate-list-dom",
+    "status": "SEEN",
+    "note": "\u2723\nGate List \u00b7 gate_list-mtrv83wq-4\noptions\n\u00d7\nno gates on this track"
+  },
+  {
+    "item": "14-diagnosis",
+    "status": "NOT DRIVEN",
+    "note": "no gate_pending frame captured at all \u2014 cannot diagnose region field"
+  }
+]

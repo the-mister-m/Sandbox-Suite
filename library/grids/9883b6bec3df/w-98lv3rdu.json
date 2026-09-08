@@ -1,0 +1,28 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "ledger-mtrjhvwz-1",
+      "type": "ledger",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 7,
+        "h": 12
+      },
+      "options": {}
+    },
+    {
+      "id": "transcript-mtrjhvwz-2",
+      "type": "transcript",
+      "slot": {
+        "col": 8,
+        "row": 1,
+        "w": 5,
+        "h": 12
+      },
+      "options": {}
+    }
+  ]
+}

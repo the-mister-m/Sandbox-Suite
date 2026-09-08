@@ -114,7 +114,7 @@
 - [Docs/Reports/phase3-test/SPEC-test-ledger.md](Docs/Reports/phase3-test/SPEC-test-ledger.md) / [Docs/Reports/RECEIPT-test-job5-ledger.md](Docs/Reports/RECEIPT-test-job5-ledger.md) — Job 5 test: ledger widget vs old ledgerview.js, loose end settled (names live in msg.tracks, widget reads msg.rows), legend/ql-edge CSS not carried over, 1 pass / 1 pass-with-defect / 1 fail, 11 fixes listed
 - [Docs/Reports/phase3-test/SPEC-test-queue_log.md](Docs/Reports/phase3-test/SPEC-test-queue_log.md) / [Docs/Reports/RECEIPT-test-job3-queue_log.md](Docs/Reports/RECEIPT-test-job3-queue_log.md) — Job 3 test: queue_log widget vs old queuelog.js, same msg.rows/msg.tracks defect kills the TTL and trim toggles, .tb-btn/.chip/.empty unstyled, 2 pass / 3 fail, 7 fixes listed
 - [Docs/Handoffs/HANDOFF-phase3-test.md](Docs/Handoffs/HANDOFF-phase3-test.md) — handoff from the Phase 3 build session to the test session: state, Brandon's asks, builder prompt shape, Playwright check — 2026-09-06
-- [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md) — thirteen remaining widget test jobs as specs, Waves B and C, shared setup, per-job checklist lines and estimates — 2026-09-06
+- [Docs/Specs/SPEC-test-waves-BC.md](Docs/Specs/SPEC-test-waves-BC.md) — thirteen remaining widget test jobs as specs, Waves B and C, shared setup, per-job checklist lines and estimates — 2026-09-06 — superseded by [SPEC-phase4-test-waves.md](Docs/Specs/SPEC-phase4-test-waves.md)
 - [Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md](Docs/Reports/SESSION-REVIEW-2026-09-06-phase3-test.md) — session review: harness built, four widgets specced, three systemic defects, thirteen jobs specced for next session
 - [Docs/HOWTO-frames.md](Docs/HOWTO-frames.md) — client-to-server and server-to-client ADE frame tables, drawn from frames.py and web_io.py — 2026-09-07
 - [Docs/Reports/RECEIPT-F1-backend-frames.md](Docs/Reports/RECEIPT-F1-backend-frames.md) — Job F1: change_prompt broadcasts to the environment, create_track always returns a row, load_preset takes a mode — 2026-09-07
@@ -127,3 +127,14 @@
 - [static/js/widgets/arrange/](static/js/widgets/arrange/) — Job F4: the arrange widget, one file, plan read from and written to a doc generator project file — 2026-09-07
 - [Docs/Reports/RECEIPT-F4-arrange.md](Docs/Reports/RECEIPT-F4-arrange.md) — Job F4: arrange widget built, left drawer, node window, five notch kinds, message wire filled into shared/derived.js, mini nodes, loop glow, state motion, /api/fs/put added — 2026-09-07
 - [Docs/Reports/REVIEW-session-F-widgets.md](Docs/Reports/REVIEW-session-F-widgets.md) — session review: backend frames, four shared modules, timeline behavior, arrange widget built — F2 and F4 over their token caps — 2026-09-07
+- [Docs/Scope/SCOPE-phase4-session-agent.md](Docs/Scope/SCOPE-phase4-session-agent.md) — Phase 4 session agent brief: gates, model policy, sequential default — 2026-09-07
+- [Docs/Specs/SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md) — Phase 4 fix boxes S1 S2 S3, exact lines, Sonnet — 2026-09-07
+- [Docs/Specs/SPEC-phase4-test-waves.md](Docs/Specs/SPEC-phase4-test-waves.md) — Phase 4 test waves B C D, eleven boxes, read lines, checklists — 2026-09-07
+- [Docs/Specs/SPEC-phase4-timeline-target.md](Docs/Specs/SPEC-phase4-timeline-target.md) — timeline, mount, devagent target UI — 2026-09-07
+- [Docs/Reports/RECEIPT-phase4-read-and-specs.md](Docs/Reports/RECEIPT-phase4-read-and-specs.md) — session review: Phase 4 read pass over widgets/matrix/frame senders, four docs written, no code edited — 2026-09-07
+- [Docs/Specs/SPEC-phase4-fixes-B.md](Docs/Specs/SPEC-phase4-fixes-B.md) — Wave B fixes, boxes F-B, F-C, F-D — 2026-09-07
+- [Docs/Specs/SPEC-phase4-fixes-C.md](Docs/Specs/SPEC-phase4-fixes-C.md) — Wave C fixes, box F-E — 2026-09-07
+- [Docs/Specs/SPEC-phase4-arrange-maps.md](Docs/Specs/SPEC-phase4-arrange-maps.md) — arrange browse, archive, update, box D2 — 2026-09-07
+- [Docs/Specs/SPEC-phase4-fixes-D.md](Docs/Specs/SPEC-phase4-fixes-D.md) — last wave W1 to W5, housekeeping list — 2026-09-07
+- [Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md) — Phase 4 build/test session review: nineteen widgets driven, five fix waves, twenty-seven boxes — 2026-09-07
+- [Docs/Reports/](Docs/Reports/) RECEIPT-phase4-* (S1, S1-rerun, S2, S3, B1–B4, C1–C4, D1–D3, F-B–F-G, W1–W5) — one receipt per box, Phase 4 build/test — 2026-09-07

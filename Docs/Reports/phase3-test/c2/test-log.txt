@@ -1,0 +1,358 @@
+instance timeline-mtron0y0-1
+ROSTER BEFORE {
+ "regions": [
+  {
+   "id": "32f1ec929f4a",
+   "name": "gfsf",
+   "model": "gemma4:e4b-it-q8_0",
+   "track": "a104ecc9ea23",
+   "root": "/Users/moth3rship/Desktop"
+  }
+ ],
+ "rows": [
+  {
+   "id": "5a031370bf1c",
+   "name": "test",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "a104ecc9ea23",
+   "name": "JHJKHKL",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "2ec9b663f955",
+   "name": "jj",
+   "root": "/System/Volumes"
+  },
+  {
+   "id": "8d0b223aeea9",
+   "name": "kljoiu",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "18aa66bf5f38",
+   "name": "lkj;",
+   "root": "/bin"
+  }
+ ],
+ "turns": 33,
+ "actions": 47,
+ "zoom": 2.5,
+ "refreshMin": 5,
+ "timer": true
+}
+HEAD ACTIONS HTML
+<div class="mx-add-controls-wrap"><div class="mx-add-controls"><input type="text" placeholder="track name" style=""><div class="mx-dev-rootfield"><input type="text" placeholder="root path" disabled="" style=""><button class="mx-btn" type="button">browse</button></div><button class="mx-btn" type="button">+ track</button></div></div><div class="mx-add-controls-wrap"><div class="mx-add-controls"><input type="text" placeholder="region name" style=""><div class="mx-dev-rootfield"><input type="text" placeholder="root path" disabled="" style=""><button class="mx-btn" type="button">browse</button></div><div class="mx-add-controls-picker"><div class="mx-model-picker"><select class="mx-mp-provider"><option value="ollama">ollama</option><option value="gemini">gemini</option><option value="claude">claude</option></select><select class="mx-mp-model"><option value="gemma4">gemma4</option><option value="gpt-oss">gpt-oss</option><option value="ornith">ornith</option><option value="qwen3.8">qwen3.8</option></select><select class="mx-mp-version"><option value="12b-it-qat">12b-it-qat</option><option value="12b-mxfp8">12b-mxfp8</option><option value="26b-mxfp8">26b-mxfp8</option><option value="31b-it-q8_0">31b-it-q8_0</option><option value="31b-mxfp8">31b-mxfp8</option><option value="e4b-it-q8_0">e4b-it-q8_0</option></select></div></div><button class="mx-btn" type="button" disabled="">+ region</button></div></div>
+C2 TRACK {"id": "07169234c08e", "name": "c2trk", "regions": [], "root": "/Users/moth3rship/Desktop", "order": 5, "created": "2026-09-07T16:17:52"}
+ROSTER AFTER MOUNT {
+ "regions": [
+  {
+   "id": "32f1ec929f4a",
+   "name": "gfsf",
+   "model": "gemma4:e4b-it-q8_0",
+   "track": "a104ecc9ea23",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "140ea23dfb65",
+   "name": "c2claude",
+   "model": "sonnet",
+   "track": "07169234c08e",
+   "root": "/Users/moth3rship/Desktop"
+  }
+ ],
+ "rows": [
+  {
+   "id": "5a031370bf1c",
+   "name": "test",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "a104ecc9ea23",
+   "name": "JHJKHKL",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "2ec9b663f955",
+   "name": "jj",
+   "root": "/System/Volumes"
+  },
+  {
+   "id": "8d0b223aeea9",
+   "name": "kljoiu",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "18aa66bf5f38",
+   "name": "lkj;",
+   "root": "/bin"
+  },
+  {
+   "id": "07169234c08e",
+   "name": "c2trk",
+   "root": "/Users/moth3rship/Desktop"
+  }
+ ]
+}
+LANES {
+ "headCount": 6,
+ "rowCount": 6,
+ "heads": [
+  {
+   "name": "test",
+   "reg": "b3claude",
+   "sub": "",
+   "root": "no root of its own \u2014 workspace default",
+   "ttl": false,
+   "trim": false
+  },
+  {
+   "name": "JHJKHKL",
+   "reg": "gfsf",
+   "sub": "gemma4:e4b-it-q8_0",
+   "root": "\u2026/moth3rship/Desktop",
+   "ttl": false,
+   "trim": false
+  },
+  {
+   "name": "jj",
+   "reg": "no region",
+   "sub": "",
+   "root": "no root of its own \u2014 workspace default",
+   "ttl": false,
+   "trim": false
+  },
+  {
+   "name": "kljoiu",
+   "reg": "no region",
+   "sub": "",
+   "root": "no root of its own \u2014 workspace default",
+   "ttl": false,
+   "trim": false
+  },
+  {
+   "name": "lkj;",
+   "reg": "no region",
+   "sub": "",
+   "root": "no root of its own \u2014 workspace default",
+   "ttl": false,
+   "trim": false
+  },
+  {
+   "name": "c2trk",
+   "reg": "c2claude",
+   "sub": "claude-sonnet-5",
+   "root": "\u2026/moth3rship/Desktop",
+   "ttl": true,
+   "trim": true
+  }
+ ],
+ "spans": [
+  [
+   {
+    "left": "14874px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "3"
+    ]
+   },
+   {
+    "left": "14795.8px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "?"
+    ]
+   },
+   {
+    "left": "11329.2px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "\u00b7"
+    ]
+   },
+   {
+    "left": "11218.4px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "\u00b7"
+    ]
+   },
+   {
+    "left": "11003.9px",
+    "width": "147.047px",
+    "rname": "b4claude.2",
+    "pips": 1,
+    "pipText": [
+     "2"
+    ]
+   },
+   {
+    "left": "10950.2px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "\u00b7"
+    ]
+   },
+   {
+    "left": "10055.5px",
+    "width": "821.223px",
+    "rname": "b4claude",
+    "pips": 2,
+    "pipText": [
+     "?",
+     "2"
+    ]
+   },
+   {
+    "left": "7971.1px",
+    "width": "1341.57px",
+    "rname": "sonnetb2",
+    "pips": 9,
+    "pipText": [
+     "2",
+     "?",
+     "W",
+     "?",
+     "W",
+     "?",
+     "R",
+     "2",
+     "?"
+    ]
+   },
+   {
+    "left": "7970.45px",
+    "width": "340.28px",
+    "rname": "gemma4b2",
+    "pips": 2,
+    "pipText": [
+     "2",
+     "?"
+    ]
+   },
+   {
+    "left": "7937.09px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "3"
+    ]
+   },
+   {
+    "left": "7193.03px",
+    "width": "121.243px",
+    "rname": "sonnetc",
+    "pips": 2,
+    "pipText": [
+     "3",
+     "?"
+    ]
+   },
+   {
+    "left": "6708.28px",
+    "width": "307.413px",
+    "rname": "sonnet3",
+    "pips": 2,
+    "pipText": [
+     "2",
+     "?"
+    ]
+   },
+   {
+    "left": "5453.26px",
+    "width": "328.661px",
+    "rname": "sonnet2",
+    "pips": 2,
+    "pipText": [
+     "?",
+     "3"
+    ]
+   },
+   {
+    "left": "5688.29px",
+    "width": "178.513px",
+    "rname": "gfsf2",
+    "pips": 1,
+    "pipText": [
+     "?"
+    ]
+   },
+   {
+    "left": "0px",
+    "width": "30px",
+    "rname": null,
+    "pips": 1,
+    "pipText": [
+     "\u00b7"
+    ]
+   },
+   {
+    "left": "7836px",
+    "width": "9465.19px",
+    "rname": "b3claude",
+    "pips": 1,
+    "pipText": [
+     "?"
+    ]
+   }
+  ],
+  [
+   {
+    "left": "5680.35px",
+    "width": "684.205px",
+    "rname": "gfsf",
+    "pips": 5,
+    "pipText": [
+     "?",
+     "2",
+     "2",
+     "2",
+     "?"
+    ]
+   }
+  ],
+  [],
+  [],
+  [],
+  []
+ ],
+ "ticks": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ]
+}
+empty-lane head index 0
+LANE MENU (no region) ["\uff0b insert region preset \u25b8", "\u2715 delete track"]
+region-lane head index 1
+LANE MENU (with region) ["\u2398 copy region settings", "\ud83d\udcbe save preset", "load preset \u25b8", "reset with preset \u25b8", "\u21ba reset region", "\u2715 delete region"]
+span count 17
+REGION SPAN MENU []
+track name click True
+track inline input present True
+TRACK NAMES AFTER RENAME ["c2renamed"]
+region name click True
+region inline input present True
+REGION NAMES AFTER RENAME ["c2regnamed"]
+ROOT LINE CLICK {"clicked": true, "text": "\u2026/moth3rship/Desktop"}
+ROOT BROWSER MODAL null
+ZOOM before {"lbl": "250%", "ls": null} after+ {"lbl": "313%", "ls": "3.125", "rowsW": "21971.1px"}
+REFRESH {"refreshMin": 1, "timer": true}
+FRAMES SEEN ["ade_init", "chat_history", "crew_list", "feed", "feed_dirty", "gate_edges", "models", "rail_catalog", "track_created", "track_list", "track_transcript"]
+ZOOM AFTER RELOAD {"lbl": "313%", "ls": "3.125"}
+ROSTER AFTER CLEANUP {"regions": ["gfsf"], "rows": ["test", "JHJKHKL", "jj", "kljoiu", "lkj;"]}

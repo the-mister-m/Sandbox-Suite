@@ -1,0 +1,3 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[driver] cleanup, tracks before drop: [{"id": "32f1ec929f4a", "name": "gfsf"}, {"id": "518f4d739fed", "name": "gfsf2"}, {"id": "5c84d83e0ea5", "name": "sonnet2"}]
+[driver] cleanup, tracks after drop: [{"id": "32f1ec929f4a", "name": "gfsf"}, {"id": "518f4d739fed", "name": "gfsf2"}, {"id": "5c84d83e0ea5", "name": "sonnet2"}]

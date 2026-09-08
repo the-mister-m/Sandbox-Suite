@@ -1,0 +1,10 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[driver] instances: [{'id': 'browser-mtrohb9u-1', 'type': 'browser'}, {'id': 'viewer-mtrohb9u-2', 'type': 'viewer'}]
+[driver] change root: rootline now '/Users/moth3rship/Desktop/AI Design/Sandbox Suite'
+[driver] Docs chevron after click: '▾' (expect down-arrow)
+[driver] size check: /Users/moth3rship/Desktop/AI Design/Sandbox Suite/_c4-scratch.txt => 62 B
+[driver] duplicate: '_c4-scratch copy.txt' row present = True, file exists on disk = True
+[driver] rename: renamed row present = True, file exists on disk = True, old dup still on disk = False
+[driver] reveal: clicked Show in Finder on _c4-scratch.txt (fires /api/fs/reveal, server does subprocess.Popen(['open','-R', path]) per server.py:1583-1593)
+[driver] open in viewer: viewer tabs = ['/Users/moth3rship/Desktop/AI Design/Sandbox Suite/_c4-scratch.txt']
+[driver] open in editor: instances -> 3; browser tree children before=1 after=0; browser root after=None

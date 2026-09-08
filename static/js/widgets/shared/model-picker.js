@@ -21,12 +21,12 @@
       .catch(() => (_rows = []));
   }
 
-  function fill(select, values, chosen) {
+  function fill(select, values, chosen, labelFor) {
     select.textContent = "";
     for (const v of values) {
       const o = document.createElement("option");
       o.value = v;
-      o.textContent = v || "—";
+      o.textContent = (labelFor ? labelFor(v) : v) || "—";
       if (v === chosen) o.selected = true;
       select.appendChild(o);
     }
@@ -70,18 +70,23 @@
       if (row && typeof opts.onPick === "function") opts.onPick(row.id, row);
     }
 
-    // an alias row carries no version and draws as "—". When nothing is
-    // chosen, land on the newest dated version instead; aliases stay in
-    // the list and stay selectable.
+    // an alias row carries no version and draws its resolved id instead
+    // of a dash, when the row has one. When nothing is chosen, land on
+    // the newest dated version instead; aliases stay in the list and
+    // stay selectable.
     function drawVersions() {
-      const versions = uniq(state.rows
-        .filter((r) => r.provider === state.provider && r.model === state.model)
-        .map((r) => r.version || ""));
+      const matched = state.rows
+        .filter((r) => r.provider === state.provider && r.model === state.model);
+      const versions = uniq(matched.map((r) => r.version || ""));
       if (versions.indexOf(state.version) < 0) {
         const dated = versions.filter(Boolean).sort().reverse();
         state.version = dated[0] || versions[0] || "";
       }
-      fill(versionSel, versions, state.version);
+      fill(versionSel, versions, state.version, (v) => {
+        if (v) return v;
+        const row = matched.find((r) => (r.version || "") === "");
+        return (row && row.resolved) || v;
+      });
     }
 
     function drawModels() {

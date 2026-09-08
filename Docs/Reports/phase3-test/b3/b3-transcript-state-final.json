@@ -1,0 +1,176 @@
+{
+  "regions": [
+    {
+      "id": "32f1ec929f4a",
+      "name": "gfsf",
+      "live": true,
+      "caches": [
+        {
+          "bytes": 17078,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "b063adc1befc",
+      "name": "gemma4b2",
+      "live": true,
+      "caches": [
+        {
+          "bytes": 17952,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "90db982504a6",
+      "name": "sonnetb2",
+      "live": true,
+      "caches": [
+        {
+          "bytes": 19360,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "9f2051a42f39",
+      "name": "b3claude2",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 17095,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "e9e288084b2b",
+      "name": "probe",
+      "live": false,
+      "caches": []
+    },
+    {
+      "id": "5e563551b2b4",
+      "name": "untitled",
+      "live": false,
+      "caches": []
+    },
+    {
+      "id": "14190f5a4d31",
+      "name": "untitled.2",
+      "live": false,
+      "caches": []
+    },
+    {
+      "id": "adc208eca7b0",
+      "name": "throwaway",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 9731,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "518f4d739fed",
+      "name": "gfsf2",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 11945,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "5c84d83e0ea5",
+      "name": "sonnet2",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 19122,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "b4071bdf83d3",
+      "name": "gemma4t",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 9729,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "faed240b2643",
+      "name": "sonnet3",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 17476,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "55b0c251e410",
+      "name": "gemma4c",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 9729,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "d248cb53bb94",
+      "name": "sonnetc",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 17465,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "38b6279c67cc",
+      "name": "b3claude",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 17102,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "e5a59014886c",
+      "name": "b3gemma4",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 9730,
+          "cache": null
+        }
+      ]
+    },
+    {
+      "id": "62885bf299ef",
+      "name": "throwawayb2",
+      "live": false,
+      "caches": [
+        {
+          "bytes": 9733,
+          "cache": null
+        }
+      ]
+    }
+  ]
+}

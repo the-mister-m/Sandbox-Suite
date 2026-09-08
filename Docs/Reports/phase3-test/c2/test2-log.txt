@@ -1,0 +1,4 @@
+LIVE REGIONS ["gfsf"]
+LIVE SPAN {"i": 16, "name": "gfsf"}
+LIVE SPAN MENU ["\u2715 delete region"]
+ROOT BROWSER MODAL {"show": true, "title": "Agent root", "entries": 18, "bodyText": "/Users/moth3rship/Desktop.. (up one level).backupsAI DesignCT Trip for home machineFable Agent Brief 8 19Homestead AppsMyPlayground.playgroundOld Claude MemoryROMSdatadocgenrolling stone stemssaaaveuntitled folderSelect"}

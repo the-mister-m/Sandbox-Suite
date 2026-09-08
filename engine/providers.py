@@ -537,8 +537,10 @@ class ClaudeProvider:
         rows = []
         for name in CLAUDE_MODELS:
             model, version = self.split_model(name)
+            resolved = CLAUDE_ALIAS_TO_RATE_KEY.get(name, name)
             rows.append({"id": name, "provider": self.id,
-                         "model": model, "version": version})
+                         "model": model, "version": version,
+                         "resolved": resolved})
         return rows
 
     @staticmethod

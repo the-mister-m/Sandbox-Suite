@@ -1,0 +1,44 @@
+{
+  "archived_at": "2026-09-07T18:20:52",
+  "doc": {
+    "contents": [],
+    "docsetRoot": {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "id": "f5b0aa58-4a2f-4aca-9ceb-a17ca0ea252b",
+              "kind": "folder",
+              "label": "test 1",
+              "role": "job",
+              "tags": []
+            }
+          ],
+          "id": "fae7878f-4c3e-4928-b92b-e45acffa7aa1",
+          "kind": "folder",
+          "label": "Music History",
+          "role": "sequence",
+          "tags": []
+        },
+        {
+          "extension": "md",
+          "id": "ad5b51b2-7556-4212-8c86-336129a8fb06",
+          "kind": "file",
+          "label": "test 2",
+          "tags": [],
+          "templateId": null
+        }
+      ],
+      "id": "root",
+      "kind": "folder",
+      "label": "Desktop",
+      "role": "global",
+      "tags": []
+    },
+    "savedAt": "2026-08-28T20:57:12.056Z",
+    "schemaVersion": 1
+  },
+  "root": null,
+  "source": "/private/tmp/claude-501/-Users-moth3rship-Desktop-AI-Design-Sandbox-Suite/af5599e6-5613-45ed-a555-46de3ad50a8b/scratchpad/docgen-981412e2/database.json"
+}

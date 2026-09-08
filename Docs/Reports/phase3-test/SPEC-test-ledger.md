@@ -168,3 +168,92 @@ Screenshots read: `ledger-widget.png`, `ledger-full.png`, `ledger-probe-filled.p
 - **Not verified: multiple ledger widgets.** The widget uses document-unique ids (`#ledBar`, `#rollup`, `#agentTotals`, `#ledScroll`, `#ledCols`, `#ledHead`, `#ledBody`, `#legend`, `#colsBtn`, `#colsPanel`, `#ledTrackAll`, `#ledTrackNone`, `#ledColAll`, `#ledColNone`, `#atToggle`). All internal lookups are scoped via `frame.el.querySelector`, so it probably survives, but two ledger frames on one grid was not tested and the ids are duplicated in the document if it happens.
 - `ensureStyle()` injects `#mx-ledger-style` into `document.head` and `unmount` never removes it. Intentional-looking, harmless, noting it so a fix job does not "fix" it by accident.
 - A fix job changing the layout should check the other Phase 3 widgets before touching `.mx-host` — that rule is shared by every widget in the grid.
+
+---
+---
+
+# RETEST — Phase 4, Wave B, box B3 — 2026-09-07
+
+Live-session retest, following S1/S2/B1's feed and roster fixes. Session
+9883b6bec3df, track 5a031370bf1c. Screenshots under
+Docs/Reports/phase3-test/b3/.
+
+## READ LINE CONFIRMED OR REFUTED
+CONFIRMED for this pass. `chipIds()` derives from `kind:"turn"` records'
+region field (regionOf). A completed turn on region b3claude2
+(9f2051a42f39) landed a `kind:"turn"` record with real `usage`/`cost_usd`
+(confirmed on disk, archives/9883b6bec3df/log.jsonl) and rendered in the
+table. Opening the turn requests `{type:"transcript", track:<region>}`
+once per region (`txRequested` guard, ledger.js:625) and renders it via
+`MX.turns._groupTurns`/`_buildTurnBlock`, same as transcript widget.
+`mx:open-ledger` sets `pendingFocus` and the next render opens + flashes
+the matching row (ledger.js:774-780, 467-476).
+
+## LOOSE END retest — `rows` vs `tracks`
+FIXED. Track names now resolve correctly from live data: the ledger's
+chip bar and Track column showed real names ("b3claude2", not a raw
+region id) throughout this run (b3-30/31/34). Job 5's fix-list item 1
+appears already applied, or S1/S2's roster work fixed it as a side
+effect — not independently re-diffed against ledger.js:802 this pass,
+just observed live.
+
+## CHECKLIST
+- turn table: SEEN — b3-30-ledger-with-b3claude2.png shows a row for
+  b3claude2, turn 1, stop "stop", real cost. b3-ledger-state-final.json
+  confirms the exact record: usage.out_tokens 1126, cost_usd 0.0966,
+  duration_ms 24539.
+- rollup chips: SEEN — b3-30 header: 13 Turns, 24m 46s Duration, $0.6990
+  Cost, 25 Actions, 10,808 Out, 231,841 Read, 104,446 Read Peak, 0 Write
+  5m, 84,025 Write 1h (these totals include prior B1/S1-rerun turns still
+  on this track, not only this run's — the widget aggregates the whole
+  track history by design).
+- per-agent totals: SEEN — b3-30/31 show "9 agents · peak 13,825" with a
+  sortable table; b3claude2's row shows turns 1, cost, out, read peak
+  matching totalsForMe in b3-ledger-state-final.json.
+- open a turn shows actions and transcript: SEEN — b3-31-b3claude2-row-open.png,
+  opening the b3claude2 row shows three action sub-rows (WRITE_FILE
+  b3test.txt, READ_FILE b3test.txt, RUN_COMMAND rm b3test.txt) plus the
+  transcript pane below rendering the full turn (user prompt, thinking,
+  model text) via the shared turns.js block builder.
+- columns hide and reorder: SEEN — b3-32-col-hidden.png: unchecking "Out"
+  in the columns panel drops it from the header (confirmed by DOM read:
+  'out' absent from #ledHead th list afterward). b3-33-col-reordered.png:
+  a synthetic HTML5 drag of the "cost" header onto "model" reordered the
+  columns — header order became
+  time,track,turn,call,duration,cost,model,stop,actions,readbilled,...
+  (cost now before model, was after).
+- mx:open-ledger focuses a row: SEEN — b3-34-open-ledger-focus.png,
+  dispatching `mx:open-ledger` with {track:9f2051a42f39, turn:1} opened
+  and highlighted (flash class, blue background) the b3claude2 row.
+
+## CONSOLE
+One pre-existing 404 (page-level favicon, shared-setup known list) on
+every load. No new console errors, no pageerrors, across all three
+driver runs (b3-console.txt, b3-console3.txt).
+
+## FIX LIST (this pass)
+None found beyond Job 5's list above. Not independently re-checked this
+pass: css items 2-6 (legend/gate-color/io swatches, `.chip`/`.tb-btn`
+base rules, `.tx-wrap`), layout item 7 (`.ledgerRoot` fill), and feed
+items 8-9 (feed_dirty subscription, per-inst filter) — feed clearly does
+refresh live now (S1/B1 fixed the underlying server bug and this run's
+manual `{type:'feed'}` re-sends worked), but whether it also
+auto-refreshes on `feed_dirty` without a manual nudge was not isolated
+here.
+
+## READS (this pass)
+- Docs/Specs/SPEC-phase4-test-waves.md (Shared setup, B3)
+- Docs/Reports/RECEIPT-phase4-S1-rerun.md, RECEIPT-phase4-B1.md (full)
+- static/js/widgets/ledger/ledger.js (full, 815 lines)
+- static/js/widgets/transcript/transcript.js (full, 205 lines)
+- Docs/tests/matrix_harness.py (full, basis for driver scripts)
+- Docs/HOWTO-frames.md (full, client-to-server and server-to-client tables)
+- static/js/matrix/grid.js:180-235 (applyTemplate, instances, windowId)
+- static/js/matrix/widget-frame.js:1-110 (send/subscribe/deliver/setOption)
+- static/js/matrix/socket.js:1-70 (onFrame/send)
+- archives/9883b6bec3df/log.jsonl, .../9f2051a42f39.jsonl,
+  .../38b6279c67cc.jsonl (ground truth for gate/turn state, read
+  repeatedly across three driver rounds)
+
+## BLOCKERS (this pass)
+None.

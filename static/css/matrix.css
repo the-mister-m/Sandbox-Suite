@@ -1,5 +1,69 @@
 /* matrix window — grid, widget frame chrome, corner panels */
 
+/* theme variables — values match static/css/skins/og.css so a var(--x, #fallback)
+   read anywhere in static/css or static/js/widgets resolves to the same color
+   whether or not the skin sheet is present on the page */
+:root {
+  --plane: #111;
+  --surface-1: #0e0e0e;
+  --surface-2: #141414;
+  --surface-3: #161616;
+  --well: #222;
+  --deep: #0a0a0a;
+
+  --text-1: #ddd;
+  --text-2: #aaa;
+  --text-3: #888;
+  --text-4: #666;
+
+  --gridline: #2a2a2a;
+  --border: #383838;
+  --border-2: #444;
+  --border-3: rgba(255,255,255,0.08);
+  --splitter: #2a2a2a;
+  --splitter-hot: #444;
+
+  --gate-white: #6b6a64;
+  --gate-green: #0ca30c;
+  --gate-blue: #3987e5;
+  --gate-yellow: #c98500;
+  --gate-red: #d03b3b;
+
+  --fill-white: rgba(255,255,255,0.06);
+  --fill-green: rgba(12,163,12,0.16);
+  --fill-blue: rgba(57,135,229,0.16);
+  --fill-yellow: rgba(201,133,0,0.16);
+  --fill-red: rgba(208,59,59,0.18);
+
+  --status-working: var(--gate-green);
+  --status-thinking: var(--gate-blue);
+  --status-blocked: var(--gate-red);
+  --status-idle: var(--text-4);
+
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+  --accent: #2a6;
+  --accent-fg: #021;
+  --accent-dim: #4d9;
+  --accent-dark: #1a4a2a;
+  --accent-mid: #1a3a2a;
+  --accent-bdr: #2a5a3a;
+
+  --col-you: #6cf;
+  --col-ask: #fc6;
+  --col-cot: #777;
+  --col-ok: #4d9;
+  --col-err: #c55;
+  --col-warn: #a33;
+  --col-warn-fg: #fee;
+
+  --overlay-1: rgba(0,0,0,0.65);
+  --overlay-2: rgba(0,0,0,.55);
+  --shadow-1: rgba(0,0,0,.45);
+  --shadow-2: rgba(0,0,0,.6);
+}
+
 html, body {
   margin: 0;
   height: 100%;
@@ -266,3 +330,54 @@ html, body {
 .mx-stub { font-family: var(--mono, monospace); font-size: 11px; color: var(--text-2, #aaa); }
 .mx-stub dt { color: var(--text-3, #888); }
 .mx-stub dd { margin: 0 0 6px; color: var(--text-1, #ddd); word-break: break-all; }
+
+/* widget picker dropdown */
+
+.mx-picker {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  background: var(--surface-1, #0e0e0e);
+  border: 1px solid var(--border-2, #444);
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mx-picker-groups {
+  display: flex;
+  flex-direction: column;
+  min-width: 110px;
+  border-right: 1px solid var(--gridline, #2a2a2a);
+}
+
+.mx-picker-widgets {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.mx-picker-group {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-1, #ddd);
+  cursor: pointer;
+  border-bottom: 1px solid var(--gridline, #2a2a2a);
+}
+
+.mx-picker-group:hover { background: var(--surface-2, #141414); }
+.mx-picker-group.mx-picker-active { background: var(--surface-3, #161616); }
+
+.mx-picker-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gridline, #2a2a2a);
+}
+
+.mx-picker-widget:hover { background: var(--surface-2, #141414); }
+.mx-picker-widget.mx-picker-disabled { cursor: default; opacity: 0.4; }

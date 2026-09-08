@@ -1,0 +1,6 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[harness] mounted region 805f93037a33 on 5a031370bf1c
+[harness] devagent model-picker version option texts: ['e4b-it-q8_0', 'claude-sonnet-5']
+[harness] timeline th-reg: ['fdsonnet.4', 'gfsf', 'no region', 'no region', 'no region']
+[harness] timeline th-sub: ['claude-sonnet-5', 'gemma4:e4b-it-q8_0', '', '', '']
+[harness] gfsf lane sub text: 'gemma4:e4b-it-q8_0'

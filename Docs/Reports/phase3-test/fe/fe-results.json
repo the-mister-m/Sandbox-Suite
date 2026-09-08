@@ -1,0 +1,430 @@
+{
+  "strip_popover_before": true,
+  "strip_popover_after_add": true,
+  "strip_still_single_element": 1,
+  "devagent_presetNames": [
+    "Agent Opus",
+    "Agent Sonnet",
+    "Music History Sonnet",
+    "User Fable",
+    "test sonnet"
+  ],
+  "gates_tab_text": "write_file\nopen\nask\nqueue\nlocked\nany\nsend_message\nopen\nask\nqueue\nlocked\nany\nremember\nopen\nask\nqueue\nlocked\nany\nrun_command\nopen\nask\nqueue\nlocked\nany\ncheck_read\nopen\nask\nqueue\nlocked\ninside\ncheck_read\nopen\nask\nqueue\nlocked\noutside\nscreen_capture\nopen\nask\nqueue\nlocked\nany\nfetch_url\nopen\nask\nqueue\nlocked\nany\nrecall\nopen\nask\nqueue\nlocked\nany\nweb_open\nopen\nask\nqueue\nlocked\nany\nweb_read\nopen\nask\nqueue\nlocked\nany\nweb_screenshot\nopen\nask\nqueue\nlocked\nany\nweb_act\nopen\nask\nqueue\nlocked\nany\nweb_eval\nopen\nask\nqueue\nlocked\nany\ninitiate\nopen\nask\nqueue\nlocked\nany\nreset_region\nopen\nask\nqueue\nlocked\nany\nreset_self\nopen\nask\nqueue\nlocked\nany\nrequest_messages\nopen\nask\nqueue\nlocked\nany\napply",
+  "preset_select_options": [
+    "Agent Opus",
+    "Agent Sonnet",
+    "Music History Sonnet",
+    "User Fable",
+    "test sonnet"
+  ],
+  "fehtest_written": true,
+  "fehtest2_written": true,
+  "fehtest2_deleted": true,
+  "region_name_input_after_tab_click": "fehtypeintact",
+  "stray_feh_tracks_removed": [
+    "8b8c158cfc30"
+  ],
+  "feh_region_id": "d448212331f3",
+  "context_textarea_after_reread": "feh context body",
+  "context_relative_path": "injections/region/d448212331f3.md",
+  "workspace_root": "/Users/moth3rship/Desktop",
+  "context_abs_path_guess": "/Users/moth3rship/Desktop/injections/region/d448212331f3.md",
+  "context_file_exists_at_guess": false,
+  "fehnum_max_tools_value": null,
+  "fehnum_max_tools_type": "NoneType",
+  "timeline_claude_insert": {
+    "track": {
+      "id": "5a031370bf1c",
+      "name": "test",
+      "regions": [
+        "2c53b8dde072"
+      ],
+      "root": "/Users/moth3rship/Desktop",
+      "order": 0,
+      "created": "2026-09-07T04:14:37"
+    },
+    "region": {
+      "id": "2c53b8dde072",
+      "track": "5a031370bf1c",
+      "node_id": null,
+      "name": "untitled.9",
+      "model": "sonnet",
+      "seat": null,
+      "root": "/Users/moth3rship/Desktop",
+      "created": "2026-09-07T17:14:32",
+      "provider": "claude",
+      "loop_class": "user-loop",
+      "mechanism": "cli",
+      "muted": false,
+      "settings": {
+        "model": "sonnet",
+        "seat": "",
+        "preset_name": "",
+        "reset_on_change": true,
+        "gate_wait_s": 150,
+        "max_tools": null,
+        "request_timeout": 200,
+        "allow_agent_reset": true,
+        "context_reset_cap_k": 300,
+        "start_turn_on_reset": true,
+        "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+        "num_ctx": 32768,
+        "think": true,
+        "keep_alive": 30,
+        "temperature": 0.8,
+        "top_k": 40,
+        "top_p": 0.9,
+        "min_p": 0,
+        "repeat_penalty": 1.1,
+        "repeat_last_n": 64,
+        "seed": 0,
+        "num_predict": -1,
+        "mirostat": 0,
+        "mirostat_tau": 5,
+        "mirostat_eta": 0.1,
+        "num_gpu": null,
+        "num_thread": null,
+        "claude_mode": "persistent",
+        "claude_effort": null,
+        "claude_partial": true,
+        "claude_cache_ttl": "1h",
+        "claude_keep_warm": false,
+        "claude_exclude_dynamic": false,
+        "claude_tools": [],
+        "claude_disallowed_tools": [],
+        "claude_add_dirs": [],
+        "claude_hook_ask_blocking": true,
+        "claude_setting_sources": null,
+        "claude_system_prompt": "",
+        "claude_bare": false,
+        "claude_config_dir": "",
+        "claude_memory_enabled": false,
+        "claude_md_excludes": [],
+        "claude_output_style": "",
+        "claude_settings_file": ""
+      },
+      "overlay": [
+        {
+          "edge": "write_file",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "send_message",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "remember",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "run_command",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "inside",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "outside",
+          "hook": "ask"
+        },
+        {
+          "edge": "screen_capture",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "fetch_url",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "recall",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_open",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_read",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_screenshot",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_act",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_eval",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "initiate",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_region",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_self",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "request_messages",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        }
+      ],
+      "region": {
+        "job": null,
+        "input": null,
+        "output": null,
+        "git": null,
+        "notes": null,
+        "status": null,
+        "stxt": null
+      }
+    }
+  },
+  "timeline_cache_toggle_present_claude": false,
+  "timeline_ollama_insert": {
+    "track": {
+      "id": "5a031370bf1c",
+      "name": "test",
+      "regions": [
+        "dadc0ea658c4"
+      ],
+      "root": "/Users/moth3rship/Desktop",
+      "order": 0,
+      "created": "2026-09-07T04:14:37"
+    },
+    "region": {
+      "id": "dadc0ea658c4",
+      "track": "5a031370bf1c",
+      "node_id": null,
+      "name": "untitled.10",
+      "model": "gemma4:26b-mxfp8",
+      "seat": null,
+      "root": "/Users/moth3rship/Desktop",
+      "created": "2026-09-07T17:14:34",
+      "provider": "ollama",
+      "loop_class": "user-loop",
+      "mechanism": "native",
+      "muted": false,
+      "settings": {
+        "model": "gemma4:26b-mxfp8",
+        "seat": "",
+        "preset_name": "",
+        "reset_on_change": true,
+        "gate_wait_s": 150,
+        "max_tools": null,
+        "request_timeout": 200,
+        "allow_agent_reset": true,
+        "context_reset_cap_k": 300,
+        "start_turn_on_reset": true,
+        "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+        "num_ctx": 32768,
+        "think": true,
+        "keep_alive": 30,
+        "temperature": 0.8,
+        "top_k": 40,
+        "top_p": 0.9,
+        "min_p": 0,
+        "repeat_penalty": 1.1,
+        "repeat_last_n": 64,
+        "seed": 0,
+        "num_predict": -1,
+        "mirostat": 0,
+        "mirostat_tau": 5,
+        "mirostat_eta": 0.1,
+        "num_gpu": null,
+        "num_thread": null,
+        "claude_mode": "persistent",
+        "claude_effort": null,
+        "claude_partial": true,
+        "claude_cache_ttl": "1h",
+        "claude_keep_warm": false,
+        "claude_exclude_dynamic": false,
+        "claude_tools": [],
+        "claude_disallowed_tools": [],
+        "claude_add_dirs": [],
+        "claude_hook_ask_blocking": true,
+        "claude_setting_sources": null,
+        "claude_system_prompt": "",
+        "claude_bare": false,
+        "claude_config_dir": "",
+        "claude_memory_enabled": false,
+        "claude_md_excludes": [],
+        "claude_output_style": "",
+        "claude_settings_file": ""
+      },
+      "overlay": [
+        {
+          "edge": "write_file",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "send_message",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "remember",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "run_command",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "inside",
+          "hook": "ask"
+        },
+        {
+          "edge": "check_read",
+          "driver": "model",
+          "scope": "outside",
+          "hook": "ask"
+        },
+        {
+          "edge": "screen_capture",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "fetch_url",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "recall",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_open",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_read",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_screenshot",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_act",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "web_eval",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "initiate",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_region",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "reset_self",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        },
+        {
+          "edge": "request_messages",
+          "driver": "model",
+          "scope": "any",
+          "hook": "ask"
+        }
+      ],
+      "region": {
+        "job": null,
+        "input": null,
+        "output": null,
+        "git": null,
+        "notes": null,
+        "status": null,
+        "stxt": null
+      }
+    }
+  },
+  "mermaid_console_lines_so_far": [
+    "[console:log] mermaid loaded from vendored ESM build: /static/vendor/mermaid/dist/mermaid.esm.min.mjs"
+  ],
+  "mermaid_svg_rendered": true,
+  "viewer_tabs_before_reload": 2,
+  "viewer_tabs_after_reload": 2,
+  "mermaid_svg_rendered_after_reload": true,
+  "editor_path_before": "(new file)",
+  "editor_path_after_saveas_no_extra_click": "/private/tmp/claude-501/-Users-moth3rship-Desktop-AI-Design-Sandbox-Suite/af5599e6-5613-45ed-a555-46de3ad50a8b/scratchpad/feh-editor-saveas.txt",
+  "cleanup_fehnum_removed": true
+}

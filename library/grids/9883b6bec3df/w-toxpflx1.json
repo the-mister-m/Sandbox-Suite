@@ -1,0 +1,28 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "anchor_chat-mtrkno5z-1",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 7,
+        "h": 12
+      },
+      "options": {}
+    },
+    {
+      "id": "gate_list-mtrkno5z-2",
+      "type": "gate_list",
+      "slot": {
+        "col": 8,
+        "row": 1,
+        "w": 5,
+        "h": 12
+      },
+      "options": {}
+    }
+  ]
+}

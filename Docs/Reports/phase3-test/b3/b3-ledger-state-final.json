@@ -1,0 +1,105 @@
+{
+  "mineTurns": [
+    {
+      "schema": 2,
+      "id": "82d1a91aa84a",
+      "kind": "turn",
+      "machine": "mothership",
+      "session": "9f2051a42f39",
+      "shell": "ade",
+      "root": "/Users/moth3rship/Desktop",
+      "seat": null,
+      "vessel": "sonnet",
+      "region": "9f2051a42f39",
+      "track": "5a031370bf1c",
+      "turn": 1,
+      "started": 1788803634590,
+      "ended": 1788803659129,
+      "duration_ms": 24539,
+      "usage": {
+        "out_tokens": 1126,
+        "in_tokens": 8,
+        "cache_read": 13336,
+        "cache_creation": 11233,
+        "duration_ns": 19199971168,
+        "cost_usd": 0.09658019999999999,
+        "calls": [
+          {
+            "id": "msg_011CepWMyU1yn6K7gnjsDu5p",
+            "model": "claude-sonnet-5",
+            "input": 2,
+            "cache_read": 2268,
+            "cache_write_5m": 0,
+            "cache_write_1h": 9844,
+            "output": 2,
+            "cost_usd": 0.059780400000000004,
+            "ts": 1788803642157
+          },
+          {
+            "id": "msg_011CepWNyPLXEqRcEGzUzg4B",
+            "model": "claude-sonnet-5",
+            "input": 2,
+            "cache_read": 12112,
+            "cache_write_5m": 0,
+            "cache_write_1h": 1066,
+            "output": 3,
+            "cost_usd": 0.0100806,
+            "ts": 1788803650940
+          },
+          {
+            "id": "msg_011CepWPGicxzvqoNEVkBSRK",
+            "model": "claude-sonnet-5",
+            "input": 2,
+            "cache_read": 13178,
+            "cache_write_5m": 0,
+            "cache_write_1h": 158,
+            "output": 2,
+            "cost_usd": 0.0049374,
+            "ts": 1788803654962
+          },
+          {
+            "id": "msg_011CepWPa5u8sKiTtzrYf83Y",
+            "model": "claude-sonnet-5",
+            "input": 2,
+            "cache_read": 13336,
+            "cache_write_5m": 0,
+            "cache_write_1h": 165,
+            "output": 1,
+            "cost_usd": 0.005011799999999999,
+            "ts": 1788803659096
+          }
+        ],
+        "cache_read_billed": 40894,
+        "cache_read_peak": 13336,
+        "cache_write_5m": 0,
+        "cache_write_1h": 11233
+      },
+      "cost_usd": 0.09658019999999999,
+      "stop_reason": "stop",
+      "actions": [],
+      "source": "sandbox-loop"
+    }
+  ],
+  "totalsForMe": {
+    "region": "9f2051a42f39",
+    "track": "5a031370bf1c",
+    "turns": 1,
+    "read_billed": 40894,
+    "read_peak": 13336,
+    "write_5m": 0,
+    "write_1h": 11233,
+    "out": 1126,
+    "cost_usd": 0.09658019999999999
+  },
+  "chipIds": [
+    "90db982504a6",
+    "b063adc1befc",
+    "9f2051a42f39",
+    "d248cb53bb94",
+    "faed240b2643",
+    "32f1ec929f4a",
+    "5c84d83e0ea5",
+    "518f4d739fed",
+    "14190f5a4d31"
+  ]
+}

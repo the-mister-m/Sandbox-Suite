@@ -1,0 +1,21 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[shot] queuelog-01-feed-on-mount.png
+[state] feed row count on mount: 43
+[state] write gate: pending row found after 1s, clicking approve
+[shot] queuelog-10-write-gate-settled.png
+[state] read gate: pending row found after 1s, clicking approve
+[shot] queuelog-11-read-gate-settled.png
+[state] rm gate: pending row found after 1s, clicking approve
+[shot] queuelog-12-rm-gate-settled.png
+[state] gates settled inline: write=True read=True rm=True
+[shot] queuelog-13-feed-final.png
+[shot] queuelog-14-detail-open.png
+[state] clicked a sonnetb2 row to expand detail: True
+[state] column order after dragging model before time: ['model', 'time', 'action', 'target', 'track', 'summary']
+[shot] queuelog-20-after-reorder.png
+[state] time col width after +50px drag: 62
+[shot] queuelog-21-after-resize.png
+[state] localStorage ade.queuelog.cols before reload: [{"key":"model","w":110},{"key":"time","w":62},{"key":"action","w":118},{"key":"target","w":240},{"key":"track","w":130},{"key":"summary","w":280}]
+[shot] queuelog-30-after-reload.png
+[state] queue_log instance id after reload: queue_log-mtrjpct9-1
+[state] cols after reload: [{'key': 'model', 'w': 110}, {'key': 'time', 'w': 62}, {'key': 'action', 'w': 118}, {'key': 'target', 'w': 240}, {'key': 'track', 'w': 130}, {'key': 'summary', 'w': 280}]

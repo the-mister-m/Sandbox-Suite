@@ -179,7 +179,8 @@ def _record_event(sess, kind, data, full=None, prior=None):
                 custody=ledger.custody(sess),
                 action_type="gate", edge=data.get("action"),
                 payload={"target": data.get("target"),
-                         "queue_id": data.get("queue_id")},
+                         "queue_id": data.get("queue_id"),
+                         "command": data.get("command")},
                 hook=data.get("hook"), answer=answer,
                 answered_by=answered_by,
                 parked=now, resolved=None if outcome is None else now,
@@ -393,7 +394,8 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
             entry = dq.park(queue_action_type, queue_payload or {}, driver,
                             hook="queue", meta=meta, prompt=prompt, ensure_gate=True)
         log_event(sess, "gate", action=action, target=target, answer=None,
-                  hook="queue", queue_id=entry["id"] if entry else None)
+                  hook="queue", queue_id=entry["id"] if entry else None,
+                  command=(entry.get("payload") or {}).get("command") if entry else None)
         sess.gate_parked = True
         return False
 
@@ -415,13 +417,15 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
         dq.downgrade(entry["id"], reason="timeout")
         sess.io.out("[gate timed out — parked in the queue]", dim=True)
         log_event(sess, "gate", action=action, target=target, answer=None,
-                  hook="ask", answered_by="timeout", queue_id=entry["id"])
+                  hook="ask", answered_by="timeout", queue_id=entry["id"],
+                  command=(entry.get("payload") or {}).get("command"))
         sess.gate_parked = True
         return False
     if ans == "parked":
         sess.io.out("[no human attached — parked]", dim=True)
         log_event(sess, "gate", action=action, target=target, answer=None,
-                  hook="ask", answered_by="disconnect", queue_id=entry["id"])
+                  hook="ask", answered_by="disconnect", queue_id=entry["id"],
+                  command=(entry.get("payload") or {}).get("command"))
         sess.gate_parked = True
         return False
     if ans == "deferred":
@@ -430,7 +434,8 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
         return False
     ans = bool(ans)
     evt = log_event(sess, "gate", action=action, target=target, answer=ans,
-                    hook="ask", answered_by="human")
+                    hook="ask", answered_by="human", queue_id=entry["id"],
+                    command=(entry.get("payload") or {}).get("command"))
     if ans:
         _stamp_gate_for_execution(sess, evt, target, "ask")
     dq.notify("gate_answered")

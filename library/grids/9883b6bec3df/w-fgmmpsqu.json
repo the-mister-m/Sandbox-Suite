@@ -1,0 +1,50 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "mount-mtru8hk4-1",
+      "type": "mount",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "devagent-mtru8l3l-2",
+      "type": "devagent",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "strip-mtru8mpl-3",
+      "type": "strip",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "timeline-mtru8oku-4",
+      "type": "timeline",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

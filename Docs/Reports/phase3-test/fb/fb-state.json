@@ -1,0 +1,23 @@
+{
+  "region": "fc32b0e75ba5",
+  "gate_id": "7c37f414517b",
+  "dead_region": "fb-dead-region-does-not-exist",
+  "dead_gate_list_count": 0,
+  "messenger_before": {
+    "muted": false
+  },
+  "messenger_after": {
+    "muted": true,
+    "rowMutedClassPresent": true
+  },
+  "final_gates": [
+    {
+      "id": "7c37f414517b",
+      "settled": true,
+      "outcome": "unknown"
+    }
+  ],
+  "roster_after_kill": [
+    "32f1ec929f4a"
+  ]
+}

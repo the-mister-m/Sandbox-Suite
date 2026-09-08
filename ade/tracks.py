@@ -1020,8 +1020,9 @@ def _region_log_dir(region_id):
 ledger.set_log_dir_resolver(_region_log_dir)
 
 
-def list_regions(log_dir):
+def region_ids_of_log_dir(log_dir):
     # region ids of the environment that owns this log_dir
+    # was list_regions(log_dir); shadowed by list_regions(environment) below
     for w in list_environments():
         if w.log_dir == log_dir:
             with w.tracks_lock:
@@ -1391,7 +1392,9 @@ def remove_track(track_id):
         if track is None:
             return None
         for rid in list(track.regions):
-            environment.regions.pop(rid, None)
+            removed = environment.regions.pop(rid, None)
+            if removed is not None:
+                environment.closed_rows.append(removed.index_entry())
         return track
 
 
@@ -1680,7 +1683,10 @@ def _write_archive(environment, sid, name, created, saved=True, shutdown=False):
             "regions": [r.index_entry() for r in regions] + dead_rows,
             "plan":    plan,
         }
-        with open(os.path.join(d, "master.json"), "w") as fh:
+        mpath = os.path.join(d, "master.json")
+        if os.path.isfile(mpath):
+            shutil.copyfile(mpath, os.path.join(d, "master.prev"))
+        with open(mpath, "w") as fh:
             json.dump(master, fh, indent=2)
         for r in regions:
             r.flush(d)
@@ -2077,6 +2083,8 @@ def save_all_on_shutdown():
     # every live environment writes its archive, saved before or not
     out = []
     for environment in list_environments():
+        if not environment.hydrated:
+            continue
         try:
             d = environment.save_on_shutdown()
             if d:

@@ -1,0 +1,2 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[d3] no draggable row found in browser widget

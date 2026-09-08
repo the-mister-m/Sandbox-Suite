@@ -1,0 +1,21 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "editor-mtrodv0u-1",
+      "type": "editor",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "showPreview": false,
+        "tabs": [],
+        "active": ""
+      }
+    }
+  ]
+}

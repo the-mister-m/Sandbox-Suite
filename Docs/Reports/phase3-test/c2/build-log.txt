@@ -1,0 +1,132 @@
+ROSTER BEFORE {"regions": ["gfsf"], "rows": ["test", "JHJKHKL", "jj", "kljoiu", "lkj;"]}
+HEAD ACTIONS HTML
+<button type="button" id="tlAddTrack" class="tb-btn" title="add a lane — named untitled, session root, no region">+ track</button>
+HEAD ACTIONS SHAPE {"inputs": 0, "selects": 0, "buttons": ["+ track"]}
+AFTER + TRACK {
+ "rows": [
+  {
+   "id": "5a031370bf1c",
+   "name": "test",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "a104ecc9ea23",
+   "name": "JHJKHKL",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "2ec9b663f955",
+   "name": "jj",
+   "root": "/System/Volumes"
+  },
+  {
+   "id": "8d0b223aeea9",
+   "name": "kljoiu",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "18aa66bf5f38",
+   "name": "lkj;",
+   "root": "/bin"
+  },
+  {
+   "id": "f523e9d9f3a5",
+   "name": "untitled",
+   "root": "/Users/moth3rship/Desktop"
+  }
+ ],
+ "heads": [
+  {
+   "name": "test",
+   "reg": "b3claude",
+   "root": "\u2026/moth3rship/Desktop",
+   "rootTitle": "/Users/moth3rship/Desktop"
+  },
+  {
+   "name": "JHJKHKL",
+   "reg": "gfsf",
+   "root": "\u2026/moth3rship/Desktop",
+   "rootTitle": "/Users/moth3rship/Desktop\n\nclick to pick a folder"
+  },
+  {
+   "name": "jj",
+   "reg": "no region",
+   "root": "/System/Volumes",
+   "rootTitle": "/System/Volumes"
+  },
+  {
+   "name": "kljoiu",
+   "reg": "no region",
+   "root": "\u2026/moth3rship/Desktop",
+   "rootTitle": "/Users/moth3rship/Desktop"
+  },
+  {
+   "name": "lkj;",
+   "reg": "no region",
+   "root": "/bin",
+   "rootTitle": "/bin"
+  },
+  {
+   "name": "untitled",
+   "reg": "no region",
+   "root": "\u2026/moth3rship/Desktop",
+   "rootTitle": "/Users/moth3rship/Desktop"
+  }
+ ]
+}
+NEW TRACK {"id": "f523e9d9f3a5", "name": "untitled", "regions": [], "root": "/Users/moth3rship/Desktop", "order": 5, "created": "2026-09-07T16:23:05"}
+new lane head index 5
+LANE MENU ["\uff0b insert region", "\uff0b insert region preset \u25b8", "\u2715 delete track"]
+AFTER INSERT REGION {
+ "regions": [
+  {
+   "id": "32f1ec929f4a",
+   "name": "gfsf",
+   "model": "gemma4:e4b-it-q8_0",
+   "track": "a104ecc9ea23",
+   "root": "/Users/moth3rship/Desktop"
+  },
+  {
+   "id": "50d404ef7a80",
+   "name": "untitled.4",
+   "model": "",
+   "track": "f523e9d9f3a5",
+   "root": "/Users/moth3rship/Desktop"
+  }
+ ],
+ "heads": [
+  {
+   "name": "test",
+   "reg": "b3claude",
+   "sub": ""
+  },
+  {
+   "name": "JHJKHKL",
+   "reg": "gfsf",
+   "sub": "gemma4:e4b-it-q8_0"
+  },
+  {
+   "name": "jj",
+   "reg": "no region",
+   "sub": ""
+  },
+  {
+   "name": "kljoiu",
+   "reg": "no region",
+   "sub": ""
+  },
+  {
+   "name": "lkj;",
+   "reg": "no region",
+   "sub": ""
+  },
+  {
+   "name": "untitled",
+   "reg": "untitled.4",
+   "sub": ""
+  }
+ ]
+}
+LANE MENU WITH REGION ["\u2398 copy region settings", "\ud83d\udcbe save preset", "load preset \u25b8", "reset with preset \u25b8", "\u21ba reset region", "\u2715 delete region"]
+FRAMES SEEN ["ade_init", "chat_history", "crew_list", "feed", "feed_dirty", "gate_edges", "models", "rail_catalog", "track_created", "track_list", "track_transcript"]
+ROSTER AFTER CLEANUP {"regions": ["gfsf"], "rows": ["test", "JHJKHKL", "jj", "kljoiu", "lkj;"]}

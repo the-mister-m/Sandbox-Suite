@@ -64,6 +64,7 @@ below.
 | save_preset | track, name, fields (pending) | out (bad name) | change_prompt (F1 edit) | no (roster comes later, from change_answer) | yes, always |
 | rename_preset | old_name, new_name | out | none | no | no |
 | delete_preset | name | out | none | no | no |
+| roster | (added by S2) | (added by S2) | (added by S2) | (added by S2) | (added by S2) |
 | (unknown type) | type | out ("unknown frame") | none | no | no |
 
 A second `change_answer` on a taken token prints "unknown token" and
@@ -74,9 +75,9 @@ stops — that is fine as-is.
 | frame | fields | who sends it (frames.py line or tracks.py listener) |
 |---|---|---|
 | session_refused | reason | `refuse()`, frames.py:104 — no caller within frames.py itself |
-| crew_list | roster, current | no caller in frames.py or tracks.py:1571-1620 — out of scope |
-| gate_edges | edges | no caller in frames.py or tracks.py:1571-1620 — out of scope |
-| rail_catalog | catalog | no caller in frames.py or tracks.py:1571-1620 — out of scope |
+| crew_list | roster, current | `send_crew_list()`, called at server.py:1753, on socket open |
+| gate_edges | edges | `send_gate_edges()`, called at server.py:1754, on socket open |
+| rail_catalog | catalog | `send_rail_catalog()`, called at server.py:1755, on socket open |
 | ade_init | session, tracks, rows, names | `_init()` closure, frames.py:550 — called from ade_save:737, ade_load:744, ade_new:761 |
 | track_list | tracks, rows, names | `_roster()` closure, frames.py:545, and direct sender-only calls on early-return paths (delete_track:642, duplicate_region:654, edit_track_row:665, edit_track:1010, change_answer:1056); also `broadcast_roster()`, frames.py:130 — the tracks.py roster listener (outside handle()) uses this after reset and region replacement |
 | region_replaced | old_id, new_id | `broadcast_region_replaced()`, frames.py:135 — no caller within frames.py; fired by the tracks.py roster listener after region replacement, outside handle() |
@@ -98,7 +99,27 @@ stops — that is fine as-is.
 | feed_dirty | stores | `_fire_dirty()`, frames.py:177, timer-armed by `mark_dirty()` — mark_dirty has no caller within frames.py itself; out of scope |
 | activity | event | `broadcast_human_mail()`, frames.py:140 — no caller within frames.py; out of scope |
 | tree_dirty | track (id or "*") | `_broadcast_all("send_tree_dirty", ...)` at save:842, delete:852, move:883, rename:909, mkdir:928, rmdir:956 |
-| track_status | track, phase | `broadcast_track_status()`, frames.py:120 — no caller within frames.py or tracks.py:1571-1620; out of scope |
-| context_warn | track, peak, cap | `broadcast_context_warn()`, frames.py:125 — no caller within frames.py or tracks.py:1571-1620; out of scope |
-| gate_broadcast | kind, id, prompt, track, track_name | `broadcast_gate()`, frames.py:115 — no caller within frames.py or tracks.py:1571-1620; out of scope |
+| track_status | track, phase | `broadcast_track_status()`, frames.py:120 — set as the status listener at server.py:362 |
+| context_warn | track, peak, cap | `broadcast_context_warn()`, frames.py:125 — called from ade/tracks.py:827 |
+| gate_broadcast | kind, id, prompt, track, track_name | `broadcast_gate()`, frames.py:115 — called from `_gate_notifier()` at server.py:200 |
 | change_prompt | token, region, action, edits, choices, text | `_send_change_prompt()`, frames.py:355 (F1 edit) — called from edit_track:1040, load_preset:1091, save_preset:1105; not a `send_*` web_io.py method, sends via `webio._send()` |
+
+## Server to client, engine senders
+
+Drawn from `engine/web_io.py` (the `WebIO` class) and `MirrorView` in
+`ade/tracks.py`.
+
+| frame | fields | sender line |
+|---|---|---|
+| out | text, dim, end | `WebIO.out()`, engine/web_io.py:26 |
+| ask | prompt, id, region | `WebIO.ask()`, engine/web_io.py:50; also `_advance_locked()`, engine/web_io.py:97 |
+| gate_pending | pending, active | `WebIO._push_pending_locked()`, engine/web_io.py:145 |
+| activity | event | `WebIO.event()`, engine/web_io.py:148 |
+| meters | meters | `WebIO.meters()`, engine/web_io.py:159 |
+| term | data, shell, region | `WebIO.term()`, engine/web_io.py:164 |
+| speak | text, voice | `WebIO.speak()`, engine/web_io.py:172 |
+| audio | data, mime | `WebIO.speak()`, engine/web_io.py:179 |
+| status | phase | `WebIO.status()`, engine/web_io.py:184 |
+| models | list, rows, current | `WebIO.send_models()`, engine/web_io.py:190 |
+| ledger_detail | detail, inst | `WebIO.send_ledger_detail()`, engine/web_io.py:219 |
+| mirror | track, kind, ...payload | `MirrorView._tag()`, ade/tracks.py:154 |

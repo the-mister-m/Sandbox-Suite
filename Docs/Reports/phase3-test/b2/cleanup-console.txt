@@ -1,0 +1,4 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[state] roster before drop: ['gfsf', 'gemma4b2', 'sonnetb2']
+[shot] cleanup-01-after-drop.png
+[state] roster after drop: ['gfsf']

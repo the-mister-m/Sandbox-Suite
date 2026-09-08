@@ -80,10 +80,27 @@
     frame.send(obj);
   }
 
-  function controlKind(v) {
+  // declared kind for keys whose engine/settings.py Row is nullable (or
+  // just unset before a first edit) — controlKind falls back to "str" for
+  // null/undefined, which then saves a numeric key as a string
+  const NUM_KEYS = ["gate_wait_s", "max_tools", "request_timeout",
+    "context_reset_cap_k", "num_ctx", "keep_alive", "temperature", "top_k",
+    "top_p", "min_p", "repeat_penalty", "repeat_last_n", "seed",
+    "num_predict", "mirostat", "mirostat_tau", "mirostat_eta", "num_gpu",
+    "num_thread", "order"];
+  const BOOL_KEYS = ["reset_on_change", "allow_agent_reset",
+    "start_turn_on_reset", "think", "claude_partial", "claude_keep_warm",
+    "claude_exclude_dynamic", "claude_hook_ask_blocking", "claude_bare",
+    "claude_memory_enabled"];
+
+  function controlKind(v, key) {
     if (Array.isArray(v)) return "list";
     if (typeof v === "boolean") return "bool";
     if (typeof v === "number") return "num";
+    if (v === null || v === undefined) {
+      if (NUM_KEYS.indexOf(key) >= 0) return "num";
+      if (BOOL_KEYS.indexOf(key) >= 0) return "bool";
+    }
     return "str";
   }
 
@@ -135,6 +152,7 @@
   const CSS = `
 .mx-dev-row{ display:grid; grid-template-columns:var(--dv-key) var(--dv-ctl) auto;
   align-items:center; column-gap:8px; padding-left:var(--dv-indent); }
+.mx-dev-row:hover{ background:var(--surface-2, #141414); }
 .mx-dev-row + .mx-dev-row{ margin-top:var(--dv-gap); }
 .mx-dev-row > .mx-dev-key{ min-width:0; overflow-wrap:anywhere; }
 .mx-dev-row > input,
@@ -146,9 +164,18 @@
 .mx-dev-row > select{ width:100%; }
 .mx-dev-row > input[type="checkbox"]{ width:14px; height:14px; margin:0; justify-self:start; }
 
-/* model picker — three selects sized to content inside one cell */
+/* text inputs and native selects read the same surface, border, radius */
+.mx-dev-row input[type="text"],
+.mx-dev-row input[type="number"],
+.mx-dev-row select,
+.mx-dev-tab-body > select{ box-sizing:border-box; background:var(--surface-1, #0e0e0e);
+  color:var(--text-1, #ddd); border:1px solid var(--border, #383838); border-radius:3px;
+  padding:0 5px; }
+
+/* model picker — three selects on one line, shrinking instead of wrapping */
 .mx-dev-model-host{ display:flex; align-items:center; gap:4px; overflow:hidden; }
-.mx-dev-model-host select{ width:auto; min-width:0; flex:0 1 auto; }
+.mx-model-picker{ display:flex; align-items:center; flex-wrap:nowrap; gap:4px; min-width:0; }
+.mx-model-picker select{ width:auto; min-width:0; flex:1 1 0; }
 
 /* section heads carry the spacing; their rows sit indented under them */
 .mx-dev-block{ margin-top:var(--dv-sec); }
@@ -196,7 +223,8 @@
   // block starts open. A caret click pins the block's state either way.
   function blockCollapsed(state, region, block) {
     const key = region.id + ":" + block.name;
-    if (state.blocksTouched.has(key)) return state.collapsedBlocks.has(key);
+    const touched = state.blocksTouched;
+    if (touched && touched.has(key)) return state.collapsedBlocks.has(key);
     return !!block.provider && block.provider !== region.provider;
   }
 
@@ -249,6 +277,10 @@
 
       const commit = el("button", "mx-btn", "apply");
       commit.type = "button";
+      const baseline = input.value;
+      const checkDirty = () => { commit.hidden = input.value === baseline; };
+      checkDirty();
+      input.addEventListener("input", checkDirty);
       commit.addEventListener("click", () => {
         sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: input.value } });
       });
@@ -275,7 +307,7 @@
       return row;
     }
 
-    const kind = controlKind(value);
+    const kind = controlKind(value, key);
     let input;
     if (kind === "bool") {
       input = el("input"); input.type = "checkbox"; input.checked = !!value;
@@ -290,6 +322,13 @@
 
     const btn = el("button", "mx-btn", "apply");
     btn.type = "button";
+    const baseline = kind === "bool" ? input.checked : input.value;
+    const checkDirty = () => {
+      const dirty = kind === "bool" ? input.checked !== baseline : input.value !== baseline;
+      btn.hidden = !dirty;
+    };
+    checkDirty();
+    input.addEventListener(kind === "bool" ? "change" : "input", checkDirty);
     btn.addEventListener("click", () => {
       let out;
       if (kind === "bool") out = input.checked;
@@ -423,7 +462,8 @@
     if (!state.presetsLoaded) {
       state.presetsLoaded = true;
       fetch("/api/library/presets").then((r) => r.json()).then((d) => {
-        state.presetNames = (d && d.names) || [];
+        state.presetNames = Array.isArray(d && d.names) ? d.names
+                          : (Array.isArray(d && d.list) ? d.list : []);
         rerender();
       }).catch(() => {});
     }

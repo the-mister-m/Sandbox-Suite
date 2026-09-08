@@ -27,3 +27,12 @@
 - Decide whether the old queue controls (awaiting-me filter, edit, delete, hold-to-fire) are the missing new queue. D6 never asked for them.
 - Register haiku or gemma4:e4B and drive a session before any live send test; both absent from the models registry.
 - Design fix jobs from Brandon's notes plus the specs. Not started.
+- Restart, open arrange, click browse, say whether the chooser dialog is in front — server.py:1560 edit unproven.
+- Queue-log command text on a human answer inside the wait window — W4 proved by code parity only, not driven.
+- Track loss on the 17:48 restart: cause not found from disk; W1's two safety lines prevent a repeat; Brandon's terminal scrollback from 17:47 to 17:49 would name the line.
+- Chat and anchor-chat are now near duplicates; Brandon dedupes later.
+- Haiku absent from the picker list; the alias works as a bare model string.
+- gate-list does not filter chat_history on message id; two gate-lists on one socket share a reply.
+- Decide the library/maps and grid window cleanup: library/maps/ (Music History.json, Music History.2.json, Desktop.json), library/grids/9883b6bec3df/ throwaway window files, Docs/Reports/phase3-test/<box>/ (keep), two unnamed empty sessions from 2026-09-06 (85b19c53d41a, 0d78d246515f), archives/9883b6bec3df/ region jsonl files.
+- Browser widget two skins, Finder columns versus VS Code tree — idea from this session, not specced.
+- Rule conflict raised by four boxes, unresolved: the harness bypass notice tells agents to read and edit through Bash; the project rules say Read and Edit tools so Brandon sees edits.

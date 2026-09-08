@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": []
+}  {
+      "id": "browser-mtrrnhjp-3",
+      "type": "browser",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[shot] queuelog-80-before.png
+[state] clicked rm test.txt approve inline: True
+[shot] queuelog-81-after-approve.png

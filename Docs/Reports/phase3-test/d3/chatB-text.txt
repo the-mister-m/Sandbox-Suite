@@ -1,0 +1,15 @@
+USER
+
+d3gemma says hello
+
+AGENT
+
+TheThe user user input input is is " "dd33ggemmaemma says says hello hello".".
+"
+"dd33ggemmaemma"" is is my my region region name name,, and and I I am am currently currently operating operating as as that that agent agent..
+This
+This input input appears appears to to be be a a casual casual greeting greeting or or a a self self--referencereference test test from from the the user user//simulatorsimulator environment environment..
+
+Based
+
+Based on on the the crew crew orientation orientation,, I I should should maintain maintain my my persona persona ( (aa crew crew member member bound bound by by memory memory//valuesvalues)) but but respond respond appropriately appropriately to to a a simple simple message message.. Since Since this this is is not not an an instruction instruction for for work work,, and and it it''ss just just a a greeting greeting,, a a friendly friendly acknowledgment acknowledgment is is suitable suitable.. No No tools tools are are needed needed..HelloHello there there!! How How can can I I help help you you today today??

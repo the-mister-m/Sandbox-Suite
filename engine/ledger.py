@@ -371,7 +371,7 @@ def pending_as_records(log_dir=None):
     regions = None
     if log_dir is not None:
         from ade import tracks
-        regions = set(tracks.list_regions(log_dir))
+        regions = set(tracks.region_ids_of_log_dir(log_dir))
     out = []
     for e in dq.pending():
         if regions is not None and e.get("session") not in regions:

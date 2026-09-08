@@ -1,0 +1,25 @@
+{
+  "root_before": "",
+  "root_after": "",
+  "ids": {
+    "mount": "mount-mtrrhy3c-1",
+    "timeline": "timeline-mtrrhy3c-2",
+    "devagent": "devagent-mtrrhy3c-3"
+  },
+  "clicked": "clicked, pickerVal=ollama",
+  "frame_types_after_click": [
+    "track_created",
+    "track_list",
+    "track_created",
+    "track_list",
+    "track_transcript",
+    "chat_history",
+    "feed_dirty"
+  ],
+  "markers_after_click": {
+    "timeline": "unremounted",
+    "devagent": "unremounted"
+  },
+  "found_in_timeline": true,
+  "found_in_devagent": true
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "item": "14-gate-list-live-row",
+    "status": "FAILED",
+    "note": "settle buttons drew within 60s: False, gate_pending seen: False"
+  },
+  {
+    "item": "14-gate-pending-frame",
+    "status": "NOT DRIVEN",
+    "note": "no gate_pending frame observed in 60s window"
+  },
+  {
+    "item": "14-gate-list-dom",
+    "status": "SEEN",
+    "note": "\u2723\nGate List \u00b7 gate_list-mtrverqq-1\noptions\n\u00d7\n19:25:10\nwrite_file\nw4bgate.txt"
+  }
+]

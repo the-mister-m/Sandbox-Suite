@@ -100,6 +100,9 @@
     if (this._mod && this._mod.onOption) {
       try { this._mod.onOption(this, key, value); } catch (e) { /* widget may ignore it */ }
     }
+    // options ride entirely on setOption/getOptions; without this a
+    // widget that persists only through options never survives a reload
+    if (MX.grid && MX.grid.save) MX.grid.save();
   };
 
   // per-instance options panel, opened from the widget's own bar

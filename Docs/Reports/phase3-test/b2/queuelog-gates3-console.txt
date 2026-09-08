@@ -1,0 +1,13 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[shot] queuelog-50-start.png
+[state] denied 0 stray send rows
+[state] write: pending sonnetb2 row found after 1s, clicking approve
+[shot] queuelog-51-write-approved.png
+[state] read: NOT FOUND within 45s
+[shot] queuelog-52-read-approved.png
+[state] run: NOT FOUND within 45s
+[shot] queuelog-53-run-approved.png
+[state] settled inline: write=True read=False run=False
+[shot] queuelog-54-feed-final.png
+[shot] queuelog-55-detail-open.png
+[state] clicked write_file row to expand detail: True

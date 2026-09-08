@@ -1,0 +1,38 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[shot] queuelog-70-start.png
+[state] approved 1 pending read row(s)
+[state] immediate read approve on start: 1
+[shot] queuelog-71-read-approved.png
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] approved 0 pending run row(s)
+[state] run: nothing pending within 220s
+[shot] queuelog-72-run-approved.png
+[shot] queuelog-73-feed-final.png
+[shot] queuelog-74-detail-open.png
+[state] clicked read_file row to expand detail: True
+[state] got_run=False

@@ -1,0 +1,19 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": []
+}  {
+      "id": "gate_list-mtrurcu7-2",
+      "type": "gate_list",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": "7bc404eeb8ab"
+      }
+    }
+  ]
+}

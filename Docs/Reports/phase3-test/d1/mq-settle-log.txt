@@ -1,0 +1,4 @@
+clicked: approve rows_before: ['17:34:53d1mqaskwrite  d1test.txt  [create]\nhello\n\napply? [y/N] approvedenyqueue']
+clicked: approve rows_before: ['17:34:56d1mqaskread  /Users/moth3rship/Desktop/d1test.txt\n\napprove? [y/N] approvedenyqueue']
+clicked: approve rows_before: ['17:34:59d1mqaskrun\n\n  $ rm d1test.txt\n\napprove? [y/N] approvedenyqueue']
+clicked: approve rows_before: ['17:35:03d1mqasksend  → Captain\n\nd1test.txt written ("hello"), read back confirmed match, removed via `rm d1test.txt` (exit 0). File no longer exists.\n\n\napprove? [y/N] approvedenyqueue']

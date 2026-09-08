@@ -1,0 +1,32 @@
+[
+  {
+    "item": "14-final-settle-drew",
+    "status": "FAILED",
+    "note": "count=0"
+  },
+  {
+    "item": "14-final-bare-gate-frame",
+    "status": "FAILED",
+    "note": ""
+  },
+  {
+    "item": "14-final-mirror-gate-frame",
+    "status": "FAILED",
+    "note": ""
+  },
+  {
+    "item": "14-final-frame-types-seen",
+    "status": "SEEN",
+    "note": "[\"ade_init\", \"chat_history\", \"crew_list\", \"feed_dirty\", \"gate_broadcast\", \"gate_edges\", \"mirror\", \"models\", \"rail_catalog\", \"track_list\", \"track_status\"]"
+  },
+  {
+    "item": "14-final-mirror-frame-content",
+    "status": "NOT DRIVEN",
+    "note": "null"
+  },
+  {
+    "item": "14-final-bare-frame-content",
+    "status": "NOT DRIVEN",
+    "note": "null"
+  }
+]

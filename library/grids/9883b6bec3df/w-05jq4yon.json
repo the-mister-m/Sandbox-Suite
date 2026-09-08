@@ -1,0 +1,55 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "timeline-mtrmj8nc-1",
+      "type": "timeline",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "strip-mtrmj9lz-2",
+      "type": "strip",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "chat-mtrmjak8-3",
+      "type": "chat",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "speech_enabled": false,
+        "tts_engine": "say",
+        "region": "32f1ec929f4a"
+      }
+    },
+    {
+      "id": "mount-mtrmjbii-4",
+      "type": "mount",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+mounted: {'strip': 'strip-mtrnb5ko-1', 'changes': 'changes-mtrnb5l5-2', 'queue_log': 'queue_log-mtrnb5l9-3', 'messenger': 'messenger-mtrnb5le-4', 'ledger': 'ledger-mtrnb5lq-5'}
+region fc1 = a17e153a3ebc
+approved gates: [{'kind': 'ask', 'id': 'ff5c035020ab'}, {'kind': 'resolved', 'id': 'ff5c035020ab'}, {'kind': 'ask', 'id': '9f5a4a3d5fe7'}, {'kind': 'resolved', 'id': '9f5a4a3d5fe7'}]
+changes tree text: '✣\nChanges · changes-mtrnb5l5-2\noptions\n×\nfiles\nagents\n▾\nfc_test.txt\n1\nwrite_file\nfc1\n15:40:56\n▾\nfbtest.txt\n1\nwrite_file\nfbsonnet.2\n15:39:42\n▾\nb4test.txt\n1\nwrite_file\nb4claude\n14:38:48\n▾\ntest.txt\n5\nwrite_file\nsonnet2\n13:20:38\nwrite\nsonnet3\n13:35:13\nwrite_file\nsonnetc\n13:42:41\nwrite\nsonnetb2\n13:59:45\nwrite\nsonnetb2\n14:03:02\n▾\nb3test.txt\n2\nwrite_file\nb3claude\n13:52:21\nwrite_file\nb3claude2\n13:54:08\n▾\n'
+queue-log row count: 47
+queue-log detail text: 'INPUT\ncommand: pwd\nOUTPUT\n36 B\n[exit 0] /Users/moth3rship/Desktop'
+messenger: clicked_card=True wp_feed frames before=2 after=2
+strip text after kill: '✣\nAgent Strip · strip-mtrnb5ko-1\noptions\n×\ngfsf\n✕'
+changes text after kill: '✣\nChanges · changes-mtrnb5l5-2\noptions\n×\nfiles\nagents\n▾\nfc_test.txt\n1\nwrite_file\nfc1\n15:40:56\n▾\nfbtest.txt\n1\nwrite_file\nfbsonnet.2\n15:39:42\n▾\nb4test.txt\n1\nwrite_file\nb4claude\n14:38:48\n▾\ntest.txt\n5\nwrite_file\nsonnet2\n13:20:38\nwrite\nsonnet3\n13:35:13\nwrite_file\nsonnetc\n13:42:41\nwrite\nsonnetb2\n13:59:45\nwrite\nsonnetb2\n14:03:02\n▾\nb3test.txt\n2\nwrite_file\nb3claude\n13:52:21\nwrite_file\nb3claude2\n13:54:08\n▾\n'
+ledger text after kill: '✣\nLedger · ledger-mtrnb5lq-5\noptions\n×\nfc1\nfbsonnet.2\nb4fence\nb4stop\nb4claude.2\nb4gemma\nb4claude\nsonnetb2\ngemma4b2\nb3claude2\nsonnetc\nsonnet3\ngfsf\nsonnet2\ngfsf2\nuntitled.2\nALL\nNONE\nColumns ▾\n31\nTURNS\n46m 5s\nDURATION\n$1.2784\nCOST\n46\nACTIONS\n20,475\nOUT\n583,644\nREAD\n288,942\nREAD PEAK\n0\nWRITE 5M\n153,074\nWRITE 1H\n▸\nPER-AGENT TOTALS\n16 agents · peak 17,473\nTIME ▼\n\tTRACK\n\tTURN\n\tCALL\n\tDURATION\n\tMODEL\n\tSTOP'
+final roster frame count seen: 18

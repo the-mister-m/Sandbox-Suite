@@ -5,6 +5,8 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ## SESSION INDEX
 (one line per session, newest first: date · name · 5–10 word summary)
+- 2026-09-07 · phase4-build-test · Nineteen widgets driven headed, five fix waves landed, timeline built to spec
+- 2026-09-07 · phase4-scope · Widget tree and frame senders read, four Phase 4 docs written, no code edited
 - 2026-09-07 · devagent-ui · Devagent CSS written from scratch, dropdowns, file browser, version default
 - 2026-09-06 · phase3-scope · Old ADE and socket lane audited, Phase 3 scoped, 14 E-specs written
 - 2026-09-06 · phase2-wave1-2 · Jobs 1, 3a, 3b built; World renamed Environment; no current session
@@ -14,6 +16,18 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 - 2026-09-05 · phase1-specs · Phase 1 tree read, assessed, three specs + handoff written
 
 ## ENTRIES
+### 2026-09-07 12:50–20:12 — phase4-build-test, session agent Fable
+- DONE: Brandon drove headed against server 127.0.0.1:5000, session 9883b6bec3df "test run" — twenty-seven boxes, twenty-seven receipts, five fix specs, six server restarts. Renamed the shadowed list_regions to region_ids_of_log_dir in ade/tracks.py, unblocking every feed-driven widget through engine/ledger.py's call site; server.py's choose-file dialog moved inside Finder's tell block, unproven pending a restart and Brandon's eyes. Nineteen of nineteen widgets driven headed, not screenshotted idle. Every Wave B, C, D finding fixed and re-driven except two logged open. Timeline built to SPEC-phase4-timeline-target.md. Arrange gained browse, archive, library, update, and disk paths on nodes. Anchor-chat is now a region switcher on follow and mirror; the anchor frame is gone. Raw out/status/meters fan-out deleted; mirror is the one tagged stream. Archive writes master.prev before overwriting; shutdown skips unhydrated environments.
+- DECIDED: see MEMORY.md warm start's durable facts list.
+- OPEN: see TODO.md; rule conflict between the harness bypass notice and the project's Read/Edit rule raised, unresolved.
+- LINKS: [Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md) · [Docs/Specs/SPEC-phase4-fixes-B.md](Docs/Specs/SPEC-phase4-fixes-B.md) · [Docs/Specs/SPEC-phase4-fixes-C.md](Docs/Specs/SPEC-phase4-fixes-C.md) · [Docs/Specs/SPEC-phase4-arrange-maps.md](Docs/Specs/SPEC-phase4-arrange-maps.md) · [Docs/Specs/SPEC-phase4-fixes-D.md](Docs/Specs/SPEC-phase4-fixes-D.md) · [Docs/Specs/SPEC-phase4-timeline-target.md](Docs/Specs/SPEC-phase4-timeline-target.md)
+
+### 2026-09-07 — phase4-scope (timestamps: ask Brandon)
+- DONE: Session agent Fable read the whole widget tree under static/js/widgets, the matrix framework under static/js/matrix, Docs/HOWTO-frames.md, and grepped ade/web_io.py, ade/frames.py, engine/web_io.py, server.py. No code edited. Four documents written: Phase 4 session agent scope, a Sonnet fix spec (S1 S2 S3), a test-wave spec (waves B C D, eleven boxes, supersedes SPEC-test-waves-BC.md), and a timeline/mount/devagent target-UI spec.
+- DECIDED: see MEMORY.md warm start's durable facts list.
+- OPEN: see TODO.md.
+- LINKS: [Docs/Scope/SCOPE-phase4-session-agent.md](Docs/Scope/SCOPE-phase4-session-agent.md) · [Docs/Specs/SPEC-phase4-fixes-sonnet.md](Docs/Specs/SPEC-phase4-fixes-sonnet.md) · [Docs/Specs/SPEC-phase4-test-waves.md](Docs/Specs/SPEC-phase4-test-waves.md) · [Docs/Specs/SPEC-phase4-timeline-target.md](Docs/Specs/SPEC-phase4-timeline-target.md) · [Docs/Reports/RECEIPT-phase4-read-and-specs.md](Docs/Reports/RECEIPT-phase4-read-and-specs.md)
+
 ### 2026-09-06 — phase3-scope (18:46–21:36 UTC)
 - DONE: Session agent Fable read the socket lane backend, the full old ADE front end, ledger, rails, settings rows, the mount widget and model picker; audited it in chat with Brandon; scoped Phase 3 and wrote fourteen E-series specs plus the session agent brief.
 - AUDIT: old pages cannot boot (three panes they import are gone, both socket owners open the path with no session id); backend has autosave, ledger-directory, workspace-root, session-settings-persist, in-turn-ask, and ade_end socket-cleanup bugs; the old sessions route crashes; provenance and gate answer translation are still served, contrary to the handoff. All fixed in E1 through E4.

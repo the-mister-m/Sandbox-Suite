@@ -1,0 +1,35 @@
+{
+  "strip_popover_before": true,
+  "strip_popover_after_add": true,
+  "strip_still_single_element": 1,
+  "devagent_presetNames": [
+    "Agent Opus",
+    "Agent Sonnet",
+    "Music History Sonnet",
+    "User Fable",
+    "test sonnet"
+  ],
+  "gates_tab_text": "write_file\nopen\nask\nqueue\nlocked\nany\nsend_message\nopen\nask\nqueue\nlocked\nany\nremember\nopen\nask\nqueue\nlocked\nany\nrun_command\nopen\nask\nqueue\nlocked\nany\ncheck_read\nopen\nask\nqueue\nlocked\ninside\ncheck_read\nopen\nask\nqueue\nlocked\noutside\nscreen_capture\nopen\nask\nqueue\nlocked\nany\nfetch_url\nopen\nask\nqueue\nlocked\nany\nrecall\nopen\nask\nqueue\nlocked\nany\nweb_open\nopen\nask\nqueue\nlocked\nany\nweb_read\nopen\nask\nqueue\nlocked\nany\nweb_screenshot\nopen\nask\nqueue\nlocked\nany\nweb_act\nopen\nask\nqueue\nlocked\nany\nweb_eval\nopen\nask\nqueue\nlocked\nany\ninitiate\nopen\nask\nqueue\nlocked\nany\nreset_region\nopen\nask\nqueue\nlocked\nany\nreset_self\nopen\nask\nqueue\nlocked\nany\nrequest_messages\nopen\nask\nqueue\nlocked\nany\napply",
+  "preset_select_options": [
+    "Agent Opus",
+    "Agent Sonnet",
+    "Music History Sonnet",
+    "User Fable",
+    "test sonnet"
+  ],
+  "fehtest_written": true,
+  "fehtest2_written": true,
+  "fehtest2_deleted": true,
+  "region_name_input_after_tab_click": "fehtypeintact",
+  "stray_feh_tracks_removed": [
+    "8b8c158cfc30"
+  ],
+  "feh_region_id": "d448212331f3",
+  "context_textarea_after_reread": "feh context body",
+  "context_relative_path": "injections/region/d448212331f3.md",
+  "workspace_root": "/Users/moth3rship/Desktop",
+  "context_abs_path_guess": "/Users/moth3rship/Desktop/injections/region/d448212331f3.md",
+  "context_file_exists_at_guess": false,
+  "fehnum_max_tools_value": null,
+  "fehnum_max_tools_type": "NoneType"
+}

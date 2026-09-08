@@ -1,0 +1,958 @@
+[
+  {
+    "t": 1788812030836,
+    "m": {
+      "type": "track_list",
+      "tracks": [
+        {
+          "id": "32f1ec929f4a",
+          "track": "a104ecc9ea23",
+          "node_id": null,
+          "name": "gfsf",
+          "model": "gemma4:e4b-it-q8_0",
+          "seat": null,
+          "root": "/Users/moth3rship/Desktop",
+          "created": "2026-09-07T12:53:57",
+          "provider": "ollama",
+          "loop_class": "user-loop",
+          "mechanism": "native",
+          "muted": false,
+          "settings": {
+            "model": "gemma4:e4b-it-q8_0",
+            "seat": "",
+            "preset_name": "",
+            "reset_on_change": true,
+            "gate_wait_s": 150,
+            "max_tools": null,
+            "request_timeout": 200,
+            "allow_agent_reset": true,
+            "context_reset_cap_k": 300,
+            "start_turn_on_reset": true,
+            "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+            "num_ctx": 32768,
+            "think": true,
+            "keep_alive": 30,
+            "temperature": 0.8,
+            "top_k": 40,
+            "top_p": 0.9,
+            "min_p": 0,
+            "repeat_penalty": 1.1,
+            "repeat_last_n": 64,
+            "seed": 0,
+            "num_predict": -1,
+            "mirostat": 0,
+            "mirostat_tau": 5,
+            "mirostat_eta": 0.1,
+            "num_gpu": null,
+            "num_thread": null,
+            "claude_mode": "persistent",
+            "claude_effort": null,
+            "claude_partial": true,
+            "claude_cache_ttl": "1h",
+            "claude_keep_warm": false,
+            "claude_exclude_dynamic": false,
+            "claude_tools": [],
+            "claude_disallowed_tools": [],
+            "claude_add_dirs": [],
+            "claude_hook_ask_blocking": true,
+            "claude_setting_sources": null,
+            "claude_system_prompt": "",
+            "claude_bare": false,
+            "claude_config_dir": "",
+            "claude_memory_enabled": false,
+            "claude_md_excludes": [],
+            "claude_output_style": "",
+            "claude_settings_file": ""
+          },
+          "overlay": [
+            {
+              "edge": "write_file",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "send_message",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "remember",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "run_command",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "inside",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "outside",
+              "hook": "ask"
+            },
+            {
+              "edge": "screen_capture",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "fetch_url",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "recall",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_open",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_read",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_screenshot",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_act",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_eval",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "initiate",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_region",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_self",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "request_messages",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            }
+          ],
+          "region": {
+            "job": null,
+            "input": null,
+            "output": null,
+            "git": null,
+            "notes": null,
+            "status": null,
+            "stxt": null
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "5a031370bf1c",
+          "name": "test",
+          "regions": [],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 0,
+          "created": "2026-09-07T04:14:37"
+        },
+        {
+          "id": "a104ecc9ea23",
+          "name": "JHJKHKL",
+          "regions": [
+            "32f1ec929f4a"
+          ],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 1,
+          "created": "2026-09-07T04:59:22"
+        },
+        {
+          "id": "2ec9b663f955",
+          "name": "jj",
+          "regions": [],
+          "root": "/System/Volumes",
+          "order": 2,
+          "created": "2026-09-07T11:50:50"
+        },
+        {
+          "id": "8d0b223aeea9",
+          "name": "kljoiu",
+          "regions": [],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 3,
+          "created": "2026-09-07T11:51:13"
+        },
+        {
+          "id": "18aa66bf5f38",
+          "name": "lkj;",
+          "regions": [],
+          "root": "/bin",
+          "order": 4,
+          "created": "2026-09-07T11:54:42"
+        }
+      ],
+      "names": {
+        "e9e288084b2b": "probe",
+        "5e563551b2b4": "untitled",
+        "14190f5a4d31": "untitled.2",
+        "adc208eca7b0": "throwaway",
+        "518f4d739fed": "gfsf2",
+        "5c84d83e0ea5": "sonnet2",
+        "b4071bdf83d3": "gemma4t",
+        "faed240b2643": "sonnet3",
+        "55b0c251e410": "gemma4c",
+        "d248cb53bb94": "sonnetc",
+        "38b6279c67cc": "b3claude",
+        "e5a59014886c": "b3gemma4",
+        "62885bf299ef": "throwawayb2",
+        "9f2051a42f39": "b3claude2",
+        "b063adc1befc": "gemma4b2",
+        "90db982504a6": "sonnetb2",
+        "481ac26ee513": "b4claude",
+        "5f2653efe80b": "b4gemma",
+        "fd4f0c30551c": "b4claude.2",
+        "3483ba1b0b6e": "b4stop",
+        "3a74cb29c5ed": "b4fence",
+        "e8d87cf22e69": "s2region",
+        "28163fd8c6b8": "fbsonnet",
+        "fc32b0e75ba5": "fbsonnet.2",
+        "a17e153a3ebc": "fc1",
+        "7952d2dafc5f": "fdsonnet",
+        "05ecdae627d5": "fdsonnet.2",
+        "be91b577842f": "fdsonnet.3",
+        "805f93037a33": "fdsonnet.4",
+        "c07433b8915b": "c1sonnet",
+        "770f55685f6f": "c1sonnet.2",
+        "32f1ec929f4a": "gfsf"
+      }
+    }
+  },
+  {
+    "t": 1788812031708,
+    "m": {
+      "type": "track_created",
+      "track": {
+        "id": "3e50df9becde",
+        "track": "5a031370bf1c",
+        "node_id": null,
+        "name": "c3sonnet",
+        "model": "sonnet",
+        "seat": null,
+        "root": "/Users/moth3rship/Desktop",
+        "created": "2026-09-07T16:13:51",
+        "provider": "claude",
+        "loop_class": "user-loop",
+        "mechanism": "cli",
+        "muted": false,
+        "settings": {
+          "model": "sonnet",
+          "seat": "",
+          "preset_name": "",
+          "reset_on_change": true,
+          "gate_wait_s": 150,
+          "max_tools": null,
+          "request_timeout": 200,
+          "allow_agent_reset": true,
+          "context_reset_cap_k": 300,
+          "start_turn_on_reset": true,
+          "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+          "num_ctx": 32768,
+          "think": true,
+          "keep_alive": 30,
+          "temperature": 0.8,
+          "top_k": 40,
+          "top_p": 0.9,
+          "min_p": 0,
+          "repeat_penalty": 1.1,
+          "repeat_last_n": 64,
+          "seed": 0,
+          "num_predict": -1,
+          "mirostat": 0,
+          "mirostat_tau": 5,
+          "mirostat_eta": 0.1,
+          "num_gpu": null,
+          "num_thread": null,
+          "claude_mode": "persistent",
+          "claude_effort": null,
+          "claude_partial": true,
+          "claude_cache_ttl": "1h",
+          "claude_keep_warm": false,
+          "claude_exclude_dynamic": false,
+          "claude_tools": [],
+          "claude_disallowed_tools": [],
+          "claude_add_dirs": [],
+          "claude_hook_ask_blocking": true,
+          "claude_setting_sources": null,
+          "claude_system_prompt": "",
+          "claude_bare": false,
+          "claude_config_dir": "",
+          "claude_memory_enabled": false,
+          "claude_md_excludes": [],
+          "claude_output_style": "",
+          "claude_settings_file": ""
+        },
+        "overlay": [
+          {
+            "edge": "write_file",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "send_message",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "remember",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "run_command",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "check_read",
+            "driver": "model",
+            "scope": "inside",
+            "hook": "ask"
+          },
+          {
+            "edge": "check_read",
+            "driver": "model",
+            "scope": "outside",
+            "hook": "ask"
+          },
+          {
+            "edge": "screen_capture",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "fetch_url",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "recall",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "web_open",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "web_read",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "web_screenshot",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "web_act",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "web_eval",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "initiate",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "reset_region",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "reset_self",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          },
+          {
+            "edge": "request_messages",
+            "driver": "model",
+            "scope": "any",
+            "hook": "ask"
+          }
+        ],
+        "region": {
+          "job": null,
+          "input": null,
+          "output": null,
+          "git": null,
+          "notes": null,
+          "status": null,
+          "stxt": null
+        }
+      },
+      "row": {
+        "id": "5a031370bf1c",
+        "name": "test",
+        "regions": [
+          "3e50df9becde"
+        ],
+        "root": "/Users/moth3rship/Desktop",
+        "order": 0,
+        "created": "2026-09-07T04:14:37"
+      }
+    }
+  },
+  {
+    "t": 1788812031708,
+    "m": {
+      "type": "track_list",
+      "tracks": [
+        {
+          "id": "32f1ec929f4a",
+          "track": "a104ecc9ea23",
+          "node_id": null,
+          "name": "gfsf",
+          "model": "gemma4:e4b-it-q8_0",
+          "seat": null,
+          "root": "/Users/moth3rship/Desktop",
+          "created": "2026-09-07T12:53:57",
+          "provider": "ollama",
+          "loop_class": "user-loop",
+          "mechanism": "native",
+          "muted": false,
+          "settings": {
+            "model": "gemma4:e4b-it-q8_0",
+            "seat": "",
+            "preset_name": "",
+            "reset_on_change": true,
+            "gate_wait_s": 150,
+            "max_tools": null,
+            "request_timeout": 200,
+            "allow_agent_reset": true,
+            "context_reset_cap_k": 300,
+            "start_turn_on_reset": true,
+            "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+            "num_ctx": 32768,
+            "think": true,
+            "keep_alive": 30,
+            "temperature": 0.8,
+            "top_k": 40,
+            "top_p": 0.9,
+            "min_p": 0,
+            "repeat_penalty": 1.1,
+            "repeat_last_n": 64,
+            "seed": 0,
+            "num_predict": -1,
+            "mirostat": 0,
+            "mirostat_tau": 5,
+            "mirostat_eta": 0.1,
+            "num_gpu": null,
+            "num_thread": null,
+            "claude_mode": "persistent",
+            "claude_effort": null,
+            "claude_partial": true,
+            "claude_cache_ttl": "1h",
+            "claude_keep_warm": false,
+            "claude_exclude_dynamic": false,
+            "claude_tools": [],
+            "claude_disallowed_tools": [],
+            "claude_add_dirs": [],
+            "claude_hook_ask_blocking": true,
+            "claude_setting_sources": null,
+            "claude_system_prompt": "",
+            "claude_bare": false,
+            "claude_config_dir": "",
+            "claude_memory_enabled": false,
+            "claude_md_excludes": [],
+            "claude_output_style": "",
+            "claude_settings_file": ""
+          },
+          "overlay": [
+            {
+              "edge": "write_file",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "send_message",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "remember",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "run_command",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "inside",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "outside",
+              "hook": "ask"
+            },
+            {
+              "edge": "screen_capture",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "fetch_url",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "recall",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_open",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_read",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_screenshot",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_act",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_eval",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "initiate",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_region",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_self",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "request_messages",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            }
+          ],
+          "region": {
+            "job": null,
+            "input": null,
+            "output": null,
+            "git": null,
+            "notes": null,
+            "status": null,
+            "stxt": null
+          }
+        },
+        {
+          "id": "3e50df9becde",
+          "track": "5a031370bf1c",
+          "node_id": null,
+          "name": "c3sonnet",
+          "model": "sonnet",
+          "seat": null,
+          "root": "/Users/moth3rship/Desktop",
+          "created": "2026-09-07T16:13:51",
+          "provider": "claude",
+          "loop_class": "user-loop",
+          "mechanism": "cli",
+          "muted": false,
+          "settings": {
+            "model": "sonnet",
+            "seat": "",
+            "preset_name": "",
+            "reset_on_change": true,
+            "gate_wait_s": 150,
+            "max_tools": null,
+            "request_timeout": 200,
+            "allow_agent_reset": true,
+            "context_reset_cap_k": 300,
+            "start_turn_on_reset": true,
+            "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+            "num_ctx": 32768,
+            "think": true,
+            "keep_alive": 30,
+            "temperature": 0.8,
+            "top_k": 40,
+            "top_p": 0.9,
+            "min_p": 0,
+            "repeat_penalty": 1.1,
+            "repeat_last_n": 64,
+            "seed": 0,
+            "num_predict": -1,
+            "mirostat": 0,
+            "mirostat_tau": 5,
+            "mirostat_eta": 0.1,
+            "num_gpu": null,
+            "num_thread": null,
+            "claude_mode": "persistent",
+            "claude_effort": null,
+            "claude_partial": true,
+            "claude_cache_ttl": "1h",
+            "claude_keep_warm": false,
+            "claude_exclude_dynamic": false,
+            "claude_tools": [],
+            "claude_disallowed_tools": [],
+            "claude_add_dirs": [],
+            "claude_hook_ask_blocking": true,
+            "claude_setting_sources": null,
+            "claude_system_prompt": "",
+            "claude_bare": false,
+            "claude_config_dir": "",
+            "claude_memory_enabled": false,
+            "claude_md_excludes": [],
+            "claude_output_style": "",
+            "claude_settings_file": ""
+          },
+          "overlay": [
+            {
+              "edge": "write_file",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "send_message",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "remember",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "run_command",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "inside",
+              "hook": "ask"
+            },
+            {
+              "edge": "check_read",
+              "driver": "model",
+              "scope": "outside",
+              "hook": "ask"
+            },
+            {
+              "edge": "screen_capture",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "fetch_url",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "recall",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_open",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_read",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_screenshot",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_act",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "web_eval",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "initiate",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_region",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "reset_self",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            },
+            {
+              "edge": "request_messages",
+              "driver": "model",
+              "scope": "any",
+              "hook": "ask"
+            }
+          ],
+          "region": {
+            "job": null,
+            "input": null,
+            "output": null,
+            "git": null,
+            "notes": null,
+            "status": null,
+            "stxt": null
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "5a031370bf1c",
+          "name": "test",
+          "regions": [
+            "3e50df9becde"
+          ],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 0,
+          "created": "2026-09-07T04:14:37"
+        },
+        {
+          "id": "a104ecc9ea23",
+          "name": "JHJKHKL",
+          "regions": [
+            "32f1ec929f4a"
+          ],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 1,
+          "created": "2026-09-07T04:59:22"
+        },
+        {
+          "id": "2ec9b663f955",
+          "name": "jj",
+          "regions": [],
+          "root": "/System/Volumes",
+          "order": 2,
+          "created": "2026-09-07T11:50:50"
+        },
+        {
+          "id": "8d0b223aeea9",
+          "name": "kljoiu",
+          "regions": [],
+          "root": "/Users/moth3rship/Desktop",
+          "order": 3,
+          "created": "2026-09-07T11:51:13"
+        },
+        {
+          "id": "18aa66bf5f38",
+          "name": "lkj;",
+          "regions": [],
+          "root": "/bin",
+          "order": 4,
+          "created": "2026-09-07T11:54:42"
+        }
+      ],
+      "names": {
+        "e9e288084b2b": "probe",
+        "5e563551b2b4": "untitled",
+        "14190f5a4d31": "untitled.2",
+        "adc208eca7b0": "throwaway",
+        "518f4d739fed": "gfsf2",
+        "5c84d83e0ea5": "sonnet2",
+        "b4071bdf83d3": "gemma4t",
+        "faed240b2643": "sonnet3",
+        "55b0c251e410": "gemma4c",
+        "d248cb53bb94": "sonnetc",
+        "38b6279c67cc": "b3claude",
+        "e5a59014886c": "b3gemma4",
+        "62885bf299ef": "throwawayb2",
+        "9f2051a42f39": "b3claude2",
+        "b063adc1befc": "gemma4b2",
+        "90db982504a6": "sonnetb2",
+        "481ac26ee513": "b4claude",
+        "5f2653efe80b": "b4gemma",
+        "fd4f0c30551c": "b4claude.2",
+        "3483ba1b0b6e": "b4stop",
+        "3a74cb29c5ed": "b4fence",
+        "e8d87cf22e69": "s2region",
+        "28163fd8c6b8": "fbsonnet",
+        "fc32b0e75ba5": "fbsonnet.2",
+        "a17e153a3ebc": "fc1",
+        "7952d2dafc5f": "fdsonnet",
+        "05ecdae627d5": "fdsonnet.2",
+        "be91b577842f": "fdsonnet.3",
+        "805f93037a33": "fdsonnet.4",
+        "c07433b8915b": "c1sonnet",
+        "770f55685f6f": "c1sonnet.2",
+        "32f1ec929f4a": "gfsf",
+        "3e50df9becde": "c3sonnet"
+      }
+    }
+  },
+  {
+    "t": 1788812033356,
+    "m": {
+      "type": "term",
+      "data": "\r\n",
+      "shell": "terminal-mtrohwm9-1-sh1",
+      "region": "3e50df9becde"
+    }
+  },
+  {
+    "t": 1788812033356,
+    "m": {
+      "type": "term",
+      "data": "\u001b[1m\u001b[7m%\u001b[27m\u001b[1m\u001b[0m                                                                               \r \r",
+      "shell": "terminal-mtrohwm9-1-sh1",
+      "region": "3e50df9becde"
+    }
+  },
+  {
+    "t": 1788812033356,
+    "m": {
+      "type": "term",
+      "data": "\r\u001b[0m\u001b[27m\u001b[24m\u001b[Jmoth3rship@Brandos-Mac-Studio Desktop % \u001b[K\u001b[?2004h\u001b[?2004l\r\r\n",
+      "shell": "terminal-mtrohwm9-1-sh1",
+      "region": "3e50df9becde"
+    }
+  },
+  {
+    "t": 1788812033356,
+    "m": {
+      "type": "term",
+      "data": "\u001b[1m\u001b[7m%\u001b[27m\u001b[1m\u001b[0m                                                                               \r \r",
+      "shell": "terminal-mtrohwm9-1-sh1",
+      "region": "3e50df9becde"
+    }
+  },
+  {
+    "t": 1788812033356,
+    "m": {
+      "type": "term",
+      "data": "\r\u001b[0m\u001b[27m\u001b[24m\u001b[Jmoth3rship@Brandos-Mac-Studio Desktop % \u001b[K\u001b[?2004h",
+      "shell": "terminal-mtrohwm9-1-sh1",
+      "region": "3e50df9becde"
+    }
+  }
+]

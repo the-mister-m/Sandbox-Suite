@@ -22,8 +22,8 @@ class WebIO:
         self._gate_active  = None
 
     def out(self, text="", *, dim=False, end="\n"):
-        with self._send_lock:
-            self.ws.send(json.dumps({"type": "out", "text": text, "dim": dim, "end": end}))
+        # state: raw member copy removed, mirror carries this stream
+        pass
 
     def turn_start(self):
         pass
@@ -155,8 +155,8 @@ class WebIO:
             self.ws.send(json.dumps({"type": "settings", "settings": settings}))
 
     def meters(self, d):
-        with self._send_lock:
-            self.ws.send(json.dumps({"type": "meters", "meters": d}))
+        # state: raw member copy removed, mirror carries this stream
+        pass
 
     # shell is the tab's own PTY key; region is the PTY's region
     def term(self, data, shell="", region=""):
@@ -180,8 +180,8 @@ class WebIO:
                                      "data": base64.b64encode(audio).decode(), "mime": mime}))
 
     def status(self, phase):
-        with self._send_lock:
-            self.ws.send(json.dumps({"type": "status", "phase": phase}))
+        # state: raw member copy removed, mirror carries this stream
+        pass
 
     def send_models(self, rows, current):
         # rows carry id/provider/model/version; list stays for phase 2 JS

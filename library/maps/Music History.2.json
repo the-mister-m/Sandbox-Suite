@@ -1,0 +1,142 @@
+{
+  "archived_at": "2026-09-07T18:20:48",
+  "doc": {
+    "contents": [
+      {
+        "authoredRevisionId": null,
+        "nodeId": "a60c04b9-2137-49e7-9c2a-eaae8ade11fc",
+        "plainText": "test one two three for 5",
+        "templateId": null,
+        "values": []
+      }
+    ],
+    "docsetRoot": {
+      "children": [
+        {
+          "extension": "md",
+          "id": "a60c04b9-2137-49e7-9c2a-eaae8ade11fc",
+          "kind": "file",
+          "label": "RUNMAP.md",
+          "tags": [],
+          "templateId": null
+        },
+        {
+          "children": [],
+          "id": "b58027e9-01d5-487a-bfd3-0fd8043d3c57",
+          "kind": "folder",
+          "label": "Briefs",
+          "role": "sequence",
+          "tags": []
+        }
+      ],
+      "id": "root",
+      "kind": "folder",
+      "label": "Music History",
+      "role": "global",
+      "tags": []
+    },
+    "plan": {
+      "id": "kmtrvo5172",
+      "name": "plan",
+      "phases": [
+        {
+          "active": false,
+          "cables": [
+            {
+              "a": {
+                "n": "kmtrvo5173",
+                "t": "kmtrvo6b35"
+              },
+              "action": "",
+              "b": {
+                "n": "kmtrvo5174",
+                "t": "kmtrvo6sx6"
+              },
+              "content": "",
+              "id": "kmtrvo75n7",
+              "path": "test/cable/path.txt",
+              "wire": "message"
+            }
+          ],
+          "files": [],
+          "id": "kmtrvo5171",
+          "loops": [],
+          "name": "Music History",
+          "nodes": [
+            {
+              "agent": "",
+              "docId": "a60c04b9-2137-49e7-9c2a-eaae8ade11fc",
+              "id": "kmtrvo5173",
+              "jobId": null,
+              "kind": "job",
+              "model": "",
+              "name": "RUNMAP.md",
+              "notches": [
+                {
+                  "id": "kmtrvo6b35",
+                  "kind": "message",
+                  "p": 0.6196572124094203,
+                  "path": null
+                },
+                {
+                  "id": "kmtrvqu511",
+                  "kind": "message",
+                  "p": 0.38,
+                  "path": null
+                }
+              ],
+              "notes": "",
+              "path": "/Users/moth3rship/Desktop/Music History/RUNMAP.md",
+              "preset": null,
+              "regions": [],
+              "status": "blank",
+              "stxt": "",
+              "track": "",
+              "wt": "",
+              "x": 0,
+              "y": 0
+            },
+            {
+              "agent": "",
+              "docId": "b58027e9-01d5-487a-bfd3-0fd8043d3c57",
+              "id": "kmtrvo5174",
+              "jobId": null,
+              "kind": "group",
+              "model": "",
+              "name": "Briefs",
+              "notches": [
+                {
+                  "id": "kmtrvo6sx6",
+                  "kind": "message",
+                  "p": 0.38,
+                  "path": null
+                },
+                {
+                  "id": "kmtrvqumy2",
+                  "kind": "message",
+                  "p": 0.425,
+                  "path": null
+                }
+              ],
+              "notes": "",
+              "path": "/Users/moth3rship/Desktop/Music History/Briefs",
+              "preset": null,
+              "regions": [],
+              "status": "blank",
+              "stxt": "",
+              "track": "",
+              "wt": "",
+              "x": 0,
+              "y": 150
+            }
+          ]
+        }
+      ],
+      "selPhase": "kmtrvo5171"
+    },
+    "savedAt": "2026-09-05T02:09:36.916Z",
+    "schemaVersion": 1
+  },
+  "root": "/Users/moth3rship/Desktop/Music History",
+  "source": "/private/tmp/claude-501/-Users-moth3rship-Desktop-AI-Design-Sandbox-Suite/af5599e6-5613-45ed-a555-46de3ad50a8b/scratchpad/docgen-bb99c24e/database.json"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "item": "8-picker-onscreen",
+    "status": "SEEN",
+    "note": "{\"anchor\": {\"x\": 1231.0859375, \"y\": 8, \"width\": 90.90625, \"height\": 26}, \"dd\": {\"x\": 1068.9921875, \"y\": 34, \"width\": 253, \"height\": 137}, \"vp\": {\"width\": 1400, \"height\": 900}}"
+  },
+  {
+    "item": "9-devagent-selected",
+    "status": "SEEN",
+    "note": "row_found=True has_selected_class=True"
+  },
+  {
+    "item": "cleanup-w4b",
+    "status": "SEEN",
+    "note": "killed d04ed6c660eb, f96332e5c43f; deleted track f319b85f89f3"
+  }
+]

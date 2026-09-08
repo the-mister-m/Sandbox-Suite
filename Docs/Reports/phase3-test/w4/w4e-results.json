@@ -1,0 +1,12 @@
+[
+  {
+    "item": "14-gate-list-live-NOW",
+    "status": "FAILED",
+    "note": "settle_count=0 dom=\u2723\nGate List \u00b7 gate_list-mtrvh3yx-1\noptions\n\u00d7\n19:25:10\nwrite_file\nw4bgate.txt"
+  },
+  {
+    "item": "14-gate-pending-frame-NOW",
+    "status": "NOT DRIVEN",
+    "note": "null"
+  }
+]

@@ -1,0 +1,25 @@
+[
+  {
+    "type": "open",
+    "path": "/Users/moth3rship/Desktop/c3-editor-scratch.md",
+    "inst": "editor-mtrodv0u-1"
+  },
+  {
+    "type": "save",
+    "path": "/Users/moth3rship/Desktop/c3-editor-scratch.md",
+    "content": "# c3 editor scratch\n\nline one, edited by c3.\n",
+    "inst": "editor-mtrodv0u-1"
+  },
+  {
+    "type": "save",
+    "path": "/Users/moth3rship/Desktop/c3-editor-scratch.md",
+    "content": "# c3 editor scratch\n\nline one.\n",
+    "inst": "editor-mtrodv0u-1"
+  },
+  {
+    "type": "save",
+    "path": "/Users/moth3rship/Desktop/c3-nonexistent-dir/nope.txt",
+    "content": "denied save test",
+    "inst": "editor-mtrodv0u-1"
+  }
+]

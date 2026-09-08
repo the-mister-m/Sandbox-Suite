@@ -1,0 +1,17 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "strip-mtri6zds-1",
+      "type": "strip",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 12,
+        "h": 12
+      },
+      "options": {}
+    }
+  ]
+}
