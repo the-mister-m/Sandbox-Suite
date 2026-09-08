@@ -5,7 +5,9 @@
 //
 // opts.mode: "track" (name, root, + track button, sends create_track),
 // "region" (name, root, model, + region button, sends insert_region on
-// opts.track() — disabled while opts.track() returns null), "both" (track
+// opts.track() — disabled while opts.track() returns null; opts.stage, when
+// given, receives {track, name, root, model} instead of a frame being sent,
+// so the caller can hold a draft and send the create frame itself), "both" (track
 // name, region name, root, model, one button — sends create_track, then on
 // the track_created frame whose row matches sends insert_region; this is
 // the mount widget's behavior).
@@ -185,6 +187,13 @@
         const root = rRoot.override();
         const model = pickerCtrl ? pickerCtrl.value() : "";
         if (!track || !name || !model) return;
+        // opts.stage diverts the click into a caller-held draft; the caller
+        // owns the create frame and sends it once the draft is filled in
+        if (typeof opts.stage === "function") {
+          opts.stage({ track: track, name: name, root: root, model: model });
+          rName.value = "";
+          return;
+        }
         const msg = { type: "insert_region", track: track, name: name, model: model };
         if (root) msg.root = root;
         sendFrame(frame, msg);

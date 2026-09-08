@@ -55,10 +55,10 @@
     claude_config_dir: null,
   };
 
-  // keys whose value set is fetched at mount and cached on dev state
+  // keys whose value set is fetched at mount and cached on dev state.
+  // preset_name draws its own control, not this one.
   const CHOICES_LIVE = {
     claude_output_style: "outputStyles",
-    preset_name: "presetNames",
   };
 
   function choicesFor(state, key) {
@@ -78,6 +78,50 @@
   function sendFrame(frame, obj) {
     obj.inst = frame.id;
     frame.send(obj);
+  }
+
+  // ---- draft region ----
+  //
+  // A region the user is still filling in has this id instead of a server
+  // one. Every row reads region.settings[key] and writes through commit(),
+  // so a draft renders through the same builders as a live region; commit
+  // merges into the draft object rather than sending edit_track.
+
+  // one draft per track: "__draft__:<trackId>"
+  const DRAFT_ID = "__draft__";
+  MX.settingsRows.DRAFT_ID = DRAFT_ID;
+  function isDraft(id) { return typeof id === "string" && id.indexOf(DRAFT_ID) === 0; }
+  MX.settingsRows.isDraft = isDraft;
+
+  // mirrors the type tagging frames.py does on edit_track: name, root, seat
+  // and overlay are their own edit types, the rail keys are their own, and
+  // everything else lands in the settings bag
+  function applyToDraft(state, region, fields) {
+    for (const key of Object.keys(fields)) {
+      const value = fields[key];
+      if (key === "name") region.name = value;
+      else if (key === "root") region.root = value;
+      else if (key === "seat") { region.seat = value; region.settings.seat = value || ""; }
+      else if (key === "overlay") region.overlay = value;
+      else if (key === "provider" || key === "loop_class" || key === "mechanism") region[key] = value;
+      else if (key === "model") {
+        region.model = value;
+        region.settings.model = value;
+        const row = (state.modelRows || []).find((m) => m.id === value);
+        if (row && row.provider) region.provider = row.provider;
+      } else {
+        region.settings[key] = value;
+      }
+    }
+  }
+
+  function commit(frame, state, rerender, region, fields) {
+    if (isDraft(region.id)) {
+      applyToDraft(state, region, fields);
+      rerender();
+      return;
+    }
+    sendFrame(frame, { type: "edit_track", track: region.id, fields: fields });
   }
 
   // declared kind for keys whose engine/settings.py Row is nullable (or
@@ -241,7 +285,7 @@
     return [region.provider, region.model].filter(Boolean).join(" / ");
   }
 
-  function buildSettingRow(frame, state, region, key) {
+  function buildSettingRow(frame, state, rerender, region, key) {
     const value = region.settings ? region.settings[key] : undefined;
     const row = el("div", "mx-dev-row");
     row.appendChild(el("label", "mx-dev-key", key));
@@ -251,7 +295,7 @@
       row.appendChild(host);
       MX.mountModelPicker(host, {
         value: value,
-        onPick: (id) => sendFrame(frame, { type: "edit_track", track: region.id, fields: { model: id } }),
+        onPick: (id) => commit(frame, state, rerender, region, { model: id }),
       });
       return row;
     }
@@ -268,23 +312,42 @@
       browse.addEventListener("click", () => {
         MX.openRootBrowser(input.value || "/", (path) => {
           input.value = path;
-          sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: path } });
+          commit(frame, state, rerender, region, { [key]: path });
         }, { ext: PATH_KEYS[key] });
       });
       wrap.appendChild(input);
       wrap.appendChild(browse);
       row.appendChild(wrap);
 
-      const commit = el("button", "mx-btn", "apply");
-      commit.type = "button";
+      const commitBtn = el("button", "mx-btn", "apply");
+      commitBtn.type = "button";
       const baseline = input.value;
-      const checkDirty = () => { commit.hidden = input.value === baseline; };
+      const checkDirty = () => { commitBtn.hidden = input.value === baseline; };
       checkDirty();
       input.addEventListener("input", checkDirty);
-      commit.addEventListener("click", () => {
-        sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: input.value } });
+      commitBtn.addEventListener("click", () => {
+        commit(frame, state, rerender, region, { [key]: input.value });
       });
-      row.appendChild(commit);
+      row.appendChild(commitBtn);
+      return row;
+    }
+
+    // preset_name draws the preset list and loads on change
+    if (key === "preset_name") {
+      const sel = el("select");
+      const current = value === null || value === undefined ? "" : String(value);
+      const names = state.presetNames || [];
+      const list = names.indexOf(current) < 0 ? [current].concat(names) : names.slice();
+      for (const c of list) {
+        const o = el("option", "", c || "—");
+        o.value = c;
+        if (c === current) o.selected = true;
+        sel.appendChild(o);
+      }
+      sel.addEventListener("change", () => {
+        if (sel.value) loadPreset(frame, state, rerender, region, sel.value);
+      });
+      row.appendChild(sel);
       return row;
     }
 
@@ -301,7 +364,7 @@
         sel.appendChild(o);
       }
       sel.addEventListener("change", () => {
-        sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: sel.value } });
+        commit(frame, state, rerender, region, { [key]: sel.value });
       });
       row.appendChild(sel);
       return row;
@@ -335,7 +398,7 @@
       else if (kind === "num") out = input.value === "" ? null : Number(input.value);
       else if (kind === "list") out = input.value.split(",").map((s) => s.trim()).filter(Boolean);
       else out = input.value;
-      sendFrame(frame, { type: "edit_track", track: region.id, fields: { [key]: out } });
+      commit(frame, state, rerender, region, { [key]: out });
     });
     row.appendChild(btn);
     return row;
@@ -361,13 +424,16 @@
     container.appendChild(box);
   }
 
+  // only the harness block and the block for the region's provider draw.
+  // model is skipped — the card head carries the picker.
   function renderSettingsTab(frame, state, rerender, region, container) {
     for (const block of BLOCKS) {
+      if (block.provider && block.provider !== region.provider) continue;
       const collapsed = blockCollapsed(state, region, block);
       const head = el("div", "mx-dev-block-head");
       const caret = el("span", "mx-dev-caret", collapsed ? "▸" : "▾");
       head.appendChild(caret);
-      head.appendChild(el("span", "", block.name + " (" + block.keys.length + ")"));
+      head.appendChild(el("span", "", block.name));
       head.addEventListener("click", () => {
         toggleBlock(state, region, block);
         rerender();
@@ -375,14 +441,22 @@
       container.appendChild(head);
       if (collapsed) continue;
       for (const k of block.keys) {
-        container.appendChild(buildSettingRow(frame, state, region, k));
+        if (k === "model") continue;
+        container.appendChild(buildSettingRow(frame, state, rerender, region, k));
       }
     }
 
     renderChangePrompt(frame, state, rerender, region, container);
   }
 
+  // the box reads and writes injections/<kind>/<id>.md — a draft has no id
+  // on disk, so the file cannot exist yet
   function renderContextBlockImpl(frame, state, rerender, kind, id, container) {
+    if (isDraft(id)) {
+      container.appendChild(el("div", "mx-dim",
+        "context file appears after the region is created"));
+      return;
+    }
     loadContext(frame, state, rerender, kind, id);
     const box = ensureContextBox(state, kind, id);
     const ta = el("textarea", "mx-dev-textarea");
@@ -412,7 +486,7 @@
   const GATE_DRIVER = "model";
   const GATE_DEFAULT_HOOK = "ask";
 
-  function renderGatesTab(frame, state, region, container) {
+  function renderGatesTab(frame, state, rerender, region, container) {
     const edges = Array.isArray(state.gateEdges) ? state.gateEdges : [];
     const hooks = Array.isArray(state.policyHooks) ? state.policyHooks : [];
     const overlay = Array.isArray(region.overlay) ? region.overlay : [];
@@ -453,11 +527,102 @@
       const fullOverlay = rowCtrls.map((c) => ({
         edge: c.edge, driver: GATE_DRIVER, scope: c.scope, hook: c.input.value,
       }));
-      sendFrame(frame, { type: "edit_track", track: region.id, fields: { overlay: fullOverlay } });
+      commit(frame, state, rerender, region, { overlay: fullOverlay });
     });
     container.appendChild(apply);
   }
 
+  // ---- presets ----
+  //
+  // Draft: REST, /api/library/presets/<name>. Live region: load_preset and
+  // save_preset frames, which park a change prompt server side.
+
+  const OVERLAY_KEY = "overlay_rows";
+
+  // engine/settings.py preset_keys() — region-tier rows less preset_name
+  // and overlay_rows. Derived from regionDefaults, not fetched.
+  function presetKeys(state) {
+    return Object.keys(state.regionDefaults || {})
+      .filter((k) => k !== "preset_name" && k !== OVERLAY_KEY);
+  }
+
+  function presetNote(state, rerender, text) {
+    state.lastOut = text;
+    rerender();
+  }
+
+  // _preset_load_items: bag resets to defaults, then the preset applies
+  function loadPresetIntoDraft(state, rerender, region, name) {
+    fetch("/api/library/presets/" + encodeURIComponent(name))
+      .then((r) => r.json())
+      .then((d) => {
+        const got = (d && d.fields) || {};
+        const bag = Object.assign({}, state.regionDefaults, got);
+        const overlay = bag[OVERLAY_KEY];
+        delete bag[OVERLAY_KEY];
+        // reset_on_change unset in the preset holds the region's value
+        if (!Object.prototype.hasOwnProperty.call(got, "reset_on_change")) {
+          bag.reset_on_change = region.settings.reset_on_change;
+        }
+        // no rail keys — Region.__init__ normalizes them at birth
+        if (Array.isArray(overlay)) bag.overlay = overlay;
+        bag.preset_name = name;
+        applyToDraft(state, region, bag);
+        const warns = (d && d.warnings) || [];
+        presetNote(state, rerender, warns.length
+          ? "[preset " + name + "] " + warns.join("; ")
+          : "[preset " + name + " loaded]");
+      })
+      .catch(() => presetNote(state, rerender, "[preset " + name + ": load failed]"));
+  }
+
+  // _capture_preset_fields: preset keys plus overlay, model required.
+  // write_preset does not filter, so the capture is explicit.
+  function savePresetFromDraft(state, rerender, region, name) {
+    const bag = region.settings || {};
+    const fields = {};
+    for (const k of presetKeys(state)) {
+      if (Object.prototype.hasOwnProperty.call(bag, k)) fields[k] = bag[k];
+    }
+    if (Array.isArray(region.overlay)) fields[OVERLAY_KEY] = region.overlay;
+    if (!String(fields.model || "").trim()) {
+      presetNote(state, rerender, "nothing to save — this region has no model, "
+        + "and a preset with no model loads onto the wrong rail. "
+        + name + " was left alone");
+      return;
+    }
+    fetch("/api/library/presets/" + encodeURIComponent(name), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    }).then((r) => r.json()).then((d) => {
+      if (d && d.error) {
+        presetNote(state, rerender, "[save_preset failed: " + d.error + "]");
+        return;
+      }
+      if (Array.isArray(d && d.list)) state.presetNames = d.list;
+      presetNote(state, rerender, "[preset saved: " + ((d && d.path) || name) + "]");
+    }).catch(() => presetNote(state, rerender, "[save_preset failed]"));
+  }
+
+  function loadPreset(frame, state, rerender, region, name) {
+    if (isDraft(region.id)) {
+      loadPresetIntoDraft(state, rerender, region, name);
+      return;
+    }
+    // no mode — the server parks a change prompt instead of applying
+    sendFrame(frame, { type: "load_preset", track: region.id, name: name });
+  }
+
+  function savePreset(frame, state, rerender, region, name) {
+    if (isDraft(region.id)) {
+      savePresetFromDraft(state, rerender, region, name);
+      return;
+    }
+    sendFrame(frame, { type: "save_preset", track: region.id, name: name });
+  }
+
+  // rename and delete carry no region — one frame path for draft and live
   function renderPresetTab(frame, state, rerender, region, container) {
     if (!state.presetsLoaded) {
       state.presetsLoaded = true;
@@ -484,7 +649,7 @@
     const load = el("button", "mx-btn", "load");
     load.type = "button";
     load.addEventListener("click", () => {
-      if (current()) sendFrame(frame, { type: "load_preset", track: region.id, name: current() });
+      if (current()) loadPreset(frame, state, rerender, region, current());
     });
     actions.appendChild(load);
 
@@ -492,7 +657,7 @@
     save.type = "button";
     save.addEventListener("click", () => {
       const name = window.prompt("preset name?");
-      if (name) sendFrame(frame, { type: "save_preset", track: region.id, name: name.trim() });
+      if (name) savePreset(frame, state, rerender, region, name.trim());
     });
     actions.appendChild(save);
 
@@ -528,7 +693,7 @@
     return {
       renderSettings(region, host) { renderSettingsTab(frame, state, rerender, region, host); },
       renderContext(kind, id, host) { renderContextBlockImpl(frame, state, rerender, kind, id, host); },
-      renderGates(region, host) { renderGatesTab(frame, state, region, host); },
+      renderGates(region, host) { renderGatesTab(frame, state, rerender, region, host); },
       renderPreset(region, host) { renderPresetTab(frame, state, rerender, region, host); },
       onFrame(msg) {
         if (msg.type !== "saved") return;

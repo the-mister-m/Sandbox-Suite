@@ -1,0 +1,30 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "anchor_chat-mtsx5g6o-1",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "region": ""
+      }
+    },
+    {
+      "id": "arrange-mtsx5vuk-2",
+      "type": "arrange",
+      "slot": {
+        "col": 1,
+        "row": 5,
+        "w": 10,
+        "h": 8
+      },
+      "options": {}
+    }
+  ]
+}

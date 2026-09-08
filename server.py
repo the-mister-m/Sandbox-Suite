@@ -920,6 +920,14 @@ def api_settings_read():
                     "warnings": warnings})
 
 
+@app.route("/api/settings/region-defaults")
+def api_settings_region_defaults():
+    # the settings bag a region is born with, before any edit. The draft
+    # region in devagent seeds from this so its rows show real values
+    # rather than blanks for keys the user never touches.
+    return jsonify({"defaults": engine_settings.region_defaults("")})
+
+
 @app.route("/api/settings/resolved")
 def api_settings_resolved():
     track_id = request.args.get("track")

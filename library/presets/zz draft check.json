@@ -1,0 +1,192 @@
+{
+  "allow_agent_reset": true,
+  "claude_add_dirs": [],
+  "claude_bare": false,
+  "claude_cache_ttl": "1h",
+  "claude_config_dir": "",
+  "claude_disallowed_tools": [],
+  "claude_effort": null,
+  "claude_exclude_dynamic": false,
+  "claude_hook_ask_blocking": true,
+  "claude_keep_warm": false,
+  "claude_md_excludes": [
+    "/Users/moth3rship/.claude/CLAUDE.md",
+    "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/CLAUDE.md",
+    "/Users/moth3rship/Desktop/AI Design/CLAUDE.md"
+  ],
+  "claude_memory_enabled": false,
+  "claude_mode": "persistent",
+  "claude_output_style": "",
+  "claude_partial": true,
+  "claude_setting_sources": null,
+  "claude_settings_file": "",
+  "claude_system_prompt": "",
+  "claude_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Glob",
+    "Grep",
+    "NotebookRead",
+    "NotebookEdit",
+    "WebFetch",
+    "WebSearch"
+  ],
+  "context_reset_cap_k": 300,
+  "gate_wait_s": 150,
+  "keep_alive": 30,
+  "max_tools": null,
+  "min_p": 0,
+  "mirostat": 0,
+  "mirostat_eta": 0.1,
+  "mirostat_tau": 5,
+  "model": "opus",
+  "num_ctx": 32768,
+  "num_gpu": null,
+  "num_predict": -1,
+  "num_thread": null,
+  "repeat_last_n": 64,
+  "repeat_penalty": 1.1,
+  "request_timeout": 200,
+  "reset_instruction": "You have been reset, message The Captain directly or agents in chat for instructions",
+  "reset_on_change": true,
+  "seat": "",
+  "seed": 0,
+  "start_turn_on_reset": true,
+  "temperature": 0.8,
+  "think": true,
+  "top_k": 40,
+  "top_p": 0.9,
+  "overlay_rows": [
+    {
+      "driver": "model",
+      "edge": "check_read",
+      "hook": "open",
+      "scope": "inside"
+    },
+    {
+      "driver": "model",
+      "edge": "fetch_url",
+      "hook": "open",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "screen_capture",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "write_file",
+      "hook": "open",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "run_command",
+      "hook": "open",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "remember",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "recall",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "send_message",
+      "hook": "open",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "request_messages",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "reset_self",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "reset_region",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "logic_status",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "logic_open",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "logic_transport",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "logic_command",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "web_open",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "web_read",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "web_screenshot",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "web_act",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "web_eval",
+      "hook": "ask",
+      "scope": "any"
+    },
+    {
+      "driver": "model",
+      "edge": "check_read",
+      "hook": "open",
+      "scope": "outside"
+    }
+  ],
+  "name": "zz draft check"
+}

@@ -1,0 +1,80 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "chat-mtt50s4p-1",
+      "type": "chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 5,
+        "h": 8
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "speech_enabled": false,
+        "tts_engine": "say",
+        "region": ""
+      }
+    },
+    {
+      "id": "browser-mtt51536-2",
+      "type": "browser",
+      "slot": {
+        "col": 9,
+        "row": 9,
+        "w": 2,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "viewer-mtt51609-3",
+      "type": "viewer",
+      "slot": {
+        "col": 6,
+        "row": 1,
+        "w": 7,
+        "h": 8
+      },
+      "options": {
+        "path": "",
+        "tabs": []
+      }
+    },
+    {
+      "id": "mini_queue-mtt52e1d-4",
+      "type": "mini_queue",
+      "slot": {
+        "col": 1,
+        "row": 9,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "ledger-mtt52jb5-5",
+      "type": "ledger",
+      "slot": {
+        "col": 5,
+        "row": 9,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "devagent-mtt52ujd-6",
+      "type": "devagent",
+      "slot": {
+        "col": 11,
+        "row": 9,
+        "w": 2,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

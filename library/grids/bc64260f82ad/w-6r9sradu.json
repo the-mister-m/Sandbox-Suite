@@ -1,0 +1,33 @@
+{
+  "cols": 12,
+  "rows": 12,
+  "widgets": [
+    {
+      "id": "chat-mtrynbel-1",
+      "type": "chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 11
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "region": "69afde95f0d7",
+        "speech_enabled": false,
+        "tts_engine": "say"
+      }
+    },
+    {
+      "id": "devagent-mtrynu81-3",
+      "type": "devagent",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 5,
+        "h": 8
+      },
+      "options": {}
+    }
+  ]
+}

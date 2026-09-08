@@ -1,27 +1,43 @@
 // devagent widget — every track, every region, every frame the backend
-// accepts, for one session. Replaces the old track settings modal.
+// accepts, for one session.
 //
-// Left pane: track/region tree. Right pane: one header for the selected
-// track and region, then three tabs — settings / context / gates — each
-// drawing the track and the region together in collapsible blocks.
+// One column. "Add track" on top. Under it, one group per track, a rule
+// between groups. Each group is a stack of region cards: every live region,
+// then one blank draft card. Draft and live cards share one shape —
+// track / region names, the model picker, a collapsible tab strip
+// (settings / context / gates / presets), and a button column on the right.
+// Draft: "Start region". Live: reset / stop / close shell / delete.
 //
-// State lives on frame._dev. Any incoming roster/status/catalog frame
-// triggers a full rebuild of both panes — simplest correct approach for
-// a dev tool; an unlocked context textarea syncs its own state on input
-// so a rebuild mid-edit does not drop unsaved text.
+// State lives on frame._dev. Roster, status and catalog frames rebuild the
+// column. Draft text syncs on input so a rebuild mid-edit keeps it.
 
 (function () {
   "use strict";
 
   const MX = window.MX = window.MX || {};
 
-  const PANE_TABS = ["settings", "context", "gates", "preset"];
+  const CARD_TABS = ["settings", "context", "gates", "presets"];
+
+  // a draft is a region that does not exist on the server yet, shaped like
+  // web_io._region_row so the shared setting rows read it unchanged. One
+  // per track, keyed "__draft__:<trackId>".
+  const DRAFT_ID = "__draft__";
+
+  function draftIdFor(trackId) { return DRAFT_ID + ":" + trackId; }
+  function isDraftId(id) { return typeof id === "string" && id.indexOf(DRAFT_ID) === 0; }
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
     if (text !== undefined) e.textContent = text;
     return e;
+  }
+
+  function button(cls, label, onClick) {
+    const b = el("button", cls, label);
+    b.type = "button";
+    b.addEventListener("click", onClick);
+    return b;
   }
 
   function sendFrame(frame, obj) {
@@ -34,23 +50,81 @@
   }
 
   function regionById(dev, id) {
+    if (isDraftId(id)) return dev.drafts[id] || null;
     return dev.regionRows.find((r) => r.id === id) || null;
   }
 
-  function regionsOfTrack(dev, trackId) {
+  function liveRegionsOfTrack(dev, trackId) {
     return dev.regionRows.filter((r) => r.track === trackId);
   }
 
+  // ---- drafts ----
+
+  // the blank card under a track. Settings seed from regionDefaults once
+  // that fetch lands, so the rows show the values the server would apply.
+  function ensureDraft(dev, trackId) {
+    const id = draftIdFor(trackId);
+    let d = dev.drafts[id];
+    if (!d) {
+      d = dev.drafts[id] = {
+        id: id, track: trackId, name: "", model: "", seat: "", root: "",
+        provider: "", loop_class: "", mechanism: "",
+        settings: {}, overlay: null, region: {}, seeded: false,
+      };
+      dev.openCards.add(id);
+      dev.cardTab[id] = "settings";
+    }
+    if (!d.seeded && Object.keys(dev.regionDefaults).length) {
+      d.settings = Object.assign({}, dev.regionDefaults, d.settings);
+      d.seeded = true;
+    }
+    return d;
+  }
+
+  function setDraftModel(dev, d, id) {
+    d.model = id;
+    d.settings.model = id;
+    const row = (dev.modelRows || []).find((m) => m.id === id);
+    d.provider = (row && row.provider) || "";
+  }
+
+  // one create frame carrying every drafted field. Settings ride the
+  // settings bag; seat, root and overlay are their own arguments server
+  // side, and an untouched overlay is left off so the server default wins.
+  // No name gate — the server names an empty region "untitled".
+  function startDraft(frame, d) {
+    const dev = frame._dev;
+    if (!d.model) {
+      const p = dev.pickers[d.id];
+      const v = p && p.value();
+      if (v) setDraftModel(dev, d, v);
+    }
+    if (!d.model && dev.modelRows.length) setDraftModel(dev, d, dev.modelRows[0].id);
+    if (!d.model) {
+      dev.lastOut = "no model available";
+      render(frame);
+      return;
+    }
+    const msg = { type: "insert_region", track: d.track, name: d.name.trim() || "untitled",
+                  model: d.model, settings: d.settings };
+    if (d.root) msg.root = d.root;
+    if (d.seat) msg.seat = d.seat;
+    if (d.provider) msg.provider = d.provider;
+    if (Array.isArray(d.overlay)) msg.overlay_rows = d.overlay;
+    delete dev.drafts[d.id];
+    dev.openCards.delete(d.id);
+    delete dev.cardTab[d.id];
+    sendFrame(frame, msg);
+    render(frame);
+  }
+
   // ---- widget css ----
-  //
-  // Each row is its own grid element, so the label / control / edit columns
-  // line up across rows only at explicit widths — content sizing would let
-  // every row pick its own.
 
   const DEV_CSS_ID = "mx-devagent-css";
   const DEV_CSS = `
 .mx-devagent{ --dv-key:150px; --dv-ctl:210px; --dv-h:22px;
-  --dv-gap:4px; --dv-sec:12px; --dv-indent:10px; }
+  --dv-gap:4px; --dv-sec:12px; --dv-indent:10px;
+  display:flex; flex-direction:column; gap:var(--dv-sec); padding:var(--dv-sec); }
 
 /* one control height across every field and button */
 .mx-devagent input[type="text"],
@@ -58,50 +132,65 @@
 .mx-devagent select,
 .mx-devagent .mx-btn{ box-sizing:border-box; height:var(--dv-h); }
 
-/* text inputs and native selects read the same surface, border, radius */
 .mx-devagent input[type="text"],
 .mx-devagent input[type="number"],
 .mx-devagent select{ background:var(--surface-1, #0e0e0e); color:var(--text-1, #ddd);
   border:1px solid var(--border, #383838); border-radius:3px; padding:0 5px; }
 
-/* section heads carry the spacing; their rows sit indented under them */
-.mx-dev-caret{ flex:0 0 auto; }
+/* top — one button, a rule under it */
+.mx-dev-top{ display:flex; justify-content:center;
+  padding-bottom:var(--dv-sec); border-bottom:1px solid var(--border, #383838); }
+.mx-dev-add-track{ min-width:240px; font-weight:700; }
 
-/* rung heads — title, path and phase stop colliding */
-.mx-dev-rung-head{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px;
-  margin:var(--dv-sec) 0 var(--dv-gap); }
-.mx-dev-rung-head:first-child{ margin-top:0; }
+/* track group — cards stacked, a rule under the group */
+.mx-dev-track-group{ display:flex; flex-direction:column; gap:var(--dv-sec);
+  padding-bottom:var(--dv-sec); border-bottom:1px solid var(--border, #383838); }
 
-/* button groups */
-.mx-dev-tabs,
-.mx-dev-region-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:6px;
-  margin-top:var(--dv-sec); }
+/* card — main stack left, button column right */
+.mx-dev-card{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:start; }
+.mx-dev-card-main{ display:flex; flex-direction:column; gap:var(--dv-gap); min-width:0; }
+.mx-dev-card-side{ display:flex; flex-direction:column; gap:var(--dv-gap); }
+.mx-dev-card-side .mx-btn{ min-width:100px; }
+.mx-dev-start{ width:64px; min-width:64px; height:64px; padding:0 6px;
+  white-space:normal; line-height:1.2; font-weight:700; }
 
-/* active tab: surface-raised fill, accent bottom border; inactive: no border */
-.mx-dev-tabs{ border-bottom:1px solid var(--gridline); padding-bottom:var(--dv-gap); }
-.mx-dev-tabs .mx-btn{ background:transparent; border-color:transparent;
+/* card head — track and region lines in one filled box */
+.mx-dev-card-head{ background:var(--surface-2, #141414); border:1px solid var(--border, #383838);
+  border-radius:3px; padding:6px 8px; display:flex; flex-direction:column; gap:var(--dv-gap); }
+.mx-dev-card-draft .mx-dev-card-head{ border-style:dashed; }
+.mx-dev-card-line{ display:flex; align-items:center; gap:8px; }
+.mx-dev-card-label{ flex:0 0 58px; font-weight:700; }
+.mx-dev-card-line input[type="text"]{ flex:1 1 80px; min-width:80px;
+  background:transparent; border-color:transparent; }
+.mx-dev-card-line input[type="text"]:hover,
+.mx-dev-card-line input[type="text"]:focus{ border-color:var(--border, #383838);
+  background:var(--surface-1, #0e0e0e); }
+.mx-dev-card-line .mx-dim{ flex:0 0 auto; }
+
+/* picker row — provider / model / version share the width */
+.mx-dev-card-picker{ border:1px solid var(--border, #383838); border-radius:3px;
+  padding:4px 8px; background:var(--surface-1, #0e0e0e); }
+.mx-dev-card-picker .mx-model-picker{ display:flex; flex-wrap:wrap; gap:6px; }
+.mx-dev-card-picker select{ flex:1 1 90px; min-width:90px; }
+
+/* tab strip — carets at both ends fold the body */
+.mx-dev-strip{ display:flex; align-items:center; justify-content:space-between; gap:6px;
+  border:1px solid var(--border, #383838); border-radius:3px; padding:2px 6px;
+  background:var(--surface-1, #0e0e0e); }
+.mx-dev-strip .mx-btn{ background:transparent; border-color:transparent;
   border-bottom:2px solid transparent; }
-.mx-dev-tabs .mx-btn.mx-dev-tab-active{ background:var(--surface-2, #141414);
+.mx-dev-strip .mx-btn.mx-dev-tab-active{ background:var(--surface-2, #141414);
   border-color:transparent; border-bottom-color:var(--accent, #2a6); }
+.mx-dev-strip .mx-dev-strip-caret{ padding:0 4px; font-size:14px; }
 
-/* tree — selected row: surface-raised fill, accent left bar, bold name */
-.mx-dev-tree-list{ margin-bottom:var(--dv-sec); }
-.mx-dev-track-head,
-.mx-dev-region-row{ display:flex; align-items:center; gap:6px;
-  padding:3px 6px; border-left:3px solid transparent; cursor:pointer; }
-.mx-dev-region-row{ padding-left:var(--dv-indent); }
-.mx-dev-track-head.mx-dev-selected,
-.mx-dev-region-row.mx-dev-selected{ border-left-color:var(--accent, #2a6);
-  background:var(--surface-2, #141414); }
-.mx-dev-track-head.mx-dev-selected .mx-dev-track-name,
-.mx-dev-region-row.mx-dev-selected .mx-dev-region-name{ font-weight:700; }
-.mx-dev-track-head:hover,
-.mx-dev-region-row:hover{ background:var(--surface-2, #141414); }
-.mx-dev-dot{ flex:0 0 auto; }
+/* tab body — indented under the strip */
+.mx-dev-card-body{ padding:6px 8px; border-left:2px solid var(--border, #383838); }
+.mx-dev-caret{ flex:0 0 auto; }
+.mx-dev-block-head{ display:flex; align-items:center; gap:6px; cursor:pointer;
+  margin:var(--dv-sec) 0 var(--dv-gap); }
+.mx-dev-block-head:first-child{ margin-top:0; }
 
-/* TRACK / REGION rung lines — the selected one reads heading weight */
-.mx-dev-rung-title-active{ font-weight:700; }
-.mx-dev-rung-title-dim{ color:var(--text-3, #888); font-weight:400; }
+.mx-dev-status{ padding-top:var(--dv-gap); }
 `;
 
   function ensureDevCss() {
@@ -112,274 +201,177 @@
     document.head.appendChild(style);
   }
 
-  // ---- tree (left pane) ----
+  // ---- fields ----
 
-  function renderTree(frame) {
-    const dev = frame._dev;
-    const host = dev.treeEl;
-    host.textContent = "";
-
-    const list = el("div", "mx-dev-tree-list");
-    const tracks = dev.trackRows.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
-    for (const t of tracks) {
-      const collapsed = dev.collapsedTracks.has(t.id);
-      const head = el("div", "mx-dev-track-head" + (t.id === dev.selectedTrackId ? " mx-dev-selected" : ""));
-      const caret = el("span", "mx-dev-caret", collapsed ? "▸" : "▾");
-      caret.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (collapsed) dev.collapsedTracks.delete(t.id); else dev.collapsedTracks.add(t.id);
-        render(frame);
-      });
-      head.appendChild(caret);
-      head.appendChild(el("span", "mx-dev-track-name", t.name));
-      head.addEventListener("click", () => {
-        dev.selectedTrackId = t.id;
-        render(frame);
-      });
-      list.appendChild(head);
-
-      if (!collapsed) {
-        for (const r of regionsOfTrack(dev, t.id)) {
-          const phase = dev.phaseByRegion[r.id];
-          const selected = r.id === dev.selectedRegionId;
-          const filled = selected || (!!phase && phase !== "idle");
-          const row = el("div", "mx-dev-region-row" + (selected ? " mx-dev-selected" : ""));
-          row.appendChild(el("span", "mx-dev-dot", filled ? "●" : "○"));
-          row.appendChild(el("span", "mx-dev-region-name", r.name));
-          row.addEventListener("click", () => {
-            dev.selectedRegionId = r.id;
-            dev.selectedTrackId = r.track;
-            render(frame);
-          });
-          list.appendChild(row);
-        }
-      }
-    }
-    host.appendChild(list);
-
-    const selectedTrack = trackById(dev, dev.selectedTrackId);
-    const trackCtrl = MX.mountAddControls(host, frame, { mode: "track" });
-    trackCtrl.refresh({ sessionRoot: dev.sessionRoot, workspaceRoot: dev.workspaceRoot });
-    const regionCtrl = MX.mountAddControls(host, frame,
-      { mode: "region", track: () => dev.selectedTrackId || null });
-    regionCtrl.refresh({ sessionRoot: dev.sessionRoot, workspaceRoot: dev.workspaceRoot,
-      trackRoot: selectedTrack ? selectedTrack.root : "" });
-  }
-
-  // ---- track rung (top-right) ----
-
-  function buildTrackFieldRow(frame, track, key, label) {
-    const row = el("div", "mx-dev-row");
-    row.appendChild(el("label", "mx-dev-key", label));
+  // text input that commits on blur or Enter, only when changed
+  function textField(value, placeholder, onCommit) {
     const input = el("input");
-    input.type = key === "order" ? "number" : "text";
-    input.value = track[key] === undefined || track[key] === null ? "" : track[key];
-    row.appendChild(input);
-    const btn = el("button", "mx-btn", "apply");
-    btn.type = "button";
-    btn.addEventListener("click", () => {
-      const value = key === "order" ? Number(input.value) : input.value;
-      sendFrame(frame, { type: "edit_track_row", track: track.id, fields: { [key]: value } });
+    input.type = "text";
+    input.value = value === undefined || value === null ? "" : value;
+    input.placeholder = placeholder;
+    let baseline = input.value;
+    input.addEventListener("blur", () => {
+      if (input.value === baseline) return;
+      baseline = input.value;
+      onCommit(input.value);
     });
-    row.appendChild(btn);
-    return row;
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") input.blur(); });
+    return input;
   }
 
-  // a collapsible section head devagent owns; the settings-rows module
-  // draws its own for the region blocks
-  function sectionHead(dev, key, label, note) {
+  // ---- card ----
+
+  function renderCard(frame, track, region, host) {
+    const dev = frame._dev;
+    const draft = isDraftId(region.id);
+    const open = dev.openCards.has(region.id);
+    const tab = dev.cardTab[region.id] || "settings";
+
+    const card = el("div", "mx-dev-card" + (draft ? " mx-dev-card-draft" : ""));
+    const main = el("div", "mx-dev-card-main");
+    const side = el("div", "mx-dev-card-side");
+
+    // head — track line, region line
+    const head = el("div", "mx-dev-card-head");
+
+    const tLine = el("div", "mx-dev-card-line");
+    tLine.appendChild(el("span", "mx-dev-card-label", "Track:"));
+    tLine.appendChild(textField(track.name, "track name", (v) => {
+      sendFrame(frame, { type: "edit_track_row", track: track.id, fields: { name: v } });
+    }));
+    head.appendChild(tLine);
+
+    const rLine = el("div", "mx-dev-card-line");
+    rLine.appendChild(el("span", "mx-dev-card-label", "Region:"));
+    const rName = textField(region.name, draft ? "untitled" : "region name", (v) => {
+      if (draft) return;
+      sendFrame(frame, { type: "edit_track", track: region.id, fields: { name: v } });
+    });
+    if (draft) rName.addEventListener("input", () => { region.name = rName.value; });
+    rLine.appendChild(rName);
+    rLine.appendChild(el("span", "mx-dim",
+      draft ? "draft" : (dev.phaseByRegion[region.id] || "idle")));
+    head.appendChild(rLine);
+    main.appendChild(head);
+
+    // picker — draft merges, live sends edit_track
+    const pick = el("div", "mx-dev-card-picker");
+    const picked = MX.mountModelPicker(pick, {
+      value: region.model,
+      onPick: (id) => {
+        if (id === region.model) return;
+        if (draft) setDraftModel(dev, region, id);
+        else sendFrame(frame, { type: "edit_track", track: region.id, fields: { model: id } });
+      },
+    });
+    Promise.resolve(picked).then((ctrl) => { if (ctrl) dev.pickers[region.id] = ctrl; });
+    main.appendChild(pick);
+
+    // strip — fold carets, tabs
+    const strip = el("div", "mx-dev-strip");
+    const toggle = () => {
+      if (open) dev.openCards.delete(region.id); else dev.openCards.add(region.id);
+      render(frame);
+    };
+    strip.appendChild(button("mx-btn mx-dev-strip-caret", open ? "▾" : "▸", toggle));
+    for (const t of CARD_TABS) {
+      strip.appendChild(button("mx-btn" + (open && tab === t ? " mx-dev-tab-active" : ""), t, () => {
+        dev.cardTab[region.id] = t;
+        dev.openCards.add(region.id);
+        render(frame);
+      }));
+    }
+    strip.appendChild(button("mx-btn mx-dev-strip-caret", open ? "▾" : "▸", toggle));
+    main.appendChild(strip);
+
+    if (open) {
+      const body = el("div", "mx-dev-card-body");
+      renderTab(frame, track, region, tab, body);
+      main.appendChild(body);
+    }
+
+    // side — start for a draft, the live actions otherwise
+    if (draft) {
+      side.appendChild(button("mx-btn mx-dev-start", "Start region", () => startDraft(frame, region)));
+    } else {
+      side.appendChild(button("mx-btn", "reset", () => sendFrame(frame, { type: "reset_track", track: region.id })));
+      side.appendChild(button("mx-btn", "stop", () => sendFrame(frame, { type: "stop", track: region.id })));
+      side.appendChild(button("mx-btn", "close shell", () => sendFrame(frame, { type: "close_shell", track: region.id })));
+      side.appendChild(button("mx-btn", "delete", () => {
+        if (window.confirm("delete region " + region.name + "?")) {
+          sendFrame(frame, { type: "kill_track", track: region.id });
+        }
+      }));
+    }
+
+    card.appendChild(main);
+    card.appendChild(side);
+    host.appendChild(card);
+  }
+
+  // ---- tab bodies ----
+
+  function blockHead(dev, key, label, note, rerender) {
     const collapsed = dev.collapsedBlocks.has(key);
     const head = el("div", "mx-dev-block-head");
     head.appendChild(el("span", "mx-dev-caret", collapsed ? "▸" : "▾"));
     head.appendChild(el("span", "", label));
     if (note) head.appendChild(el("span", "mx-dim", note));
+    head.addEventListener("click", () => {
+      if (collapsed) dev.collapsedBlocks.delete(key); else dev.collapsedBlocks.add(key);
+      rerender();
+    });
     return { head: head, collapsed: collapsed };
   }
 
-  function renderHeads(frame, container) {
+  function renderTab(frame, track, region, tab, body) {
     const dev = frame._dev;
-    const track = trackById(dev, dev.selectedTrackId);
-    const region = regionById(dev, dev.selectedRegionId);
+    const rerender = () => render(frame);
 
-    const trackActive = !!track && !region;
-
-    const head = el("div", "mx-dev-rung-head");
-    head.appendChild(el("span", "mx-dev-rung-title"
-      + (trackActive ? " mx-dev-rung-title-active" : " mx-dev-rung-title-dim"),
-      track ? "TRACK " + track.name : "TRACK —"));
-    if (track) head.appendChild(el("span", "mx-dim", "root " + (track.root || "")));
-    container.appendChild(head);
-
-    const rhead = el("div", "mx-dev-rung-head");
-    if (region) {
-      rhead.appendChild(el("span", "mx-dev-rung-title mx-dev-rung-title-active",
-        "REGION " + region.name));
-      rhead.appendChild(el("span", "mx-dim", modelDisplay(dev, region)));
-      rhead.appendChild(el("span", "mx-dim", dev.phaseByRegion[region.id] || "idle"));
-    } else {
-      rhead.appendChild(el("span", "mx-dim", "no region selected"));
-    }
-    container.appendChild(rhead);
-  }
-
-  // ---- region rung (bottom-right) ----
-
-  // small display-only lookup; the settings-rows module owns the row
-  // builders but this rung head text is devagent's own to draw
-  function modelDisplay(dev, region) {
-    const row = (dev.modelRows || []).find((m) => m.id === region.model);
-    if (row) {
-      if (!row.version && row.resolved) {
-        return [row.provider, row.resolved].filter(Boolean).join(" / ");
+    if (tab === "context") {
+      const levels = [
+        { kind: "track", row: track, label: "track" },
+        { kind: "region", row: region, label: "region" },
+      ];
+      for (const lv of levels) {
+        const key = "ctx:" + lv.kind + ":" + lv.row.id;
+        const path = "injections/" + lv.kind + "/" + lv.row.id + ".md";
+        const sec = blockHead(dev, key, lv.label, isDraftId(lv.row.id) ? "" : path, rerender);
+        body.appendChild(sec.head);
+        if (!sec.collapsed) dev.settingsRows.renderContext(lv.kind, lv.row.id, body);
       }
-      return [row.provider, row.model, row.version].filter(Boolean).join(" / ");
-    }
-    return [region.provider, region.model].filter(Boolean).join(" / ");
-  }
-
-  function renderRegionButtons(frame, region, container) {
-    const row = el("div", "mx-dev-region-actions");
-
-    const reset = el("button", "mx-btn", "reset");
-    reset.type = "button";
-    reset.addEventListener("click", () => sendFrame(frame, { type: "reset_track", track: region.id }));
-    row.appendChild(reset);
-
-    const stop = el("button", "mx-btn", "stop");
-    stop.type = "button";
-    stop.addEventListener("click", () => sendFrame(frame, { type: "stop", track: region.id }));
-    row.appendChild(stop);
-
-    const closeShell = el("button", "mx-btn", "close shell");
-    closeShell.type = "button";
-    closeShell.addEventListener("click", () => sendFrame(frame, { type: "close_shell", track: region.id }));
-    row.appendChild(closeShell);
-
-    const del = el("button", "mx-btn", "delete");
-    del.type = "button";
-    del.addEventListener("click", () => {
-      if (window.confirm("delete region " + region.name + "?")) {
-        sendFrame(frame, { type: "kill_track", track: region.id });
-      }
-    });
-    row.appendChild(del);
-
-    container.appendChild(row);
-  }
-
-  // ---- tab bodies ----
-
-  function renderSettingsPane(frame, body) {
-    const dev = frame._dev;
-    const track = trackById(dev, dev.selectedTrackId);
-    const region = regionById(dev, dev.selectedRegionId);
-
-    if (track) {
-      const key = "trk:" + track.id;
-      const sec = sectionHead(dev, key, "track (3)");
-      sec.head.addEventListener("click", () => {
-        if (sec.collapsed) dev.collapsedBlocks.delete(key); else dev.collapsedBlocks.add(key);
-        renderDetail(frame);
-      });
-      body.appendChild(sec.head);
-      if (!sec.collapsed) {
-        body.appendChild(buildTrackFieldRow(frame, track, "name", "name"));
-        body.appendChild(buildTrackFieldRow(frame, track, "root", "root"));
-        body.appendChild(buildTrackFieldRow(frame, track, "order", "order"));
-      }
-    }
-
-    if (region) dev.settingsRows.renderSettings(region, body);
-    else body.appendChild(el("div", "mx-dim", "no region selected"));
-  }
-
-  function renderContextPane(frame, body) {
-    const dev = frame._dev;
-    const track = trackById(dev, dev.selectedTrackId);
-    const region = regionById(dev, dev.selectedRegionId);
-
-    const levels = [
-      { kind: "track", row: track, label: "track" },
-      { kind: "region", row: region, label: "region" },
-    ];
-
-    for (const lv of levels) {
-      if (!lv.row) {
-        body.appendChild(el("div", "mx-dim", "no " + lv.label + " selected"));
-        continue;
-      }
-      const key = "ctx:" + lv.kind + ":" + lv.row.id;
-      const path = "injections/" + lv.kind + "/" + lv.row.id + ".md";
-      const sec = sectionHead(dev, key, lv.label, path);
-      sec.head.addEventListener("click", () => {
-        if (sec.collapsed) dev.collapsedBlocks.delete(key); else dev.collapsedBlocks.add(key);
-        renderDetail(frame);
-      });
-      body.appendChild(sec.head);
-      if (!sec.collapsed) dev.settingsRows.renderContext(lv.kind, lv.row.id, body);
-    }
-  }
-
-  function renderGatesPane(frame, body) {
-    const dev = frame._dev;
-    const region = regionById(dev, dev.selectedRegionId);
-    if (!region) {
-      body.appendChild(el("div", "mx-dim", "no region selected"));
       return;
     }
-    dev.settingsRows.renderGates(region, body);
-  }
-
-  function renderPresetPane(frame, body) {
-    const dev = frame._dev;
-    const region = regionById(dev, dev.selectedRegionId);
-    if (!region) {
-      body.appendChild(el("div", "mx-dim", "no region selected"));
-      return;
-    }
-    dev.settingsRows.renderPreset(region, body);
+    if (tab === "gates") { dev.settingsRows.renderGates(region, body); return; }
+    if (tab === "presets") { dev.settingsRows.renderPreset(region, body); return; }
+    dev.settingsRows.renderSettings(region, body);
   }
 
   // ---- top-level render ----
-  //
-  // renderDetail redraws the right pane alone. Tab clicks and caret clicks
-  // go through it, so the tree's add-control inputs keep whatever is typed
-  // in them; only roster and status frames rebuild the whole widget.
-
-  function renderDetail(frame) {
-    const dev = frame._dev;
-    if (!dev) return;
-
-    const detail = dev.detailEl;
-    detail.textContent = "";
-    renderHeads(frame, detail);
-
-    const tabs = el("div", "mx-dev-tabs");
-    for (const tab of PANE_TABS) {
-      const b = el("button", "mx-btn" + (dev.paneTab === tab ? " mx-dev-tab-active" : ""), tab);
-      b.type = "button";
-      b.addEventListener("click", () => { dev.paneTab = tab; renderDetail(frame); });
-      tabs.appendChild(b);
-    }
-    detail.appendChild(tabs);
-
-    const body = el("div", "mx-dev-tab-body");
-    if (dev.paneTab === "context") renderContextPane(frame, body);
-    else if (dev.paneTab === "gates") renderGatesPane(frame, body);
-    else if (dev.paneTab === "preset") renderPresetPane(frame, body);
-    else renderSettingsPane(frame, body);
-    detail.appendChild(body);
-
-    const region = regionById(dev, dev.selectedRegionId);
-    if (region) renderRegionButtons(frame, region, detail);
-    if (dev.lastOut) detail.appendChild(el("div", "mx-dim mx-dev-status", dev.lastOut));
-  }
 
   function render(frame) {
     const dev = frame._dev;
     if (!dev) return;
-    renderTree(frame);
-    renderDetail(frame);
+    const host = dev.rootEl;
+    host.textContent = "";
+    dev.pickers = {};
+
+    const top = el("div", "mx-dev-top");
+    top.appendChild(button("mx-btn mx-dev-add-track", "Add track", () => {
+      sendFrame(frame, { type: "create_track", name: "track " + (dev.trackRows.length + 1) });
+    }));
+    host.appendChild(top);
+
+    const tracks = dev.trackRows.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+    for (const t of tracks) {
+      const group = el("div", "mx-dev-track-group");
+      for (const r of liveRegionsOfTrack(dev, t.id)) renderCard(frame, t, r, group);
+      renderCard(frame, t, ensureDraft(dev, t.id), group);
+      host.appendChild(group);
+    }
+    if (!tracks.length) host.appendChild(el("div", "mx-dim", "no tracks"));
+
+    if (dev.lastOut) host.appendChild(el("div", "mx-dim mx-dev-status", dev.lastOut));
   }
 
   // ---- roster bookkeeping shared by ade_init and track_list ----
@@ -389,9 +381,14 @@
     dev.trackRows = msg.rows || [];
     dev.regionRows = msg.tracks || [];
     dev.namesMap = msg.names || {};
-    if (dev.selectedRegionId && !regionById(dev, dev.selectedRegionId)) dev.selectedRegionId = null;
-    if (dev.selectedTrackId && !trackById(dev, dev.selectedTrackId)) dev.selectedTrackId = null;
-    if (!dev.selectedTrackId && dev.trackRows.length) dev.selectedTrackId = dev.trackRows[0].id;
+    // a draft outlives roster frames, but not the track it sits under
+    for (const id of Object.keys(dev.drafts)) {
+      if (!trackById(dev, dev.drafts[id].track)) {
+        delete dev.drafts[id];
+        dev.openCards.delete(id);
+        delete dev.cardTab[id];
+      }
+    }
   }
 
   MX.registerWidget("devagent", {
@@ -400,30 +397,21 @@
         trackRows: [], regionRows: [], namesMap: {},
         phaseByRegion: {}, gateEdges: null, policyHooks: [],
         modelRows: [], presetNames: [], presetsLoaded: false, outputStyles: [],
-        selectedTrackId: null, selectedRegionId: null, paneTab: "settings",
         changePrompt: null, contexts: {}, lastOut: "",
-        collapsedTracks: new Set(), collapsedBlocks: new Set(),
-        blocksTouched: new Set(),
-        sessionRoot: "", workspaceRoot: "",
+        collapsedBlocks: new Set(), blocksTouched: new Set(),
+        drafts: {}, regionDefaults: {},
+        openCards: new Set(), cardTab: {}, pickers: {},
       };
       dev.settingsRows = MX.settingsRows.create(frame, { state: dev, rerender: () => render(frame) });
 
       ensureDevCss();
-      const wrap = el("div", "mx-devagent");
-      dev.treeEl = el("div", "mx-devagent-tree");
-      dev.detailEl = el("div", "mx-devagent-detail");
-      wrap.appendChild(dev.treeEl);
-      wrap.appendChild(dev.detailEl);
-      frame.host.appendChild(wrap);
+      dev.rootEl = el("div", "mx-devagent");
+      frame.host.appendChild(dev.rootEl);
 
+      // another widget asks for a region's card to open
       frame._devOpenHandler = (e) => {
         const d = (e && e.detail) || {};
-        if (d.region) {
-          dev.selectedRegionId = d.region;
-          if (d.track) dev.selectedTrackId = d.track;
-        } else if (d.track) {
-          dev.selectedTrackId = d.track;
-        }
+        if (d.region) dev.openCards.add(d.region);
         render(frame);
       };
       document.addEventListener("mx:open-devagent", frame._devOpenHandler);
@@ -433,8 +421,6 @@
         render(frame);
       }).catch(() => {});
 
-      // value sets for the dropdown-backed settings rows; the preset tab
-      // reads the same list, so it is fetched here rather than on tab open
       dev.presetsLoaded = true;
       fetch("/api/library/presets").then((r) => r.json()).then((d) => {
         dev.presetNames = Array.isArray(d && d.names) ? d.names
@@ -442,8 +428,13 @@
         render(frame);
       }).catch(() => {});
 
-      // hook names for the gates tab; the gate_edges frame carries only
-      // edge and scope, so the value set comes from the policy endpoint
+      // the bag a region is born with; drafts seed from it
+      fetch("/api/settings/region-defaults").then((r) => r.json()).then((d) => {
+        dev.regionDefaults = (d && d.defaults) || {};
+        render(frame);
+      }).catch(() => {});
+
+      // hook names for the gates tab
       fetch("/api/policy").then((r) => r.json()).then((d) => {
         dev.policyHooks = (d && d.hooks) || [];
         render(frame);
@@ -453,21 +444,6 @@
         dev.outputStyles = ((d && d.styles) || []).map((s) => s.name).filter(Boolean);
         render(frame);
       }).catch(() => {});
-
-      // inherited root shown on the add controls: session rung, global behind it
-      fetch("/api/workspace-root").then((r) => r.json()).then((d) => {
-        dev.workspaceRoot = (d && d.root) || "";
-        render(frame);
-      }).catch(() => {});
-
-      const sid = MX.socket && MX.socket.sid ? MX.socket.sid() : null;
-      if (sid) {
-        fetch("/api/session-settings/" + encodeURIComponent(sid))
-          .then((r) => r.json()).then((d) => {
-            dev.sessionRoot = (d && d.effective && d.effective.root) || "";
-            render(frame);
-          }).catch(() => {});
-      }
 
       frame.subscribe(["ade_init", "track_list", "track_created", "track_removed",
         "region_replaced", "track_status", "models", "gate_edges",
@@ -498,22 +474,29 @@
       }
 
       if (msg.type === "track_created") {
-        if (msg.track) {
-          dev.selectedRegionId = msg.track.id;
-          dev.selectedTrackId = msg.track.track;
+        // a new region's card opens on settings; the roster that follows draws it
+        if (msg.track && msg.track.id) {
+          dev.openCards.add(msg.track.id);
+          dev.cardTab[msg.track.id] = "settings";
         }
-        return; // the roster (_roster()) that follows carries the full state
+        return;
       }
 
       if (msg.type === "track_removed") {
         dev.regionRows = dev.regionRows.filter((r) => r.id !== msg.id);
-        if (dev.selectedRegionId === msg.id) dev.selectedRegionId = null;
+        dev.openCards.delete(msg.id);
+        delete dev.cardTab[msg.id];
         render(frame);
         return;
       }
 
       if (msg.type === "region_replaced") {
-        if (dev.selectedRegionId === msg.old_id) dev.selectedRegionId = msg.new_id;
+        if (dev.openCards.has(msg.old_id)) {
+          dev.openCards.delete(msg.old_id);
+          dev.openCards.add(msg.new_id);
+          dev.cardTab[msg.new_id] = dev.cardTab[msg.old_id];
+          delete dev.cardTab[msg.old_id];
+        }
         render(frame);
         return;
       }
@@ -553,8 +536,7 @@
         return;
       }
 
-      // "file" is subscribed to per spec but unused — context loads go
-      // through /api/fs/read, not the "open" frame
+      // "file" is subscribed but unused — context loads go through /api/fs/read
     },
   });
 })();

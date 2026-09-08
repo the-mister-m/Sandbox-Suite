@@ -82,3 +82,53 @@ CLOSER REVIEW
 - CLAUDE.md map: widget folders are grouped under static/js/widgets/<group>/; library/maps/ exists; five new specs — closer
 - Worklog close, Ledger/worklog.html, assigned by Brandon 2026-09-07 20:12 — closer
 - TODO.md: the OPEN list above — closer
+
+---
+
+SESSION REVIEW — Sandbox Suite — devagent card rebuild — 2026-09-07 23:07 to 23:41 EDT
+
+Session agent: Fable. Brandon drove headed with screenshots and one sketch.
+Follows an unlogged Opus pass (20:12 to 23:07) that left the edits below
+uncommitted.
+
+INHERITED FROM THE OPUS PASS, uncommitted, kept
+- [ade/frames.py](../../ade/frames.py) — `_do_insert_region` reads seat and overlay_rows off the message
+- [server.py](../../server.py) — `/api/settings/region-defaults`
+- [settings-rows.js](../../static/js/widgets/shared/settings-rows.js) — draft-aware commit, REST preset load/save for drafts, preset_name select
+- [add-controls.js](../../static/js/widgets/shared/add-controls.js) — `opts.stage` on region mode; devagent no longer uses it
+- [test_draft_region.py](../tests/test_draft_region.py), [test_draft_presets.py](../tests/test_draft_presets.py) — 18 tests, pass
+
+EDITS BY THE SESSION AGENT
+- [devagent.js](../../static/js/widgets/agent/devagent/devagent.js) — rewritten: one column of region cards to Brandon's sketch, blank draft card per track, square Start button, no name gate
+- [settings-rows.js:90-94](../../static/js/widgets/shared/settings-rows.js#L90-L94) — `isDraft()` prefix test replaces four strict id checks
+- [settings-rows.js:427-446](../../static/js/widgets/shared/settings-rows.js#L427-L446) — only the harness block and the region's provider block draw; model row skipped
+- [widget-edge-map.md](../../Mapdocs/widget-edge-map.md) — rewritten to the new shape, no line numbers
+
+STRAY FILES
+- [library/presets/zz draft check.json](../../library/presets/zz%20draft%20check.json) — Opus test preset, Brandon's call
+- library/grids/ — eight new window folders from the Opus pass, Brandon's call
+
+GOALS DONE
+- Settings editable and presets loadable before a region starts
+- A loaded preset shows in the settings rows before Start
+- Region starts without a name
+- One card shape for draft and live regions; provider-matched settings only
+
+DROPPED
+- Track root and order editing from the card. Sketch shows Track name only.
+
+BRANDON'S TODOS
+- Reload and drive: Start on a blank card, preset load into a draft, save a preset from a draft, then start
+- Decide whether track root needs a home now that the card has none
+- Decide the stray preset and the eight grid folders
+
+RULE CONFLICT, again
+- Harness bypass notice says edit through Bash; project rules say Read/Edit. Followed the project rules.
+
+CLOSER REVIEW
+- Gets copy of review, not a contract.
+- SESSIONLOG.md entry for this pass — done by session agent
+- INDEX.md: edge map line under MAPDOCS, two test lines under DOCS — done by session agent
+- MEMORY.md warm start: devagent is card-based, drafts per track, Opus pass unlogged — closer
+- CLAUDE.md map: Mapdocs/widget-edge-map.md line — closer
+- TODO.md: the three Brandon todos above — closer

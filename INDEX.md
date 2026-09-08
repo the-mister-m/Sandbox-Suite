@@ -13,6 +13,7 @@
 - [Mapdocs/rewrite phase maps/phase2-widgets-map.md](Mapdocs/rewrite%20phase%20maps/phase2-widgets-map.md) — phase 2 widgets map
 - [Mapdocs/rewrite phase maps/phase3-ade-map.md](Mapdocs/rewrite%20phase%20maps/phase3-ade-map.md) — phase 3 ADE map
 - [Mapdocs/rewrite phase maps/phase4-editions-map.md](Mapdocs/rewrite%20phase%20maps/phase4-editions-map.md) — phase 4 editions map
+- [Mapdocs/widget-edge-map.md](Mapdocs/widget-edge-map.md) — devagent / settings-rows / add-controls / model-picker edges, frame table, draft region shape — 2026-09-07
 
 ## DOCS
 - [Docs/Scope/SCOPE-sandbox-cleanup.md](Docs/Scope/SCOPE-sandbox-cleanup.md) — Phase 1 cleanup scope
@@ -138,3 +139,5 @@
 - [Docs/Specs/SPEC-phase4-fixes-D.md](Docs/Specs/SPEC-phase4-fixes-D.md) — last wave W1 to W5, housekeeping list — 2026-09-07
 - [Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md](Docs/Reports/SESSION-REVIEW-phase4-2026-09-07.md) — Phase 4 build/test session review: nineteen widgets driven, five fix waves, twenty-seven boxes — 2026-09-07
 - [Docs/Reports/](Docs/Reports/) RECEIPT-phase4-* (S1, S1-rerun, S2, S3, B1–B4, C1–C4, D1–D3, F-B–F-G, W1–W5) — one receipt per box, Phase 4 build/test — 2026-09-07
+- [Docs/tests/test_draft_region.py](Docs/tests/test_draft_region.py) — draft region: settings-rows keys match region_defaults, insert_region carries settings/seat/overlay — 2026-09-07
+- [Docs/tests/test_draft_presets.py](Docs/tests/test_draft_presets.py) — draft preset load/save over REST — 2026-09-07
