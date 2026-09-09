@@ -82,7 +82,35 @@ html, body {
   right: 8px;
   z-index: 40;
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+#mxDrawerHandle {
+  background: var(--surface-2, #141414);
+  color: var(--text-1, #ddd);
+  border: 1px solid var(--border, #383838);
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#mxDrawerHandle:hover { border-color: var(--border-2, #444); }
+
+#mxCornerBody {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width .18s ease, opacity .12s ease;
+}
+
+#mxCorners.open #mxCornerBody {
+  max-width: 300px;
+  opacity: 1;
 }
 
 .mx-corner {
@@ -94,6 +122,7 @@ html, body {
   font-family: var(--sans, system-ui, sans-serif);
   font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .mx-corner:hover { border-color: var(--border-2, #444); }
@@ -132,7 +161,19 @@ html, body {
   opacity: 0.55;
 }
 
-.mx-widget.mx-drop-target { outline: 1px solid var(--accent, #2a6); }
+.mx-ghost {
+  position: relative;
+  z-index: 15;
+  pointer-events: none;
+  border: 2px solid var(--accent, #2a6);
+  background: var(--fill-white, rgba(255,255,255,0.06));
+  border-radius: 3px;
+}
+
+.mx-ghost.mx-ghost-invalid {
+  border-color: var(--gate-red, #d03b3b);
+  background: var(--fill-red, rgba(208,59,59,0.18));
+}
 
 .mx-bar {
   display: flex;
@@ -144,7 +185,11 @@ html, body {
   font-size: 11px;
   color: var(--text-2, #aaa);
   flex: 0 0 auto;
+  cursor: grab;
+  touch-action: none;
 }
+
+.mx-bar:active { cursor: grabbing; }
 
 .mx-bar-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -159,9 +204,6 @@ html, body {
 }
 
 .mx-bar-btn:hover { border-color: var(--border, #383838); color: var(--text-1, #ddd); }
-
-.mx-move { cursor: grab; touch-action: none; }
-.mx-move:active { cursor: grabbing; }
 
 .mx-host {
   flex: 1 1 auto;
@@ -179,11 +221,16 @@ html, body {
 }
 
 .mx-edge-e { top: 0; right: -3px; width: 7px; height: 100%; cursor: col-resize; }
+.mx-edge-w { top: 0; left: -3px; width: 7px; height: 100%; cursor: col-resize; }
 .mx-edge-s { left: 0; bottom: -3px; height: 7px; width: 100%; cursor: row-resize; }
+.mx-edge-n { left: 0; top: -3px; height: 7px; width: 100%; cursor: row-resize; }
 .mx-edge-se { right: -3px; bottom: -3px; width: 11px; height: 11px; cursor: nwse-resize; }
+.mx-edge-nw { left: -3px; top: -3px; width: 11px; height: 11px; cursor: nwse-resize; }
+.mx-edge-ne { right: -3px; top: -3px; width: 11px; height: 11px; cursor: nesw-resize; }
+.mx-edge-sw { left: -3px; bottom: -3px; width: 11px; height: 11px; cursor: nesw-resize; }
 
 .mx-edge:hover { background: var(--splitter-hot, #444); }
-.mx-edge-se:hover { background: transparent; }
+.mx-edge-se:hover, .mx-edge-nw:hover, .mx-edge-ne:hover, .mx-edge-sw:hover { background: transparent; }
 
 /* options panel on a widget */
 

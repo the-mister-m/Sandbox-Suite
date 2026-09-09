@@ -1560,14 +1560,19 @@ def api_fs_raw():
     return send_file(path, mimetype=mime or "application/octet-stream", conditional=True)
 
 
-# native macOS file chooser — returns the picked path, null on cancel
+# native file/folder picker
 @app.route("/api/fs/pick")
 def api_fs_pick():
-    ext = (request.args.get("ext") or "json").strip().lower()
-    utype = {"json": "public.json"}.get(ext, "public.data")
-    # Finder owns the dialog when choose file runs inside its tell block
-    script = ('tell application "Finder"\nactivate\n'
-              'POSIX path of (choose file of type {"%s"})\nend tell' % utype)
+    kind = (request.args.get("kind") or "file").strip().lower()
+    if kind == "folder":
+        # folder picker
+        script = 'tell application "Finder"\nactivate\nPOSIX path of (choose folder)\nend tell'
+    else:
+        ext = (request.args.get("ext") or "json").strip().lower()
+        utype = {"json": "public.json"}.get(ext, "public.data")
+        # file picker
+        script = ('tell application "Finder"\nactivate\n'
+                  'POSIX path of (choose file of type {"%s"})\nend tell' % utype)
     try:
         r = subprocess.run(["osascript", "-e", script],
                            capture_output=True, text=True, timeout=300)
@@ -1794,6 +1799,12 @@ def api_session_settings_write(sid):
     if not isinstance(body, dict):
         return jsonify({"error": "body must be an object"}), 400
     written = []
+    # root: field on environment, not a settings key
+    if "root" in body:
+        new_root = os.path.abspath(os.path.expanduser(str(body["root"]).strip()))
+        if os.path.isdir(new_root):
+            environment.root = new_root
+            written.append("root")
     for key, value in body.items():
         if key not in engine_settings.SESSION_KEYS:
             continue
@@ -1801,8 +1812,10 @@ def api_session_settings_write(sid):
         written.append(key)
     bag = dict(environment.settings)
     ade_tracks.write_session_settings(environment)
+    effective = engine_settings.session_effective(bag)
+    effective["root"] = environment.root
     return jsonify({"ok": True, "written": written, "bag": bag,
-                    "effective": engine_settings.session_effective(bag)})
+                    "effective": effective})
 
 
 @app.route("/api/widget-defaults", methods=["GET"])

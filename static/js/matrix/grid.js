@@ -5,8 +5,8 @@
 
   const MX = window.MX = window.MX || {};
 
-  const COLS = 12;
-  const ROWS = 12;
+  const COLS = 28;
+  const ROWS = 18;
   const NEW_W = 4;
   const NEW_H = 4;
 
@@ -285,7 +285,7 @@
       host.className = "mx-host";
       el.appendChild(host);
 
-      for (const side of ["e", "s", "se"]) {
+      for (const side of ["n", "s", "e", "w", "ne", "nw", "se", "sw"]) {
         const edge = document.createElement("div");
         edge.className = `mx-edge mx-edge-${side}`;
         edge.addEventListener("pointerdown", (ev) => this._startResize(ev, inst, el, side));
@@ -296,7 +296,10 @@
       frame.el = el;
       this.frames[inst.id] = frame;
       opts.addEventListener("click", () => frame.toggleOptions());
-      move.addEventListener("pointerdown", (ev) => this._startMove(ev, inst, el));
+      bar.addEventListener("pointerdown", (ev) => {
+        if (ev.target === opts || ev.target === close) return;
+        this._startMove(ev, inst, el);
+      });
       frame.mount(host);
 
       return el;
@@ -320,7 +323,8 @@
       return { w: w + gap, h: h + gap, left: box.left + padL, top: box.top + padT };
     },
 
-    // every border between widgets drags to resize
+    // every border and corner drags to resize; n/w edges move col/row
+    // as they shrink or grow so the opposite side stays put
 
     _startResize(ev, inst, el, side) {
       ev.preventDefault();
@@ -328,19 +332,35 @@
       const cell = this._cellSize();
       const startX = ev.clientX;
       const startY = ev.clientY;
+      const startCol = inst.slot.col;
+      const startRow = inst.slot.row;
       const startW = inst.slot.w;
       const startH = inst.slot.h;
+      const hasE = side.includes("e");
+      const hasW = side.includes("w");
+      const hasS = side.includes("s");
+      const hasN = side.includes("n");
       const target = ev.currentTarget;
       target.setPointerCapture(ev.pointerId);
 
       const onMove = (e) => {
-        if (side !== "s") {
-          const dc = Math.round((e.clientX - startX) / cell.w);
-          inst.slot.w = Math.max(1, Math.min(this.cols - inst.slot.col + 1, startW + dc));
+        const dc = Math.round((e.clientX - startX) / cell.w);
+        const dr = Math.round((e.clientY - startY) / cell.h);
+        if (hasE) {
+          inst.slot.w = Math.max(1, Math.min(this.cols - startCol + 1, startW + dc));
         }
-        if (side !== "e") {
-          const dr = Math.round((e.clientY - startY) / cell.h);
-          inst.slot.h = Math.max(1, Math.min(this.rows - inst.slot.row + 1, startH + dr));
+        if (hasW) {
+          const col = Math.max(1, Math.min(startCol + startW - 1, startCol + dc));
+          inst.slot.col = col;
+          inst.slot.w = startCol + startW - col;
+        }
+        if (hasS) {
+          inst.slot.h = Math.max(1, Math.min(this.rows - startRow + 1, startH + dr));
+        }
+        if (hasN) {
+          const row = Math.max(1, Math.min(startRow + startH - 1, startRow + dr));
+          inst.slot.row = row;
+          inst.slot.h = startRow + startH - row;
         }
         this._place(el, inst.slot);
       };
@@ -355,7 +375,18 @@
       target.addEventListener("pointercancel", onUp);
     },
 
-    // the move button lifts the widget and drops it into a slot
+    // any other instance's footprint overlapping this rect blocks the drop
+    _overlaps(col, row, w, h, skipId) {
+      for (const other of this.instances) {
+        if (other.id === skipId) continue;
+        const s = other.slot;
+        if (col < s.col + s.w && col + w > s.col && row < s.row + s.h && row + h > s.row) return true;
+      }
+      return false;
+    },
+
+    // the move button lifts the widget; a ghost snaps to the grid and
+    // only lands where nothing else is sitting
 
     _startMove(ev, inst, el) {
       ev.preventDefault();
@@ -365,24 +396,26 @@
       target.setPointerCapture(ev.pointerId);
       el.classList.add("mx-lifted");
       this.el.classList.add("mx-lifting");
-      let landing = { col: inst.slot.col, row: inst.slot.row };
-      let hot = null;
+      this.el.style.backgroundImage =
+        `repeating-linear-gradient(to right, var(--gridline, #2a2a2a) 0 1px, transparent 1px ${cell.w}px),` +
+        `repeating-linear-gradient(to bottom, var(--gridline, #2a2a2a) 0 1px, transparent 1px ${cell.h}px)`;
 
-      const clearHot = () => {
-        if (hot) hot.classList.remove("mx-drop-target");
-        hot = null;
-      };
+      const w = inst.slot.w;
+      const h = inst.slot.h;
+      const ghost = document.createElement("div");
+      ghost.className = "mx-ghost";
+      this.el.appendChild(ghost);
+
+      let landing = { col: inst.slot.col, row: inst.slot.row };
+      this._place(ghost, { col: landing.col, row: landing.row, w: w, h: h });
 
       const onMove = (e) => {
-        const col = Math.max(1, Math.min(this.cols, Math.floor((e.clientX - cell.left) / cell.w) + 1));
-        const row = Math.max(1, Math.min(this.rows, Math.floor((e.clientY - cell.top) / cell.h) + 1));
-        landing = { col: col, row: row };
-        clearHot();
-        const under = this._instanceAt(col, row, inst.id);
-        if (under) {
-          const node = this.el.querySelector(`[data-instance="${under.id}"]`);
-          if (node) { node.classList.add("mx-drop-target"); hot = node; }
-        }
+        const col = Math.max(1, Math.min(this.cols - w + 1, Math.floor((e.clientX - cell.left) / cell.w) + 1));
+        const row = Math.max(1, Math.min(this.rows - h + 1, Math.floor((e.clientY - cell.top) / cell.h) + 1));
+        const valid = !this._overlaps(col, row, w, h, inst.id);
+        this._place(ghost, { col: col, row: row, w: w, h: h });
+        ghost.classList.toggle("mx-ghost-invalid", !valid);
+        if (valid) landing = { col: col, row: row };
       };
 
       const onUp = () => {
@@ -391,8 +424,9 @@
         target.removeEventListener("pointercancel", onUp);
         el.classList.remove("mx-lifted");
         this.el.classList.remove("mx-lifting");
-        clearHot();
-        this._drop(inst, landing);
+        this.el.style.backgroundImage = "";
+        ghost.remove();
+        this._drop(inst, el, landing);
       };
 
       target.addEventListener("pointermove", onMove);
@@ -400,29 +434,10 @@
       target.addEventListener("pointercancel", onUp);
     },
 
-    _instanceAt(col, row, skipId) {
-      for (const other of this.instances) {
-        if (other.id === skipId) continue;
-        const s = other.slot;
-        if (col >= s.col && col < s.col + s.w && row >= s.row && row < s.row + s.h) return other;
-      }
-      return null;
-    },
-
-    _drop(inst, landing) {
-      const under = this._instanceAt(landing.col, landing.row, inst.id);
-      if (under) {
-        const mine = Object.assign({}, inst.slot);
-        inst.slot = Object.assign({}, under.slot);
-        under.slot = mine;
-      } else {
-        inst.slot.col = Math.max(1, Math.min(this.cols - inst.slot.w + 1, landing.col));
-        inst.slot.row = Math.max(1, Math.min(this.rows - inst.slot.h + 1, landing.row));
-      }
-      for (const other of this.instances) {
-        const node = this.el.querySelector(`[data-instance="${other.id}"]`);
-        if (node) this._place(node, other.slot);
-      }
+    _drop(inst, el, landing) {
+      inst.slot.col = landing.col;
+      inst.slot.row = landing.row;
+      this._place(el, inst.slot);
       this.save();
     },
   };

@@ -8,7 +8,7 @@
   const GROUP_ORDER = ["chat", "queue", "usertools", "agent", "adetools"];
 
   MX.widgetPicker = {
-    open() {
+    open(pos) {
       const ui = MX.ui;
       const anchor = document.getElementById("mxNewWidget");
       const rows = MX.registryRows();
@@ -58,8 +58,10 @@
       document.body.appendChild(dd);
 
       // flip left/up when the dropdown would run off the viewport at the
-      // anchor's corner
-      const ar = anchor.getBoundingClientRect();
+      // anchor point — a cursor position when given, else the button's corner
+      const ar = pos
+        ? { left: pos.x, right: pos.x, top: pos.y, bottom: pos.y }
+        : anchor.getBoundingClientRect();
       const ddw = dd.offsetWidth;
       const ddh = dd.offsetHeight;
       const ddLeft = (ar.left + ddw > window.innerWidth) ? Math.max(0, ar.right - ddw) : ar.left;

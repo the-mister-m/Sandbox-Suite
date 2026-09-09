@@ -389,7 +389,7 @@
     btn: null,
 
     attach() {
-      let bar = document.getElementById("mxCorners") || document.querySelector(".mx-corner-bar");
+      let bar = document.getElementById("mxCornerBody") || document.getElementById("mxCorners") || document.querySelector(".mx-corner-bar");
       if (!bar) {
         bar = document.createElement("div");
         bar.className = "mx-corner-bar";
@@ -399,8 +399,8 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "mx-btn mx-rung-btn";
-      btn.textContent = "Session";
-      btn.title = "session rung";
+      btn.textContent = "Settings";
+      btn.title = "session settings";
       btn.addEventListener("click", () => this.toggle());
       bar.appendChild(btn);
       this.btn = btn;

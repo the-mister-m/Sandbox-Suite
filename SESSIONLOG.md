@@ -5,6 +5,10 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ## SESSION INDEX
 (one line per session, newest first: date · name · 5–10 word summary)
+- 2026-09-08 · mx-canvas-interaction · Right-click add, grid-snap no-overlap drag, header-wide move, resize from all 8 edges
+- 2026-09-08 · mx-corner-drawer · Corner buttons made into a collapsing drawer, stray Settings button now collapses too
+- 2026-09-08 · native-file-picker · Viewer Open and browser root wired to server's existing osascript picker, folder kind added, session root read on mount
+- 2026-09-08 · anchor-chat-scroll-fix · mx-anchor-chat missing flex/height rule fixed, cp-script now scrolls internally
 - 2026-09-07 · phase4-build-test · Nineteen widgets driven headed, five fix waves landed, timeline built to spec
 - 2026-09-07 · phase4-scope · Widget tree and frame senders read, four Phase 4 docs written, no code edited
 - 2026-09-07 · devagent-ui · Devagent CSS written from scratch, dropdowns, file browser, version default
@@ -16,6 +20,30 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 - 2026-09-05 · phase1-specs · Phase 1 tree read, assessed, three specs + handoff written
 
 ## ENTRIES
+### 2026-09-08 (timestamps: ask Brandon) — mx-canvas-interaction
+- DONE: Four canvas asks landed in matrix.js's grid. (1) Right-click on empty grid space opens the widget picker at the cursor — widget-picker.js's open() now takes an optional pos, main.js wires the contextmenu listener, skipped when the target is a widget. (2) Drag-to-move now shows a live grid-line overlay and a ghost box snapped to cells; drop only lands where _overlaps() says clear, replacing the old swap-on-drop behavior. (3) Move now binds to the whole .mx-bar (pointerdown), not just the ✣ icon — skips the options and × buttons. (4) Resize edges expanded from e/s/se to all 8 (n/s/e/w + corners); dragging n or w now moves col/row as it shrinks/grows so the opposite edge stays anchored.
+- DECIDED: n/a.
+- OPEN: Brandon doubled the grid to 60×18 by hand mid-session and hit a real bug — saved per-window grid files persist their own cols/rows and override the COLS/ROWS constant in grid.js on load, so bumping the constant does nothing for any window that's already saved once. Flagged two fixes (bump/delete saved files by hand, or drop the saved-cols override so the constant always wins); Brandon said he's set without picking either — still open. Separately, a widgets-compress-instead-of-scroll complaint self-resolved mid-session, cause not investigated.
+- LINKS: [static/js/matrix/grid.js](static/js/matrix/grid.js) · [static/js/matrix/widget-picker.js](static/js/matrix/widget-picker.js) · [static/js/matrix/main.js:60-67](static/js/matrix/main.js#L60-L67) · [static/css/matrix.css:159-174](static/css/matrix.css#L159-L174) · [static/css/matrix.css:204-221](static/css/matrix.css#L204-L221)
+
+### 2026-09-08 (timestamps: ask Brandon) — native-file-picker
+- DONE: Viewer's Open button had no way to hand back a real filesystem path — Chrome's file/directory pickers never return one. Found server.py's `/api/fs/pick` already shells out to Finder via osascript and returns a real POSIX path, but nothing called it client-side. Added a `kind=folder` branch alongside the existing file picker. Wired viewer's Open button to it; wired browser's Change Root button to it, replacing the old `showDirectoryPicker()` + manual-path-prompt workaround. Also wired the browser widget to read the session root on mount via `/api/session-settings/<sid>`, filling `st.root` only if nothing's been chosen yet.
+- DECIDED: n/a.
+- OPEN: Brandon to confirm both pickers and the inherited root in browser.
+- LINKS: [server.py:1563-1580](server.py#L1563-L1580) · [static/js/widgets/usertools/viewer/viewer.js:171-178](static/js/widgets/usertools/viewer/viewer.js#L171-L178) · [static/js/widgets/usertools/browser/browser.js:267-274](static/js/widgets/usertools/browser/browser.js#L267-L274) · [static/js/widgets/usertools/browser/browser.js:307-316](static/js/widgets/usertools/browser/browser.js#L307-L316)
+
+### 2026-09-08 (timestamps: ask Brandon) — mx-corner-drawer
+- DONE: Corner buttons (Session, New Widget) turned into a collapsible drawer. Added #mxDrawerHandle toggle and #mxCornerBody wrap in matrix.html, closed/open transition states in matrix.css, toggle listener in main.js. Session-panel.js's rung button — injected at load, sitting outside the drawer uncollapsed — renamed "Session" to "Settings" and now inserts into #mxCornerBody so it collapses with the rest.
+- DECIDED: n/a.
+- OPEN: Brandon to confirm in browser.
+- LINKS: [static/matrix.html:16-21](static/matrix.html#L16-L21) · [static/css/matrix.css:79-113](static/css/matrix.css#L79-L113) · [static/js/matrix/main.js:60-65](static/js/matrix/main.js#L60-L65) · [static/js/matrix/session-panel.js:391-403](static/js/matrix/session-panel.js#L391-L403)
+
+### 2026-09-08 (timestamps: ask Brandon) — anchor-chat-scroll-fix
+- DONE: Brandon screenshotted anchor-chat with the whole pane scrolling instead of just the transcript, input row dragging along with it. Cause: `.mx-anchor-chat` wrap had no display/height rule in the widget's injected style, so `.cp-scriptwrap`'s `flex:1; min-height:0` had nothing to size against. Added `.mx-anchor-chat{ display:flex; flex-direction:column; height:100%; min-height:0; }`.
+- DECIDED: n/a.
+- OPEN: Brandon to confirm the fix in browser.
+- LINKS: [static/js/widgets/chat/anchor-chat/anchor-chat.js:391](static/js/widgets/chat/anchor-chat/anchor-chat.js#L391)
+
 ### 2026-09-07 12:50–20:12 — phase4-build-test, session agent Fable
 - DONE: Brandon drove headed against server 127.0.0.1:5000, session 9883b6bec3df "test run" — twenty-seven boxes, twenty-seven receipts, five fix specs, six server restarts. Renamed the shadowed list_regions to region_ids_of_log_dir in ade/tracks.py, unblocking every feed-driven widget through engine/ledger.py's call site; server.py's choose-file dialog moved inside Finder's tell block, unproven pending a restart and Brandon's eyes. Nineteen of nineteen widgets driven headed, not screenshotted idle. Every Wave B, C, D finding fixed and re-driven except two logged open. Timeline built to SPEC-phase4-timeline-target.md. Arrange gained browse, archive, library, update, and disk paths on nodes. Anchor-chat is now a region switcher on follow and mirror; the anchor frame is gone. Raw out/status/meters fan-out deleted; mirror is the one tagged stream. Archive writes master.prev before overwriting; shutdown skips unhydrated environments.
 - DECIDED: see MEMORY.md warm start's durable facts list.

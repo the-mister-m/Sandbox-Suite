@@ -265,16 +265,28 @@
     }
 
     function chooseRoot() {
-      if (window.showDirectoryPicker) {
-        window.showDirectoryPicker().then((handle) => {
-          // the picker never hands a script the folder's absolute host
-          // path — confirm or correct the name it returns before it
-          // becomes the tree root
-          MX.ui.prompt("Change Root", "confirm the full path:", handle.name, setRoot);
+      // display only, no persist
+      fetch("/api/fs/pick?kind=folder").then((r) => r.json()).then((d) => {
+        if (d && d.path) setRoot(d.path);
+      }).catch(() => {});
+    }
+
+    function makeSessionRoot() {
+      // persists root server-side
+      if (!st.root) return;
+      const sid = MX.socket && MX.socket.sid ? MX.socket.sid() : null;
+      if (!sid) return;
+      MX.ui.choose("Make Session Root", "make this the session root?\n\n" + st.root,
+        [{ label: "Make Root", cls: "mx-go", value: "yes" },
+         { label: "Cancel", value: "cancel" }]
+      ).then((v) => {
+        if (v !== "yes") return;
+        fetch("/api/session-settings/" + encodeURIComponent(sid), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ root: st.root }),
         }).catch(() => {});
-        return;
-      }
-      MX.ui.prompt("Change Root", "folder path:", "", setRoot);
+      });
     }
 
     frame._browserHooks = { requestTree, refreshDir, refreshAllLoaded, applyEntries, renderRoot, setRoot };
@@ -287,9 +299,16 @@
     const rootBtn = document.createElement("button");
     rootBtn.className = "mx-btn";
     rootBtn.type = "button";
-    rootBtn.textContent = "Change Root";
+    rootBtn.textContent = "folder";
     rootBtn.addEventListener("click", chooseRoot);
     bar.appendChild(rootBtn);
+    const houseBtn = document.createElement("button");
+    houseBtn.className = "mx-btn";
+    houseBtn.type = "button";
+    houseBtn.textContent = "⌂";
+    houseBtn.title = "make session root";
+    houseBtn.addEventListener("click", makeSessionRoot);
+    bar.appendChild(houseBtn);
     const rootLine = document.createElement("span");
     rootLine.className = "mx-dim mx-browser-rootline";
     rootLine.textContent = "no root chosen";
@@ -304,6 +323,16 @@
 
     frame.host.appendChild(wrap);
     frame.subscribe(["tree", "saved", "deleted", "moved", "renamed", "made", "tree_dirty"]);
+
+    // session root
+    const sid = MX.socket && MX.socket.sid ? MX.socket.sid() : null;
+    if (sid) {
+      fetch("/api/session-settings/" + encodeURIComponent(sid))
+        .then((r) => r.json()).then((d) => {
+          const root = (d && d.effective && d.effective.root) || "";
+          if (root && !st.root) setRoot(root);
+        }).catch(() => {});
+    }
 
     // exposed for onFrame below (closure over st via frame._browser)
     frame._browserApply = function (msg) {

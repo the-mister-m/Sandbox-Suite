@@ -60,6 +60,14 @@
     document.getElementById("mxNewWidget").addEventListener("click", () => {
       MX.widgetPicker.open();
     });
+    gridEl.addEventListener("contextmenu", (ev) => {
+      if (ev.target !== gridEl) return; // only empty grid space, not a widget
+      ev.preventDefault();
+      MX.widgetPicker.open({ x: ev.clientX, y: ev.clientY });
+    });
+    document.getElementById("mxDrawerHandle").addEventListener("click", () => {
+      cornersEl.classList.toggle("open");
+    });
 
     const sid = sidFromPath();
     if (sid) bind(sid);

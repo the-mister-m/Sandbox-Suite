@@ -172,7 +172,11 @@
     openBtn.className = "mx-btn";
     openBtn.type = "button";
     openBtn.textContent = "Open";
-    openBtn.addEventListener("click", () => openTab(input.value.trim()));
+    openBtn.addEventListener("click", () => {
+      fetch("/api/fs/pick?kind=file").then((r) => r.json()).then((d) => {
+        if (d && d.path) { input.value = d.path; openTab(d.path); }
+      }).catch(() => {});
+    });
     bar.appendChild(input);
     bar.appendChild(openBtn);
     wrap.appendChild(bar);
@@ -231,6 +235,18 @@
 
     st.openTab = openTab;
     st.renderTabs = renderTabs;
+
+    // drop target — file browser rows carry the path as application/x-mx-path
+    body.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    });
+    body.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const path = e.dataTransfer.getData("application/x-mx-path")
+        || e.dataTransfer.getData("text/plain");
+      if (path) openTab(path);
+    });
 
     function clearBody() {
       if (st.monaco) { try { st.monaco.dispose(); } catch (e) { /* already gone */ } st.monaco = null; }

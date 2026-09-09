@@ -1,0 +1,66 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "widgets": [
+    {
+      "id": "anchor_chat-mtt9v9uv-1",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 9,
+        "h": 18
+      },
+      "options": {
+        "region": "9548242d650d"
+      }
+    },
+    {
+      "id": "devagent-mtt9ve5y-2",
+      "type": "devagent",
+      "slot": {
+        "col": 10,
+        "row": 1,
+        "w": 5,
+        "h": 10
+      },
+      "options": {}
+    },
+    {
+      "id": "strip-mtt9vfla-3",
+      "type": "strip",
+      "slot": {
+        "col": 27,
+        "row": 1,
+        "w": 2,
+        "h": 7
+      },
+      "options": {}
+    },
+    {
+      "id": "viewer-mtt9vll3-4",
+      "type": "viewer",
+      "slot": {
+        "col": 25,
+        "row": 15,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "path": "",
+        "tabs": []
+      }
+    },
+    {
+      "id": "browser-mtt9vnna-5",
+      "type": "browser",
+      "slot": {
+        "col": 19,
+        "row": 9,
+        "w": 6,
+        "h": 10
+      },
+      "options": {}
+    }
+  ]
+}

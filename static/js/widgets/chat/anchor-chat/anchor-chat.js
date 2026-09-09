@@ -388,6 +388,7 @@
     const style = document.createElement('style');
     style.id = _STYLE_ID;
     style.textContent = `
+.mx-anchor-chat{ display:flex; flex-direction:column; height:100%; min-height:0; }
 .cp-script{ flex:1; overflow-y:auto; padding:10px 12px; display:flex; flex-direction:column; gap:4px; min-height:0; }
 .cp-scriptwrap{ position:relative; flex:1; min-height:0; display:flex; flex-direction:column; }
 .cp-head{ flex-shrink:0; display:flex; align-items:center; gap:6px; padding:4px 8px; border-bottom:1px solid var(--gridline); background:var(--surface-2); }
