@@ -14,6 +14,87 @@
 
   const MX = window.MX = window.MX || {};
 
+  // speech — one chat speaks at a time, across the windows of one browser;
+  // the lock key is shared with the chat widget so the two never talk over
+  // each other. A non-browser tts engine sends rendered audio instead of
+  // text, played back through playAudio() the same way.
+  const SPEECH_LOCK_KEY = "mx.speech.lock";
+  const SPEECH_LOCK_MS = 15000;
+
+  function _readSpeechLock() {
+    try {
+      const raw = window.localStorage.getItem(SPEECH_LOCK_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function _claimSpeechLock(holder) {
+    const now = Date.now();
+    const cur = _readSpeechLock();
+    if (cur && cur.holder !== holder && (now - (cur.at || 0)) < SPEECH_LOCK_MS) return false;
+    try {
+      window.localStorage.setItem(SPEECH_LOCK_KEY, JSON.stringify({ holder: holder, at: now }));
+    } catch (e) {
+      return true;
+    }
+    return true;
+  }
+
+  function _releaseSpeechLock(holder) {
+    const cur = _readSpeechLock();
+    if (cur && cur.holder !== holder) return;
+    try { window.localStorage.removeItem(SPEECH_LOCK_KEY); } catch (e) { /* nothing held */ }
+  }
+
+  function _speak(frame, text, voice) {
+    const c = frame._anchorChat;
+    if (!c || !frame.options.speech_enabled) return;
+    if (!window.speechSynthesis) return;
+    if (!_claimSpeechLock(frame.id)) {
+      c.speechNote.textContent = "another chat is speaking";
+      return;
+    }
+    c.speechNote.textContent = "speaking";
+    const u = new SpeechSynthesisUtterance(text || "");
+    const want = voice || c.voice;
+    if (want) {
+      const match = window.speechSynthesis.getVoices().find((v) => v.name === want);
+      if (match) u.voice = match;
+    }
+    const renew = setInterval(() => _claimSpeechLock(frame.id), SPEECH_LOCK_MS / 3);
+    const done = () => {
+      clearInterval(renew);
+      _releaseSpeechLock(frame.id);
+      if (frame._anchorChat) frame._anchorChat.speechNote.textContent = "";
+    };
+    u.onend = done;
+    u.onerror = done;
+    window.speechSynthesis.speak(u);
+  }
+
+  function _playAudio(frame, b64, mime) {
+    const c = frame._anchorChat;
+    if (!c || !frame.options.speech_enabled || !b64) return;
+    if (!_claimSpeechLock(frame.id)) {
+      c.speechNote.textContent = "another chat is speaking";
+      return;
+    }
+    c.speechNote.textContent = "speaking";
+    const audio = new Audio("data:" + (mime || "audio/wav") + ";base64," + b64);
+    const renew = setInterval(() => _claimSpeechLock(frame.id), SPEECH_LOCK_MS / 3);
+    const done = () => {
+      clearInterval(renew);
+      _releaseSpeechLock(frame.id);
+      if (frame._anchorChat) frame._anchorChat.speechNote.textContent = "";
+    };
+    audio.onended = done;
+    audio.onerror = done;
+    c.audio = audio;
+    audio.play().catch(done);
+  }
+
   const _IMG_EXT = /\.(png|jpe?g|gif|webp)$/i;
 
   function makeImageIntake({ inputEl, hostEl }) {
@@ -227,63 +308,6 @@
     return text.replace(_SEND_CMD_RE, (_, who) => '→ message sent to ' + who.trim());
   }
 
-  function parseFences(str) {
-    const segments = [];
-    const fenceRe = /```([^\n`]*)\n([\s\S]*?)```/g;
-    let lastIdx = 0, m;
-    while ((m = fenceRe.exec(str)) !== null) {
-      if (m.index > lastIdx) segments.push({ type: 'text', content: str.slice(lastIdx, m.index) });
-      segments.push({ type: 'code', lang: m[1].trim(), content: m[2] });
-      lastIdx = fenceRe.lastIndex;
-    }
-    if (lastIdx < str.length) segments.push({ type: 'text', content: str.slice(lastIdx) });
-    return segments;
-  }
-
-  function _renderFenced(container, text) {
-    container.innerHTML = '';
-    const segments = parseFences(text || '');
-    for (const seg of segments) {
-      if (seg.type === 'text') {
-        const span = document.createElement('span');
-        span.textContent = seg.content;
-        container.appendChild(span);
-      } else {
-        const wrap = document.createElement('div');
-        wrap.className = 'code-fence';
-        const header = document.createElement('div');
-        header.className = 'code-fence-header';
-        if (seg.lang) {
-          const langLabel = document.createElement('span');
-          langLabel.className = 'code-fence-lang';
-          langLabel.textContent = seg.lang;
-          header.appendChild(langLabel);
-        }
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'code-fence-copy';
-        copyBtn.textContent = 'copy';
-        const codeText = seg.content;
-        copyBtn.onclick = () => {
-          try {
-            navigator.clipboard.writeText(codeText).then(() => {
-              copyBtn.textContent = 'copied';
-              setTimeout(() => { copyBtn.textContent = 'copy'; }, 1500);
-            }).catch(() => { copyBtn.textContent = 'err'; });
-          } catch (err) { copyBtn.textContent = 'err'; }
-        };
-        header.appendChild(copyBtn);
-        wrap.appendChild(header);
-        const pre = document.createElement('pre');
-        pre.className = 'code-fence-body';
-        const code = document.createElement('code');
-        code.textContent = codeText;
-        pre.appendChild(code);
-        wrap.appendChild(pre);
-        container.appendChild(wrap);
-      }
-    }
-  }
-
   function _streamOut(scriptEl, rowName, state, busyMeters, text, o, pin) {
     const t = text || '';
     const emp = scriptEl.querySelector('.empty');
@@ -291,7 +315,7 @@
 
     if (o.dim && o.end === '') {
       if (state.liveBub) {
-        _renderFenced(state.liveBub, _stripSendBlocks(state.liveText));
+        MX.turns.renderMarkdown(state.liveBub, _stripSendBlocks(state.liveText));
         state.liveBub = null; state.liveText = '';
       }
       if (!state.thinkingEl) {
@@ -325,7 +349,7 @@
 
     if (o.dim) {
       if (state.liveBub) {
-        _renderFenced(state.liveBub, _stripSendBlocks(state.liveText));
+        MX.turns.renderMarkdown(state.liveBub, _stripSendBlocks(state.liveText));
         state.liveBub = null; state.liveText = '';
       }
       if (t + (o.end || '')) {
@@ -347,10 +371,10 @@
       state.liveText = '';
     }
     state.liveText += t + (o.end || '');
-    state.liveBub.textContent = state.liveText;
+    MX.turns.renderMarkdown(state.liveBub, state.liveText);
     pin.scrollIfPinned();
     if (o.end === '\n' && t === '') {
-      _renderFenced(state.liveBub, _stripSendBlocks(state.liveText));
+      MX.turns.renderMarkdown(state.liveBub, _stripSendBlocks(state.liveText));
       state.liveBub = null;
       state.liveText = '';
     }
@@ -395,6 +419,7 @@
 .cp-pick{ flex:1; min-width:0; background:var(--surface-1); color:var(--text-2); border:1px solid var(--border); border-radius:4px; font:11px/1.5 var(--mono); padding:2px 4px; }
 .cp-live{ font:10px/1.4 var(--mono); color:var(--text-4); text-transform:uppercase; letter-spacing:.08em; }
 .cp-live.cp-on{ color:var(--gate-blue); }
+.cp-speech{ font:10px/1.4 var(--mono); color:var(--text-4); margin-left:6px; }
 .cp-jump-bottom{ position:absolute; right:14px; bottom:10px; z-index:6; background:var(--accent-mid); color:var(--accent-dim); border:1px solid var(--accent-bdr); border-radius:14px; padding:3px 11px; font-size:10.5px; cursor:pointer; box-shadow:0 2px 8px var(--shadow-1); }
 .cp-jump-bottom:hover{ background:var(--accent-dark); color:var(--text-1); }
 .cp-jump-bottom.hidden{ display:none; }
@@ -426,7 +451,16 @@
 .msg.mail .who{ color:var(--text-2); }
 .msg.notice .bub{ background:var(--fill-white); border:1px dashed var(--border-2); color:var(--text-3); font-style:italic; }
 .msg.notice .who{ color:var(--text-4); }
-.bub{ padding:8px 10px; border-radius:9px; white-space:pre-wrap; font-size:calc(12.5px * var(--cp-zoom, 1)); }
+.bub{ padding:8px 10px; border-radius:9px; white-space:pre-wrap; font-size:calc(12.5px * var(--cp-zoom, 1)); overflow-wrap:anywhere; }
+.bub p{ margin:0 0 6px; }
+.bub ul, .bub ol{ margin:0 0 6px; padding-left:18px; }
+.bub h1, .bub h2, .bub h3, .bub h4{ margin:6px 0 4px; font-size:12px; }
+.bub blockquote{ margin:0 0 6px; padding-left:8px; border-left:2px solid var(--gridline); color:var(--text-2); }
+.bub table{ border-collapse:collapse; margin-bottom:6px; }
+.bub th, .bub td{ border:1px solid var(--gridline); padding:2px 5px; }
+.bub pre, .bub .cq-plain{ background:var(--well); border:1px solid var(--gridline); border-radius:3px; padding:6px; overflow-x:auto; font-family:var(--mono); font-size:11px; white-space:pre-wrap; margin:0 0 6px; }
+.bub code{ font-family:var(--mono); font-size:11px; }
+.bub pre code{ background:transparent; padding:0; }
 details.cot{ margin:2px 0 4px; }
 details.cot summary{ color:var(--text-4); font:11px/1.5 var(--mono); cursor:pointer; user-select:none; list-style:none; padding:1px 0; }
 details.cot summary::-webkit-details-marker{ display:none; }
@@ -521,10 +555,10 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
   }
 
   MX.registerWidget('anchor_chat', {
-    defaults: { region: '' },
+    defaults: { region: '', speech_enabled: false },
 
     mount(frame) {
-      const c = frame._anchorChat = { region: '', regions: [], following: null };
+      const c = frame._anchorChat = { region: '', regions: [], following: null, voice: '' };
       if (typeof frame.options.region !== 'string') frame.options.region = '';
 
       const wrap = document.createElement('div');
@@ -538,8 +572,11 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
       c.livePill = document.createElement('span');
       c.livePill.className = 'cp-live';
       c.livePill.textContent = 'not live';
+      c.speechNote = document.createElement('span');
+      c.speechNote.className = 'cp-speech';
       head.appendChild(c.picker);
       head.appendChild(c.livePill);
+      head.appendChild(c.speechNote);
 
       const scriptWrap = document.createElement('div');
       scriptWrap.className = 'cp-scriptwrap';
@@ -711,10 +748,17 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
 
       frame.subscribe(['ade_init', 'track_list', 'track_transcript', 'transcript',
                        'chat_history', 'out', 'status', 'meters', 'mirror',
-                       'activity', 'track_removed', 'region_replaced']);
+                       'activity', 'track_removed', 'region_replaced', 'speak', 'audio']);
       frame.send({ type: 'roster', inst: frame.id });
       _renderHead(frame);
       _bind(frame, regionOf(frame));
+      fetch('/api/session-settings/' + encodeURIComponent(frame.sid || ''))
+        .then((r) => r.json())
+        .then((g) => {
+          const v = (g && g.effective && g.effective.voices) || {};
+          c.voice = v.tts_voice || '';
+        })
+        .catch(() => { /* no voice named */ });
     },
 
     unmount(frame) {
@@ -722,12 +766,21 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
       if (c && c.following) {
         frame.send({ type: 'unfollow', track: c.following, inst: frame.id });
       }
+      if (c && c.audio) {
+        try { c.audio.pause(); } catch (e) { /* already stopped */ }
+      }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      _releaseSpeechLock(frame.id);
       frame._anchorChat = null;
     },
 
     onOption(frame, key, value) {
-      if (key !== 'region') return;
-      _bind(frame, value || '');
+      if (key === 'region') { _bind(frame, value || ''); return; }
+      if (key === 'speech_enabled' && !frame.options.speech_enabled) {
+        _releaseSpeechLock(frame.id);
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        if (frame._anchorChat) frame._anchorChat.speechNote.textContent = '';
+      }
     },
 
     onFrame(frame, msg) {
@@ -759,6 +812,8 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
         else if (msg.kind === 'status') c.pane.setStatus(msg.phase);
         else if (msg.kind === 'meters') c.pane.setMeters(msg.d);
         else if (msg.kind === 'event') c.pane.renderMail(msg.evt);
+        else if (msg.kind === 'speak') _speak(frame, msg.text, msg.voice);
+        else if (msg.kind === 'audio') _playAudio(frame, msg.data, msg.mime);
         return;
       }
 
@@ -773,6 +828,12 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
           break;
         case 'activity':
           c.pane.renderMail(msg.event);
+          break;
+        case 'speak':
+          _speak(frame, msg.text, msg.voice);
+          break;
+        case 'audio':
+          _playAudio(frame, msg.data, msg.mime);
           break;
         case 'track_removed':
           if (msg.id === rid) _bind(frame, '');

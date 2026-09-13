@@ -1,0 +1,18 @@
+14:32:33 [harness] block I session e76d0d6f4e3e other 85b19c53d41a
+[fence] e76d0d6f4e3e before: ['w-ywzvtxv8']
+14:32:40 [harness] I surface=w-l7z6v81f url=http://127.0.0.1:5000/matrix/e76d0d6f4e3e?s=w-l7z6v81f t1=t-4jmh5l9x t2=t-nkrkme9z
+14:32:42 [step] I1 PASS
+14:32:43 [step] I2 PASS
+14:32:45 [step] I3 PASS
+14:32:46 [step] I4 PASS
+14:33:04 [step] I5a PASS
+14:33:06 [step] I5b PASS
+14:33:10 [harness] chat roster on e76d0d6f4e3e: [{'id': '9548242d650d', 'name': 'test'}]
+14:33:13 [step] I6 PASS
+14:33:24 [step] I7a PASS
+14:33:29 [step] I7b OBSERVED
+14:33:29 [harness] block I console errors: 0
+[sweep] e76d0d6f4e3e before=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e made=['w-l7z6v81f']
+[sweep] e76d0d6f4e3e after=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e intact=True

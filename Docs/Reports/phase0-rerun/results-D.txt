@@ -1,0 +1,9 @@
+session 85b19c53d41a other 0d78d246515f
+D1: PASS — surface w-lv56257i; TAB_ID t1=t-9143ob68 t2=t-n8mn50km; WINDOW_ID t1=w-lv56257i t2=w-lv56257i; added editor-mtym63ko-1 in tab1; tab2 elements with that instance=1 — Docs/Reports/phase0-rerun/D1-tab2-after-add.png
+D2: PASS — tab2 moved+resized terminal-mtym65xr-1 to {'col': 10, 'row': 4, 'w': 6, 'h': 5}; tab1 slot={'col': 10, 'row': 4, 'w': 6, 'h': 5} — Docs/Reports/phase0-rerun/D2-tab1-after-move.png
+D3: PASS — closed editor-mtym63ko-1 in tab1; tab2 held it before=1; tab2 shows 0 after — Docs/Reports/phase0-rerun/D3-tab2-after-close.png
+D4: OBSERVED — opened CLAUDE.md in tab1 editor editor-mtym6dit-2; tab1 tabs=[{'key': 'editor-mtym6dit-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}]; tab2 same instance tabs=[]; mirrors=no — Docs/Reports/phase0-rerun/D4-tab2-editor.png
+D5: PASS — remote emit: tab1 fired 1, tab2 fired 1; local emit: tab1 total 2, tab2 total 1; TAB_ID differs=True; WINDOW_ID matches=True; widget_bus frames at tab2 socket=[{'channel': 't', 'inst': 't-9143ob68'}] — Docs/Reports/phase0-rerun/D5-bus.png
+D6: PASS — surface one=w-lv56257i, surface two=w-t9n9ps9k; added viewer-mtym6v9y-4 on surface one; surface two widgets before=['editor'] after=['editor']; surface-one instance present on surface two=0 — Docs/Reports/phase0-rerun/D6-other-surface.png
+D7: PASS — tab2 7 widgets, tab1 after reload 7 widgets, layouts match=True; file w-lv56257i.json holds 7 widgets, matches tab2=True — Docs/Reports/phase0-rerun/D7-after-burst-reload.png
+D8: PASS — grid-route writes after the burst settled: 1; busiest 2s window held 1 (threshold >3); all writes this block=15 — Docs/Reports/phase0-rerun/D8-writes.png

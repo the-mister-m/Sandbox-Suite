@@ -17,11 +17,10 @@
   }
 
   function startingOptions(type) {
-    const fromRegistry = MX.widgetDefaults(type);
-    if (fromRegistry && Object.keys(fromRegistry).length) return fromRegistry;
+    const fromRegistry = MX.widgetDefaults(type) || {};
     const mod = MX.widgetModule(type);
-    if (mod && mod.defaults) return JSON.parse(JSON.stringify(mod.defaults));
-    return {};
+    const fromModule = (mod && mod.defaults) ? JSON.parse(JSON.stringify(mod.defaults)) : {};
+    return Object.assign(fromModule, fromRegistry);
   }
 
   function WidgetFrame(inst, sid) {
@@ -103,6 +102,23 @@
     // options ride entirely on setOption/getOptions; without this a
     // widget that persists only through options never survives a reload
     if (MX.grid && MX.grid.save) MX.grid.save();
+    if (MX.grid && MX.grid._applying) return; // this change came from the mirror
+    MX.bus.emit("surface.widget",
+      { surface: MX.WINDOW_ID, id: this.id, options: this.getOptions() },
+      { remote: true });
+  };
+
+  // applies a remote option change; never re-saves or re-emits
+  WidgetFrame.prototype.applyOptions = function (options) {
+    if (!options) return;
+    for (const key of Object.keys(options)) {
+      const value = options[key];
+      if (JSON.stringify(this.options[key]) === JSON.stringify(value)) continue;
+      this.options[key] = value;
+      if (this._mod && this._mod.onOption) {
+        try { this._mod.onOption(this, key, value); } catch (e) { /* widget may ignore it */ }
+      }
+    }
   };
 
   // per-instance options panel, opened from the widget's own bar
@@ -131,6 +147,8 @@
       panel.appendChild(none);
     }
 
+    const controls = (this._mod && this._mod.optionControls) || {};
+
     for (const key of keys) {
       const row = document.createElement("div");
       row.className = "mx-opt-row";
@@ -139,8 +157,30 @@
       row.appendChild(label);
 
       const value = this.options[key];
+      const control = controls[key];
       let input;
-      if (typeof value === "boolean") {
+      let refillSelect = null;
+      if (control && control.kind === "select") {
+        input = document.createElement("select");
+        refillSelect = () => {
+          Promise.resolve(control.values(this)).then((list) => {
+            list = Array.isArray(list) ? list.slice() : [];
+            const current = this.options[key];
+            if (current !== undefined && current !== null && current !== ""
+              && list.indexOf(current) < 0) list.push(current);
+            input.textContent = "";
+            for (const v of list) {
+              const opt = document.createElement("option");
+              opt.value = v;
+              opt.textContent = v;
+              input.appendChild(opt);
+            }
+            input.value = current;
+          });
+        };
+        refillSelect();
+        input.addEventListener("change", () => this.setOption(key, input.value));
+      } else if (typeof value === "boolean") {
         input = document.createElement("input");
         input.type = "checkbox";
         input.checked = value;
@@ -156,6 +196,15 @@
         });
       }
       row.appendChild(input);
+      if (control && control.kind === "select" && control.onNew) {
+        const newBtn = document.createElement("button");
+        newBtn.className = "mx-btn";
+        newBtn.textContent = "New";
+        newBtn.addEventListener("click", () => {
+          Promise.resolve(control.onNew(this)).then(() => refillSelect());
+        });
+        row.appendChild(newBtn);
+      }
       panel.appendChild(row);
     }
 

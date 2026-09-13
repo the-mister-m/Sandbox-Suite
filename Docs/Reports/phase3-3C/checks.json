@@ -1,0 +1,277 @@
+{
+  "session_open": {
+    "sid": "9883b6bec3df"
+  },
+  "mounted": {
+    "section": "tools",
+    "canvasOpt": "focused",
+    "focusedInst": "",
+    "who": "following canvas-mtz3lt85-1",
+    "titles": [],
+    "rows": [],
+    "cards": [],
+    "labels": [],
+    "text": "Nothing selected"
+  },
+  "after_select": {
+    "section": "tools",
+    "canvasOpt": "focused",
+    "focusedInst": "canvas-mtz3lt85-1",
+    "who": "following canvas-mtz3lt85-1",
+    "titles": [
+      "Text",
+      "Box",
+      "Color",
+      "Link",
+      "Notes"
+    ],
+    "rows": [],
+    "cards": [],
+    "labels": [
+      "Content",
+      "Mode",
+      "Tag",
+      "Size",
+      "Weight",
+      "Align",
+      "Font",
+      "Width",
+      "Height",
+      "Padding",
+      "Margin",
+      "Corner",
+      "Shadow"
+    ],
+    "text": "TextContentModeliteralinstructionTagh1h2h3h4h5h6pblockquotesmallSizexssmmdlgxlxxlWeightnormalboldAlignleftcenterrightFontsansserifmonocustomBoxWidthHeightPaddin"
+  },
+  "typed": {
+    "content": [
+      "EDITED BY 3C TOOLS",
+      "A paragraph of proof text.",
+      ""
+    ],
+    "drawn": 3,
+    "in_iframe": true
+  },
+  "layers_rows": [
+    "wg_y5x899",
+    "wg_czbm1i",
+    "wg_0qd7xl"
+  ],
+  "layers_reorder": {
+    "before": [
+      "wg_y5x899",
+      "wg_czbm1i",
+      "wg_0qd7xl"
+    ],
+    "after": [
+      "wg_czbm1i",
+      "wg_y5x899",
+      "wg_0qd7xl"
+    ]
+  },
+  "layers_reparent": {
+    "wg_y5x899": null,
+    "wg_0qd7xl": null,
+    "wg_czbm1i": "wg_0qd7xl"
+  },
+  "layers_toggles": [
+    {
+      "id": "wg_y5x899",
+      "hidden": true,
+      "locked": true
+    },
+    {
+      "id": "wg_0qd7xl",
+      "hidden": false,
+      "locked": false
+    },
+    {
+      "id": "wg_czbm1i",
+      "hidden": false,
+      "locked": false
+    }
+  ],
+  "hidden_in_iframe": "none",
+  "notes_inline": {
+    "section": "tools",
+    "focused": "cc-panel-field cc-panel-notes-field",
+    "notes": [
+      "note written by 3C",
+      "",
+      ""
+    ]
+  },
+  "library_cards": [
+    "text.block",
+    "text.list"
+  ],
+  "library_drag_payload": "status.badge",
+  "library_drop": {
+    "before": 3,
+    "after": 4,
+    "types": [
+      "text.block",
+      "container.box",
+      "text.block",
+      "status.badge"
+    ]
+  },
+  "page_labels": [
+    "Grid size",
+    "Grid style",
+    "Width mode",
+    "Fixed px",
+    "Palette"
+  ],
+  "page_grid": {
+    "grid": 40,
+    "gridStyle": "dynamic",
+    "width": {
+      "mode": "fixed",
+      "px": 1280
+    },
+    "palette": "default"
+  },
+  "page_add": {
+    "pages": [
+      "Page 1",
+      "Page 2"
+    ],
+    "canvas_page_option": "pg_bcax8y",
+    "state_page": "pg_bcax8y"
+  },
+  "dropdown_two": [
+    "focused",
+    "canvas-mtz3lt85-1",
+    "canvas-mtz3lzgh-3"
+  ],
+  "dropdown_expected": [
+    "focused",
+    "canvas-mtz3lt85-1",
+    "canvas-mtz3lzgh-3"
+  ],
+  "follow_focus": {
+    "clicked_a": {
+      "a": "canvas-mtz3lt85-1",
+      "focusedInst": "canvas-mtz3lt85-1",
+      "who": "following canvas-mtz3lt85-1"
+    },
+    "clicked_b": {
+      "b": "canvas-mtz3lzgh-3",
+      "focusedInst": "canvas-mtz3lzgh-3",
+      "who": "following canvas-mtz3lzgh-3"
+    }
+  },
+  "pinned": {
+    "pin": "canvas-mtz3lzgh-3",
+    "clicked": "canvas-mtz3lt85-1",
+    "focusedInst": "canvas-mtz3lt85-1",
+    "who": "pinned canvas-mtz3lzgh-3"
+  },
+  "pinned_closed": {
+    "section": "tools",
+    "canvasOpt": "canvas-mtz3lzgh-3",
+    "focusedInst": "canvas-mtz3lt85-1",
+    "who": "",
+    "titles": [],
+    "rows": [],
+    "cards": [],
+    "labels": [],
+    "text": "No canvas on this target."
+  },
+  "back_to_focused": "following canvas-mtz3lt85-1",
+  "file_select": {
+    "selection": [
+      "path-0-0"
+    ],
+    "body": {
+      "section": "tools",
+      "canvasOpt": "focused",
+      "focusedInst": "canvas-mtz3lt85-1",
+      "who": "following canvas-mtz3lt85-1",
+      "titles": [
+        "h1 \u2014 text",
+        "Text",
+        "Layout",
+        "Spacing",
+        "Surface",
+        "Border"
+      ],
+      "rows": [
+        "path-0-0"
+      ],
+      "cards": [],
+      "labels": [
+        "Text",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "color",
+        "textAlign",
+        "lineHeight",
+        "letterSpacing",
+        "display",
+        "width",
+        "height",
+        "minHeight",
+        "gap",
+        "flexDirection",
+        "justifyContent",
+        "alignItems",
+        "transform",
+        "padding",
+        "paddingTop",
+        "paddingRight",
+        "paddingBottom",
+        "paddingLeft",
+        "margin",
+        "marginTop",
+        "marginRight",
+        "marginBottom",
+        "marginLeft",
+        "backgroundColor",
+        "opacity",
+        "border",
+        "borderTopWidth",
+        "borderRightWidth",
+        "borderBottomWidth",
+        "borderLeftWidth",
+        "borderStyle",
+        "borderColor",
+        "borderRadius"
+      ],
+      "text": "h1 \u2014 textpath-0-0TextTextfontFamilyfontSizefontWeightcolortextAlignlineHeightletterSpacingLayoutdisplaywidthheightminHeightgapflexDirectionjustifyContentalignIt"
+    }
+  },
+  "file_style_patch": {
+    "has_style": true,
+    "h1_line": [
+      "<h1 style=\"color: rgb(255, 0, 0);\">3C heading</h1>"
+    ]
+  },
+  "file_set_text": [
+    "<h1 style=\"color: rgb(255, 0, 0);\">3C SET TEXT</h1>"
+  ],
+  "options_before_reload": {
+    "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3c-file.html",
+    "canvas": "focused",
+    "section": "layers"
+  },
+  "options_after_reload": {
+    "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3c-file.html",
+    "canvas": "focused",
+    "section": "layers"
+  },
+  "after_reload_body": {
+    "section": "layers",
+    "canvasOpt": "focused",
+    "focusedInst": "",
+    "who": "following canvas-mtz3lt85-1",
+    "titles": [],
+    "rows": [],
+    "cards": [],
+    "labels": [],
+    "text": "Layers need a doc canvas."
+  }
+}

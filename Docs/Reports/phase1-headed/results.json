@@ -1,0 +1,79 @@
+[
+  {
+    "n": 1,
+    "name": "Pipes options: target is a select with graph + New button",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/01-options-target-select.png",
+    "note": "{\"tag\": \"select\", \"values\": [\"graph\"], \"value\": \"\", \"buttons\": [\"New\"]}"
+  },
+  {
+    "n": 2,
+    "name": "Load target reads 84 nodes, 142 edges",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/02-load-target.png",
+    "note": ""
+  },
+  {
+    "n": 3,
+    "name": "graph listed once, not twice",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/03-dedupe-graph-once.png",
+    "note": "{\"tag\": \"select\", \"values\": [\"graph\"], \"value\": \"graph\", \"buttons\": [\"New\"]}"
+  },
+  {
+    "n": 4,
+    "name": "surface two's other shows in surface one's select",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/04-other-listed-on-surface-one.png",
+    "note": "route targets=['graph', 'other'] panel={\"tag\": \"select\", \"values\": [\"graph\", \"other\"], \"value\": \"graph\", \"buttons\": [\"New\"]}"
+  },
+  {
+    "n": 5,
+    "name": "closing surface two drops other from the select",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/05-other-gone.png",
+    "note": "route targets=['graph'] panel={\"tag\": \"select\", \"values\": [\"graph\"], \"value\": \"graph\", \"buttons\": [\"New\"]}"
+  },
+  {
+    "n": 6,
+    "name": "tab two logs tab one's emit with remote",
+    "pass": false,
+    "shot": "Docs/Reports/phase1-headed/06-tab-two-remote.png",
+    "note": "tab two log=''"
+  },
+  {
+    "n": 7,
+    "name": "same-target sibling logs without remote; different target lands nothing",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/07-same-target-mirror.png",
+    "note": "logged='{\"target\":\"graph\",\"inst\":\"pipes-mtyx0mph-1\",\"note\":\"\",\"at\":1789249624600}' unchanged_after_retarget=True"
+  },
+  {
+    "n": 8,
+    "name": "open shows first 200 chars, save says ok, reopen shows the appended line",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/08-open-save-reopen.png",
+    "note": "open=True saved_ok=True reopen_has_appended=True disk='phase1 headed open/save witness\\n\\npipes 1789249630509'"
+  },
+  {
+    "n": 9,
+    "name": "curl lands on target graph only, tagged remote",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/09-curl-widget-bus.png",
+    "note": "graph_widget_got_it=True other_target_untouched=True"
+  },
+  {
+    "n": 10,
+    "name": "reload keeps target, path, note",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/10-reload-options-survive.png",
+    "note": "{\"target\": \"graph\", \"path\": \"/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/Reports/phase1-headed/pipes-file-test.txt\", \"note\": \"survive-reload\"}"
+  },
+  {
+    "n": 11,
+    "name": "zero pageerrors across the pass",
+    "pass": true,
+    "shot": "Docs/Reports/phase1-headed/11-final-state.png",
+    "note": "none"
+  }
+]

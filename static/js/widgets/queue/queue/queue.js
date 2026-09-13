@@ -162,6 +162,14 @@
       }
     },
 
+    // claude_cache_ttl and claude_exclude_dynamic are plain scalars with no
+    // widget-side mirror; the frame already carries them in frame.options
+    onOption(frame, key, value) {
+      if (key === "claude_cache_ttl" || key === "claude_exclude_dynamic") {
+        frame.options[key] = value;
+      }
+    },
+
     getOptions(frame) {
       return JSON.parse(JSON.stringify(frame.options));
     },

@@ -1,0 +1,93 @@
+{
+  "names": [
+    "baseDocument",
+    "channels",
+    "kit",
+    "makeRender",
+    "makeResolve",
+    "makeState",
+    "mirrors",
+    "optionControls",
+    "patch"
+  ],
+  "load_ok": true,
+  "undo_restores_box": true,
+  "box_before": "{\"x\":40,\"y\":40,\"w\":320,\"h\":80}",
+  "box_moved": "{\"x\":999,\"y\":999,\"w\":320,\"h\":80}",
+  "box_after": "{\"x\":40,\"y\":40,\"w\":320,\"h\":80}",
+  "migrated_type": "text.block",
+  "migrated_tag": "h1",
+  "migrated_version": 2,
+  "animations": [
+    {
+      "name": "fade"
+    }
+  ],
+  "behaviors": [
+    {
+      "on": "click"
+    }
+  ],
+  "library_animations": [
+    {
+      "name": "shared"
+    }
+  ],
+  "base_head": "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<style>",
+  "base_has_matrix": true,
+  "base_len": 4660,
+  "drawn": 2,
+  "drawn_html": "<div class=\"cc-canvas-widget\" data-widget-id=\"wg_8qnlpa\" style=\"left: 40px; width: 320px; top: 40px; height: 80px;\"><p data-id=\"wg_8qnlpa\">Canvas core proof</p></div><div class=\"cc-canvas-widget\" data-widget-id=\"wg_0wdeca\" style=\"left: 40px; width: 160px; top: 160px; height: 32px;\"><span data-id=\"wg_0wdeca\">badge</span></div>",
+  "style_block": "[data-id=\"wg_8qnlpa\"] { font-size: 16px; font-weight: normal; text-align: left; font-family: system-ui, sans-serif; color: #1a1a1a; background: transparent; border: 1px solid transparent; padding: 8px; margin: 0px; border-radius: 0px; box-shadow: none; }\n[data-id=\"wg_0wdeca\"] { font-size: 16px; font-weight: normal; text-align: left; font-family: system-ui, sans-serif; color: #1a1a1a; background: transparent; border: 1px solid transparent; padding: 8px; margin: 0px; border-radius: 0px; box-shadow: none; }\n",
+  "play_same_html": true,
+  "play_same_css": true,
+  "patch_style": "<div data-od-id=\"a\"><p data-od-id=\"b\" style=\"color: red; font-size: 20px;\">hello</p></div>",
+  "patch_text": "<div data-od-id=\"a\"><p data-od-id=\"b\">bye</p></div>",
+  "patch_outer": "<div data-od-id=\"a\"><h2 data-od-id=\"b\">swapped</h2></div>",
+  "patch_full": "<p>new</p>",
+  "patch_token": "<!doctype html>\n<html><head><style>:root{--brand: #f00;}</style></head><body><p data-od-id=\"b\">x</p></body></html>",
+  "assign_count": 3,
+  "assigned": "<section data-od-id=\"path-0\"><h1 data-od-id=\"path-0-0\">Title</h1><p data-od-id=\"path-0-1\">Body</p></section>",
+  "find_by_path": true,
+  "file_has_guides": true,
+  "file_has_script": true,
+  "channels": {
+    "select": "canvas.select",
+    "focus": "canvas.focus",
+    "doc": "canvas.doc",
+    "change": "canvas.change",
+    "freeze": "canvas.freeze",
+    "mode": "canvas.mode"
+  },
+  "kit_types": [
+    "text.block",
+    "text.list",
+    "media.image",
+    "media.video",
+    "media.embed",
+    "container.box",
+    "input.field",
+    "input.textarea",
+    "input.select",
+    "input.checkbox",
+    "input.button",
+    "reveal.details",
+    "status.progress",
+    "status.badge",
+    "status.alert"
+  ],
+  "kit_tools": [
+    "media",
+    "container",
+    "input",
+    "status"
+  ],
+  "kit_taxonomies": [
+    "text",
+    "media",
+    "container",
+    "input",
+    "reveal",
+    "status"
+  ]
+}

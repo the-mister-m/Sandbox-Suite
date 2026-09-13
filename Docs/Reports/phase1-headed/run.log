@@ -1,0 +1,29 @@
+surface one = w-9iw4b3zu (Empty surface)
+[1] PASS — Pipes options: target is a select with graph + New button — {"tag": "select", "values": ["graph"], "value": "", "buttons": ["New"]}
+[2] PASS — Load target reads 84 nodes, 142 edges
+surface two = w-84j0dqzy (Empty surface 2)
+[3] PASS — graph listed once, not twice — {"tag": "select", "values": ["graph"], "value": "graph", "buttons": ["New"]}
+[4] PASS — surface two's other shows in surface one's select — route targets=['graph', 'other'] panel={"tag": "select", "values": ["graph", "other"], "value": "graph", "buttons": ["New"]}
+[5] PASS — closing surface two drops other from the select — route targets=['graph'] panel={"tag": "select", "values": ["graph"], "value": "graph", "buttons": ["New"]}
+[note] targets after surface two's tab closed: ['graph', 'other']
+[6] FAIL — tab two logs tab one's emit with remote — tab two log=''
+[7] PASS — same-target sibling logs without remote; different target lands nothing — logged='{"target":"graph","inst":"pipes-mtyx0mph-1","note":"","at":1789249624600}' unchanged_after_retarget=True
+[8] PASS — open shows first 200 chars, save says ok, reopen shows the appended line — open=True saved_ok=True reopen_has_appended=True disk='phase1 headed open/save witness\n\npipes 1789249630509'
+[9] PASS — curl lands on target graph only, tagged remote — graph_widget_got_it=True other_target_untouched=True
+[10] PASS — reload keeps target, path, note — {"target": "graph", "path": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/Reports/phase1-headed/pipes-file-test.txt", "note": "survive-reload"}
+[11] PASS — zero pageerrors across the pass — none
+
+surface one left behind: w-9iw4b3zu (Empty surface) on session ae83cfb77344
+
+=== SUMMARY ===
+ 1  PASS  Pipes options: target is a select with graph + New button
+ 2  PASS  Load target reads 84 nodes, 142 edges
+ 3  PASS  graph listed once, not twice
+ 4  PASS  surface two's other shows in surface one's select
+ 5  PASS  closing surface two drops other from the select
+ 6  FAIL  tab two logs tab one's emit with remote
+ 7  PASS  same-target sibling logs without remote; different target lands nothing
+ 8  PASS  open shows first 200 chars, save says ok, reopen shows the appended line
+ 9  PASS  curl lands on target graph only, tagged remote
+10  PASS  reload keeps target, path, note
+11  PASS  zero pageerrors across the pass

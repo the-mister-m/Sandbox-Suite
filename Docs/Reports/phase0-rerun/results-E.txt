@@ -1,0 +1,7 @@
+session 85b19c53d41a other 0d78d246515f
+E1: PASS — template rows=[('Empty surface', ['Add surface']), ('redpen-tpl', ['Add surface', 'Delete'])]; panel buttons=['Save', 'Save Session Template', 'Save Matrix Template', 'End', 'Add surface', 'Add surface', 'Delete', 'Open', 'Rename', 'Close', 'Open', 'Rename', 'Close', 'Open', 'Rename', 'Close', 'Open', 'Rename', 'Close', 'Open', 'Rename', 'Close', 'Bound', 'Switch', 'Switch', 'Switch', 'Switch', 'Switch'] — Docs/Reports/phase0-rerun/E1-templates.png
+E2: PASS — first w-270ai6cl name='Empty surface' widgets=0; second w-5lecz2n0 name='Empty surface 2' widgets=0 — Docs/Reports/phase0-rerun/E2-two-empty-surfaces.png
+E3: PASS — template 'redpen-tpl': first w-bof0hx8n name='redpen-tpl' widgets=2; second w-uga8kliw name='redpen-tpl 2' widgets=2 — Docs/Reports/phase0-rerun/E3-template-surfaces.png
+E5: PASS — state line 'live · 85b19c53d41a · surface w-s0q6wk8g' — Docs/Reports/phase0-rerun/E5-state-line.png
+E4: PASS — switched from 85b19c53d41a (surface w-c03v16mp, 2 widgets) to '0d78d246515f'; url=http://127.0.0.1:5000/matrix/0d78d246515f; grid instances after=0; socket sid=0d78d246515f; session window up=True; other-session files ['w-8924kcue.json'] -> ['w-8924kcue.json'] untouched=True; panel surfaces now=['w-8924kcue · 3 widgetsOpenRenameClose'] — Docs/Reports/phase0-rerun/E4-after-switch.png
+E6: PASS — GET /favicon.ico -> 204 — Docs/Reports/phase0-rerun/E6-favicon.png

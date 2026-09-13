@@ -42,60 +42,40 @@
     return text.replace(_SEND_CMD_RE, (_, who) => '→ message sent to ' + who.trim());
   }
 
-  function parseFences(str) {
-    const segments = [];
-    const fenceRe = /```([^\n`]*)\n([\s\S]*?)```/g;
-    let lastIdx = 0, m;
-    while ((m = fenceRe.exec(str)) !== null) {
-      if (m.index > lastIdx) segments.push({ type: 'text', content: str.slice(lastIdx, m.index) });
-      segments.push({ type: 'code', lang: m[1].trim(), content: m[2] });
-      lastIdx = fenceRe.lastIndex;
+  // markdown — renders through marked, sanitized through DOMPurify; both are
+  // vendored under /static/vendor. Code blocks upgrade to the shared
+  // read-only Monaco path.
+  function renderMarkdown(into, text) {
+    into.textContent = '';
+    const src = text || '';
+    if (window.marked && window.DOMPurify) {
+      const html = window.marked.parse(src, { breaks: true, gfm: true });
+      into.innerHTML = window.DOMPurify.sanitize(html);
+      upgradeCodeBlocks(into);
+      return;
     }
-    if (lastIdx < str.length) segments.push({ type: 'text', content: str.slice(lastIdx) });
-    return segments;
+    const pre = document.createElement('pre');
+    pre.className = 'cq-plain';
+    pre.textContent = src;
+    into.appendChild(pre);
   }
 
-  function _renderFenced(container, text) {
-    container.innerHTML = '';
-    const segments = parseFences(text || '');
-    for (const seg of segments) {
-      if (seg.type === 'text') {
-        const span = document.createElement('span');
-        span.textContent = seg.content;
-        container.appendChild(span);
-      } else {
-        const wrap = document.createElement('div');
-        wrap.className = 'code-fence';
-        const header = document.createElement('div');
-        header.className = 'code-fence-header';
-        if (seg.lang) {
-          const langLabel = document.createElement('span');
-          langLabel.className = 'code-fence-lang';
-          langLabel.textContent = seg.lang;
-          header.appendChild(langLabel);
-        }
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'code-fence-copy';
-        copyBtn.textContent = 'copy';
-        const codeText = seg.content;
-        copyBtn.onclick = () => {
-          try {
-            navigator.clipboard.writeText(codeText).then(() => {
-              copyBtn.textContent = 'copied';
-              setTimeout(() => { copyBtn.textContent = 'copy'; }, 1500);
-            }).catch(() => { copyBtn.textContent = 'err'; });
-          } catch (err) { copyBtn.textContent = 'err'; }
-        };
-        header.appendChild(copyBtn);
-        wrap.appendChild(header);
-        const pre = document.createElement('pre');
-        pre.className = 'code-fence-body';
-        const code = document.createElement('code');
-        code.textContent = codeText;
-        pre.appendChild(code);
-        wrap.appendChild(pre);
-        container.appendChild(wrap);
-      }
+  function upgradeCodeBlocks(into) {
+    if (typeof MX.mountReadonlyMonaco !== 'function') return;
+    const blocks = into.querySelectorAll('pre > code');
+    for (const code of blocks) {
+      const pre = code.parentNode;
+      if (!pre || pre.dataset.mxMonaco === '1') continue;
+      pre.dataset.mxMonaco = '1';
+      const text = code.textContent || '';
+      const lang = (code.className.match(/language-([\w+#-]+)/) || [])[1] || 'plaintext';
+      const holder = document.createElement('div');
+      holder.className = 'cq-code';
+      const lines = text.split('\n').length;
+      holder.style.height = Math.min(24 + lines * 19, 420) + 'px';
+      pre.parentNode.replaceChild(holder, pre);
+      MX.mountReadonlyMonaco(holder, { value: text, language: lang })
+        .catch(() => { holder.textContent = text; });
     }
   }
 
@@ -158,7 +138,7 @@
         who.textContent = turn.who || 'you';
         const bub = document.createElement('div');
         bub.className = 'bub';
-        bub.textContent = userText;
+        renderMarkdown(bub, userText);
         row.appendChild(who);
         row.appendChild(bub);
         blk.appendChild(row);
@@ -183,7 +163,7 @@
       who.textContent = rowName || 'agent';
       const bub = document.createElement('div');
       bub.className = 'bub';
-      if (agentText && !live) _renderFenced(bub, _stripSendBlocks(agentText));
+      if (agentText && !live) renderMarkdown(bub, _stripSendBlocks(agentText));
       else bub.textContent = agentText;
       row.appendChild(who);
       row.appendChild(bub);
@@ -206,5 +186,5 @@
     return { blk, liveBub };
   }
 
-  MX.turns = { _groupTurns, _buildTurnBlock };
+  MX.turns = { _groupTurns, _buildTurnBlock, renderMarkdown };
 })();

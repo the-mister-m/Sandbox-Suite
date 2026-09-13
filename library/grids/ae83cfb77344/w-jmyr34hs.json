@@ -1,0 +1,61 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "Empty surface 2",
+  "widgets": [
+    {
+      "id": "graph_force-mtyzg7u1-1",
+      "type": "graph_force",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 14,
+        "h": 14
+      },
+      "options": {
+        "target": "graph",
+        "selectedIds": [],
+        "focusedId": "",
+        "camera": {
+          "yaw": -0.42,
+          "pitch": 0.92,
+          "scale": 1
+        },
+        "frozen": true,
+        "dims": 3,
+        "mermaidCollapsed": false,
+        "query": "",
+        "sim": {
+          "repulsion": 1000,
+          "attraction": 0.05,
+          "damping": 0.05,
+          "step": 0.2,
+          "gravity": 0.012,
+          "dims": 3
+        },
+        "codeFiles": true,
+        "otherFiles": true,
+        "duplicates": true,
+        "guesses": "flag",
+        "nestFolders": false,
+        "capLevels": false,
+        "searchName": true,
+        "searchFacts": false,
+        "searchComments": false,
+        "reachMap": false,
+        "reachCard": false,
+        "reachDeep": false,
+        "reachCommon": false,
+        "commentHeader": false,
+        "commentLeading": true,
+        "commentTrailing": true,
+        "commentInterior": true,
+        "commentOrphan": false,
+        "commentProse": true,
+        "commentDead": true,
+        "commentTodo": false,
+        "commentDirective": false
+      }
+    }
+  ]
+}

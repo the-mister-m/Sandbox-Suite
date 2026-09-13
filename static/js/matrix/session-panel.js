@@ -38,6 +38,29 @@
     return d.session ? d.session.id || d.session.sid : d.sid || d.id || null;
   }
 
+  async function gridSurfaces(sid) {
+    try {
+      const r = await fetch(`/api/grid/${encodeURIComponent(sid)}`);
+      const d = await r.json();
+      return Array.isArray(d.list) ? d.list : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function renameSurface(sid, surfaceId, name) {
+    await fetch(`/api/grid/${encodeURIComponent(sid)}/${encodeURIComponent(surfaceId)}/name`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async function closeSurface(sid, surfaceId) {
+    await fetch(`/api/grid/${encodeURIComponent(sid)}/${encodeURIComponent(surfaceId)}`,
+      { method: "DELETE" });
+  }
+
   function sessionRow(row, onPick) {
     const el = ui().el;
     const line = el("div", "mx-row");
@@ -127,16 +150,31 @@
 
       o.panel.appendChild(actions);
 
-      // matrix templates — load one into this window
-      o.panel.appendChild(el("h4", null, "Matrix templates"));
+      // surface templates — start a new surface loaded from a saved template
+      o.panel.appendChild(el("h4", null, "Surface templates"));
+
+      // fixed first row: not a file, adds a surface with no widgets
+      const emptyLine = el("div", "mx-row");
+      emptyLine.appendChild(el("div", "mx-grow", "Empty surface"));
+      emptyLine.appendChild(ui().button("Add surface", null, async () => {
+        MX.grid.sid = sid;
+        const id = await MX.grid.newSurface("Empty surface");
+        MX.replaceMatrixUrl(sid, id);
+        o.close();
+      }));
+      o.panel.appendChild(emptyLine);
+
       const names = await MX.templates.list();
       if (!names.length) o.panel.appendChild(el("div", "mx-dim", "none saved"));
       for (const name of names) {
         const line = el("div", "mx-row");
         line.appendChild(el("div", "mx-grow", name));
-        line.appendChild(ui().button("Load", null, async () => {
+        line.appendChild(ui().button("Add surface", null, async () => {
           const tpl = await MX.templates.read(name);
+          MX.grid.sid = sid;
+          const id = await MX.grid.newSurface(name);
           MX.grid.applyTemplate(tpl);
+          MX.replaceMatrixUrl(sid, id);
           o.close();
         }));
         line.appendChild(ui().button("Delete", null, async () => {
@@ -146,6 +184,56 @@
         }));
         o.panel.appendChild(line);
       }
+
+      // surfaces — every saved layout for this session
+      o.panel.appendChild(el("h4", null, "Surfaces"));
+      const surfacesBody = el("div", null);
+      o.panel.appendChild(surfacesBody);
+
+      async function renderSurfaces() {
+        surfacesBody.textContent = "";
+        const surfaces = await gridSurfaces(sid);
+        if (!surfaces.length) surfacesBody.appendChild(el("div", "mx-dim", "none"));
+        for (const s of surfaces) {
+          const line = el("div", "mx-row");
+          line.appendChild(el("div", "mx-grow",
+            `${s.name || s.id} · ${s.widgets} widget${s.widgets === 1 ? "" : "s"}`));
+          line.appendChild(ui().button("Open", null, () => {
+            MX.grid.adoptSurface(s.id);
+            MX.grid.bindSession(sid);
+            MX.replaceMatrixUrl(sid, s.id);
+            o.close();
+          }));
+          line.appendChild(ui().button("Rename", null, () => {
+            ui().prompt("Rename Surface", "name", s.name || "", async (name) => {
+              await renameSurface(sid, s.id, name);
+              if (s.id === MX.WINDOW_ID) {
+                MX.grid.surfaceName = name;
+                if (MX.setSurfaceState) MX.setSurfaceState();
+              }
+              MX.bus.emit("surface.name", { surface: s.id, name: name }, { remote: true });
+              renderSurfaces();
+            });
+          }));
+          line.appendChild(ui().button("Close", "mx-warn", () => {
+            ui().modal("Close Surface", `Close "${s.name || s.id}"? This deletes it for good.`, [
+              { label: "Close", cls: "mx-warn", run: async () => {
+                await closeSurface(sid, s.id);
+                if (s.id === MX.WINDOW_ID) {
+                  MX.grid.unbindSurface();
+                  o.close();
+                  panel.open(onSwitch);
+                } else {
+                  renderSurfaces();
+                }
+              } },
+              { label: "Cancel", run: () => {} },
+            ]);
+          }));
+          surfacesBody.appendChild(line);
+        }
+      }
+      await renderSurfaces();
 
       // every open session, with how many matrix windows each has
       o.panel.appendChild(el("h4", null, "Open sessions"));

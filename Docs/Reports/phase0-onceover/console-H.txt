@@ -1,0 +1,37 @@
+14:30:40 [harness] block H session e76d0d6f4e3e other 85b19c53d41a
+[fence] e76d0d6f4e3e before: ['w-ywzvtxv8']
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+14:30:48 [harness] H surface=w-xfvnq96z url=http://127.0.0.1:5000/matrix/e76d0d6f4e3e?s=w-xfvnq96z t1=t-9ce659xw t2=t-e8obn47v
+14:31:03 [obs] H1 t1 dirty=[{'at': 12, 'id': 'browser-mtyq0nhy-1'}, {'at': 8580, 'id': 'browser-mtyq0nhy-1'}, {'at': 12555, 'id': 'editor-mtyq0pfn-2'}]
+14:31:03 [obs] H1 t1 mirror-out=[{'at': 2015, 'id': 'browser-mtyq0nhy-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 2022, 'id': 'browser-mtyq0nhy-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 5524, 'id': 'browser-mtyq0nhy-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 10583, 'id': 'browser-mtyq0nhy-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 12593, 'id': 'browser-mtyq0nhy-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 14557, 'id': 'editor-mtyq0pfn-2', 'keys': ['showPreview', 'tabs', 'active'], 'tabs': [{'key': 'editor-mtyq0pfn-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/AUDIT-BRIEF-phase3.md'}]}]
+14:31:03 [step] H1 PASS
+14:31:12 [obs] H2 tab1 editor tab-count timeline=[(0.0, 1), (0.4, 1), (0.8, 1), (1.2, 1), (1.6, 1), (2.0, 1), (2.4, 1), (2.8, 1), (3.2, 1), (3.7, 1), (4.1, 1), (4.5, 1), (4.9, 1), (5.3, 1), (5.7, 1)]
+14:31:12 [obs] H2 t1 socket file frames=[{'at': 12555, 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/AUDIT-BRIEF-phase3.md', 'inst': 'editor-mtyq0pfn-2'}, {'at': 15534, 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/HOWTO-frames.md', 'inst': 'editor-mtyq0pfn-2'}]
+14:31:12 [obs] H2 t1 surface.widget for editor (own + arriving)=[(14557, 1), (16572, 1), (17537, 1)]
+14:31:12 [obs] H2 t2 surface.widget for editor=[(14558, 1), (16567, 1), (17540, 1)]
+14:31:17 [step] H2 FAIL
+14:31:22 [step] H7 PASS
+14:31:28 [step] H3a PASS
+14:31:35 [harness] H4 disk before reload: {'browser-mtyq0nhy-1': {'root': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs', 'expanded': ['/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit', '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/Handoffs', '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/arrange-old']}, 'editor-mtyq0pfn-2': {'showPreview': False, 'tabs': [{'key': 'editor-mtyq0pfn-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/AUDIT-BRIEF-phase3.md'}, {'key': 'editor-mtyq0pfn-2-t3', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/HOWTO-frames.md'}, {'untitled': True, 'name': 'untitled-4', 'text': 'abcdefghij0123456789'}], 'active': 'editor-mtyq0pfn-2-t4'}}
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:49 [step] H3b PASS
+14:31:49 [step] H4 FAIL
+14:31:53 [step] H4b OBSERVED
+14:32:02 [step] H5 PASS
+14:32:09 [H-switch:console:error] WebSocket connection to 'ws://127.0.0.1:5000/ws/ade/e76d0d6f4e3e' failed: Invalid frame header
+14:32:15 [step] H6 FAIL
+14:32:15 [harness] block H console errors: 1
+[sweep] e76d0d6f4e3e before=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e made=['w-xfvnq96z']
+[sweep] e76d0d6f4e3e after=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e intact=True
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=[]
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True

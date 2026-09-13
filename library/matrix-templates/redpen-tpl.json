@@ -1,0 +1,38 @@
+{
+  "name": "redpen-tpl",
+  "grid": {
+    "cols": 28,
+    "rows": 18
+  },
+  "widgets": [
+    {
+      "type": "editor",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "showPreview": false,
+        "tabs": [
+          {
+            "key": "editor-mtyl15po-1-t1",
+            "path": "/Users/moth3rship/Desktop/AI Design/CLAUDE.md"
+          }
+        ],
+        "active": "editor-mtyl15po-1-t1"
+      }
+    },
+    {
+      "type": "browser",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {}
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "session_open": {
+    "sid": "9883b6bec3df"
+  },
+  "draws": {
+    "drawn": 3,
+    "widgets": 3,
+    "pages": 2
+  },
+  "drag": {
+    "before": {
+      "x": 40,
+      "y": 40,
+      "w": 320,
+      "h": 80
+    },
+    "after": {
+      "x": 120,
+      "y": 80,
+      "w": 320,
+      "h": 80
+    },
+    "dirty": true,
+    "status": "dirty",
+    "selection": [
+      "wg_s423e7"
+    ]
+  },
+  "save": {
+    "status": "saved",
+    "dirty": false,
+    "disk_box": {
+      "x": 120,
+      "y": 80,
+      "w": 320,
+      "h": 80
+    }
+  },
+  "marquee": [
+    "wg_s423e7",
+    "wg_ihf7gs"
+  ],
+  "nudge": [
+    {
+      "id": "wg_s423e7",
+      "box": {
+        "x": 128,
+        "y": 80,
+        "w": 320,
+        "h": 80
+      }
+    },
+    {
+      "id": "wg_rhvnz9",
+      "box": {
+        "x": 40,
+        "y": 200,
+        "w": 320,
+        "h": 60
+      }
+    },
+    {
+      "id": "wg_ihf7gs",
+      "box": {
+        "x": 488,
+        "y": 40,
+        "w": 160,
+        "h": 32
+      }
+    }
+  ],
+  "undo": [
+    {
+      "id": "wg_s423e7",
+      "box": {
+        "x": 120,
+        "y": 80,
+        "w": 320,
+        "h": 80
+      }
+    },
+    {
+      "id": "wg_rhvnz9",
+      "box": {
+        "x": 40,
+        "y": 200,
+        "w": 320,
+        "h": 60
+      }
+    },
+    {
+      "id": "wg_ihf7gs",
+      "box": {
+        "x": 480,
+        "y": 40,
+        "w": 160,
+        "h": 32
+      }
+    }
+  ],
+  "duplicate_count": 4,
+  "delete_count": 3,
+  "context_menu": [
+    "Duplicate",
+    "Delete",
+    "Notes",
+    "Bring forward",
+    "Send back",
+    "Lock position"
+  ],
+  "zoom": {
+    "after_plus": 110,
+    "after_wheel": 120
+  },
+  "page_tabs": [
+    "Page 1",
+    "Page 2"
+  ],
+  "export_exists": true,
+  "export_meta": [
+    "<meta name=\"code-canvas-source\" content=\"/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json\">"
+  ],
+  "export_len": 1718,
+  "fluid": {
+    "css": "100%",
+    "px": 777,
+    "iframe": 777
+  },
+  "fluid_after_resize": {
+    "css": "100%",
+    "px": 492,
+    "iframe": 492
+  },
+  "preview": {
+    "handles": 0,
+    "grid": "none",
+    "mode": "preview"
+  },
+  "two_canvases": {
+    "a_selection": [
+      "wg_rhvnz9"
+    ],
+    "b_selection": [],
+    "a_target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+    "b_target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc2.json"
+  },
+  "bus_canvas_select": 6,
+  "bus_canvas_select_sample": [
+    {
+      "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+      "inst": "canvas-mtz2zscr-1",
+      "ids": [
+        "wg_rhvnz9"
+      ]
+    },
+    {
+      "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+      "inst": "canvas-mtz2zscr-1",
+      "ids": [
+        "wg_rhvnz9"
+      ]
+    }
+  ],
+  "file_mode": {
+    "docMode": "file",
+    "from": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+    "bar_from": "from /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json"
+  },
+  "file_drag": {
+    "dirty": true,
+    "hasTransform": true,
+    "status": "dirty"
+  },
+  "file_text_session": "path-0-0-0",
+  "file_text_edit": {
+    "in_source": true,
+    "dirty": true
+  },
+  "file_reopen": {
+    "hasTransform": true,
+    "edited": true,
+    "dirty": false
+  },
+  "options_a": {
+    "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+    "mode": "code",
+    "zoom": 75,
+    "selection": [
+      "wg_rhvnz9"
+    ],
+    "schematic": false,
+    "page": "pg_nee9sr",
+    "assetMode": "data",
+    "backLink": true
+  },
+  "options_b": {
+    "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.html",
+    "mode": "canvas",
+    "zoom": 100,
+    "selection": [
+      "path-0-0-0"
+    ],
+    "schematic": false,
+    "page": "pg_nee9sr",
+    "assetMode": "data",
+    "backLink": true
+  },
+  "after_reload_a": {
+    "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/proof/3b-doc.json",
+    "mode": "code",
+    "zoom": 75,
+    "selection": [
+      "wg_rhvnz9"
+    ],
+    "schematic": false,
+    "page": "pg_nee9sr",
+    "assetMode": "data",
+    "backLink": true
+  },
+  "after_reload_live": {
+    "zoom": 75,
+    "mode": "code",
+    "page": "pg_nee9sr",
+    "selection": [
+      "wg_rhvnz9"
+    ],
+    "drawn": 3
+  }
+}

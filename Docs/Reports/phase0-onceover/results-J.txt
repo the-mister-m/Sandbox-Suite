@@ -1,0 +1,1 @@
+J: FAIL — across blocks H and I: {"H": {"errors": 1, "pageerrors": 0, "requestfailed": 7, "favicon": 0, "websocket": 1}, "I": {"errors": 0, "pageerrors": 0, "requestfailed": 0, "favicon": 0, "websocket": 0}}; every line of interest copied into the dump — Docs/Reports/phase0-onceover/console-J.txt

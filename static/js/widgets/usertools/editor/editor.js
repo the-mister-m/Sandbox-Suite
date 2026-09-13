@@ -161,6 +161,11 @@
       editor.onDidChangeModelContent(() => {
         if (ed.showPreview) ed.previewEl.innerHTML = renderMarkdown(editor.getValue());
         renderTabs(frame);
+        const tab = activeTab(frame);
+        if (tab && !tab.path) {
+          tab.text = editor.getValue();
+          if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+        }
       });
       for (const tab of ed.tabs) attachModel(frame, tab);
       showTab(frame, ed.active);
@@ -201,21 +206,36 @@
       existing.text = text || "";
       existing.saved = existing.text;
       if (existing.model) existing.model.setValue(existing.text);
-      showTab(frame, existing.key);
+      if (!ed.restoring) showTab(frame, existing.key);
+      finishRestoreStep(frame);
       return existing;
     }
     ed.seq += 1;
     const tab = {
       key: frame.id + "-t" + ed.seq,
       path: path || "",
+      name: path ? undefined : ("untitled-" + ed.seq),
       text: text || "",
       saved: text || "",
       model: null,
     };
     ed.tabs.push(tab);
     attachModel(frame, tab);
-    showTab(frame, tab.key);
+    if (!ed.restoring) showTab(frame, tab.key);
+    finishRestoreStep(frame);
     return tab;
+  }
+
+  // a restore's file replies land async; only the last one may take focus
+  function finishRestoreStep(frame) {
+    const ed = frame._editor;
+    if (!ed || !ed.restoring) return;
+    ed.restoreRemaining -= 1;
+    if (ed.restoreRemaining > 0) return;
+    ed.restoring = false;
+    ed.restoreRemaining = 0;
+    if (ed.active) showTab(frame, ed.active);
+    else renderTabs(frame);
   }
 
   function closeTab(frame, key) {
@@ -231,6 +251,7 @@
         ed.active = ed.tabs.length ? ed.tabs[Math.max(0, i - 1)].key : null;
       }
       showTab(frame, ed.active);
+      if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
       return true;
     };
     if (!isDirty(tab)) return Promise.resolve(finish());
@@ -239,6 +260,63 @@
       if (choice === "save") return saveTab(frame, tab).then((ok) => (ok ? finish() : false));
       return finish();
     });
+  }
+
+  // a remote tab list arrived through applyOptions; reconcile without prompts
+  function applyTabsOption(frame, incoming) {
+    const ed = frame._editor;
+    if (!ed) return;
+    const list = Array.isArray(incoming) ? incoming : [];
+    const keepKeys = new Set(list.filter((t) => t && t.path).map((t) => t.key));
+    const keepNames = new Set(list.filter((t) => t && t.untitled).map((t) => t.name));
+    for (let i = ed.tabs.length - 1; i >= 0; i--) {
+      const tab = ed.tabs[i];
+      const keep = tab.path ? keepKeys.has(tab.key) : keepNames.has(tab.name);
+      if (!keep) {
+        if (tab.model) { try { tab.model.dispose(); } catch (e) { /* teardown best effort */ } }
+        ed.tabs.splice(i, 1);
+      }
+    }
+    const toRequest = [];
+    for (const saved of list) {
+      if (!saved) continue;
+      if (saved.untitled) {
+        const existing = ed.tabs.find((t) => !t.path && t.name === saved.name);
+        if (existing) {
+          existing.text = saved.text || "";
+          existing.saved = existing.text;
+          if (existing.model) existing.model.setValue(existing.text);
+        } else {
+          ed.seq += 1;
+          const tab = {
+            key: frame.id + "-t" + ed.seq,
+            path: "", name: saved.name, text: saved.text || "",
+            saved: saved.text || "", model: null,
+          };
+          ed.tabs.push(tab);
+          attachModel(frame, tab);
+        }
+        continue;
+      }
+      if (!saved.path) continue;
+      if (ed.tabs.some((t) => t.key === saved.key)) continue;
+      ed.tabs.push({ key: saved.key, path: saved.path, text: "", saved: "", model: null });
+      toRequest.push(saved.path);
+    }
+    if (toRequest.length) {
+      ed.restoring = true;
+      ed.restoreRemaining = toRequest.length;
+      for (const path of toRequest) {
+        frame.send({ type: "open", path: path, inst: frame.id });
+      }
+    }
+    if (!ed.tabs.length) { ed.active = null; showTab(frame, null); }
+    else if (!toRequest.length) {
+      if (!ed.tabs.some((t) => t.key === ed.active)) showTab(frame, ed.tabs[0].key);
+      else renderTabs(frame);
+    } else {
+      renderTabs(frame);
+    }
   }
 
   function renderTabs(frame) {
@@ -259,7 +337,11 @@
       x.textContent = "×";
       x.addEventListener("click", (ev) => { ev.stopPropagation(); closeTab(frame, tab.key); });
       el.appendChild(x);
-      el.addEventListener("click", () => showTab(frame, tab.key));
+      el.addEventListener("click", () => {
+        const switching = ed.active !== tab.key;
+        showTab(frame, tab.key);
+        if (switching && MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+      });
       ed.tabBar.appendChild(el);
     }
   }
@@ -273,6 +355,7 @@
       return MX.ui.askText("Save as", "path", "").then((path) => {
         if (!path) return false;
         tab.path = path;
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
         return sendSave(frame, tab, content);
       });
     }
@@ -308,17 +391,46 @@
       ], body);
   }
 
+  // graph.open apply: opens payload.path, reveals payload.span once the
+  // matching file frame lands (or at once when the tab already exists)
+  function revealSpan(frame, span) {
+    const ed = frame._editor;
+    if (!ed || !ed.editor || !span) return;
+    ed.editor.revealLineInCenter(span[0]);
+    ed.editor.setPosition({ lineNumber: span[0], column: 1 });
+  }
+
+  function onGraphOpen(frame, payload) {
+    const ed = frame._editor;
+    if (!ed || !frame.options.followGraph) return;
+    const existing = ed.tabs.find((t) => t.path && t.path === payload.path);
+    if (existing) {
+      showTab(frame, existing.key);
+      revealSpan(frame, payload.span);
+      return;
+    }
+    ed.pendingSpan = payload.span || null;
+    frame.send({ type: "open", path: payload.path, inst: frame.id });
+  }
+
   MX.registerWidget("editor", {
+    defaults: { followGraph: false, graphTarget: "" },
+
     mount(frame) {
       ensureEditorStyles();
 
       const ed = frame._editor = {
         editor: null, monaco: null, live: true, seq: 0,
         tabs: [], active: null, pending: Object.create(null),
+        restoring: false, restoreRemaining: 0,
         showPreview: !!frame.options.showPreview,
+        pendingSpan: null, graphMirror: null,
         host: null, previewEl: null, statusEl: null, pathEl: null,
         previewBtn: null, body: null, tabBar: null,
       };
+
+      ed.graphMirror = MX.mirror(frame, "graph.open",
+        (payload) => onGraphOpen(frame, payload), "graphTarget");
 
       const wrap = document.createElement("div");
       wrap.className = "mxed-wrap";
@@ -330,10 +442,15 @@
       pathLbl.textContent = "no file open";
       ed.pathEl = pathLbl;
 
-      const btnNew = mkBtn("New", () => openTab(frame, "", ""));
+      const btnNew = mkBtn("New", () => {
+        openTab(frame, "", "");
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+      });
       const btnOpen = mkBtn("Open", () => {
         MX.ui.askText("Open file", "path", "").then((path) => {
-          if (path) frame.send({ type: "open", path: path, inst: frame.id });
+          if (path) {
+            frame.send({ type: "open", path: path, inst: frame.id });
+          }
         });
       });
       const btnSave = mkBtn("Save", () => doSave(frame));
@@ -373,9 +490,20 @@
       ed.host = editorHost;
       ed.previewEl = previewHost;
 
-      // tab state rides the grid; each restored tab reloads from the server
+      // tab state rides the grid; each restored path tab reloads from the
+      // server, an untitled tab carries its own text and needs no request
       for (const saved of (frame.options.tabs || [])) {
-        if (!saved || !saved.path) continue;
+        if (!saved) continue;
+        if (saved.untitled) {
+          ed.seq += 1;
+          ed.tabs.push({
+            key: frame.id + "-t" + ed.seq,
+            path: "", name: saved.name, text: saved.text || "",
+            saved: saved.text || "", model: null,
+          });
+          continue;
+        }
+        if (!saved.path) continue;
         ed.seq += 1;
         ed.tabs.push({
           key: saved.key || (frame.id + "-t" + ed.seq),
@@ -387,7 +515,12 @@
       frame.subscribe(["file", "saved"]);
       renderTabs(frame);
       requestAnimationFrame(() => createInstance(frame));
-      for (const tab of ed.tabs) {
+      const toOpen = ed.tabs.filter((t) => t.path);
+      if (toOpen.length) {
+        ed.restoring = true;
+        ed.restoreRemaining = toOpen.length;
+      }
+      for (const tab of toOpen) {
         frame.send({ type: "open", path: tab.path, inst: frame.id });
       }
     },
@@ -413,6 +546,7 @@
       const ed = frame._editor;
       if (!ed) return;
       ed.live = false;
+      if (ed.graphMirror) ed.graphMirror.off();
       for (const tab of ed.tabs) {
         if (tab.model) { try { tab.model.dispose(); } catch (e) { /* teardown best effort */ } }
       }
@@ -427,8 +561,15 @@
 
       if (msg.type === "file") {
         if (!msg.inst) return;
+        // a restore arrival is a mirror, not a user action; it does not announce
+        const wasRestoring = ed.restoring;
         openTab(frame, msg.path || "", msg.content || "");
         setStatus(ed, "");
+        if (!wasRestoring && MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+        if (ed.pendingSpan) {
+          revealSpan(frame, ed.pendingSpan);
+          ed.pendingSpan = null;
+        }
         return;
       }
 
@@ -455,7 +596,14 @@
     },
 
     onOption(frame, key, value) {
-      if (key === "showPreview") togglePreview(frame, !!value);
+      if (key === "showPreview") { togglePreview(frame, !!value); return; }
+      if (key === "tabs") { applyTabsOption(frame, value); return; }
+      if (key === "active") {
+        const ed = frame._editor;
+        if (!ed || !value) return;
+        ed.active = value;
+        if (!ed.restoring && ed.tabs.some((t) => t.key === value)) showTab(frame, value);
+      }
     },
 
     getOptions(frame) {
@@ -463,8 +611,12 @@
       if (!ed) return JSON.parse(JSON.stringify(frame.options));
       return {
         showPreview: !!ed.showPreview,
-        tabs: ed.tabs.filter((t) => t.path).map((t) => ({ key: t.key, path: t.path })),
+        tabs: ed.tabs.map((t) => (t.path
+          ? { key: t.key, path: t.path }
+          : { untitled: true, name: t.name, text: t.text })),
         active: ed.active || "",
+        followGraph: !!frame.options.followGraph,
+        graphTarget: frame.options.graphTarget || "",
       };
     },
   });

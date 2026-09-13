@@ -1,0 +1,5648 @@
+{
+  "schema_version": 1,
+  "root": "/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer",
+  "nodes": [
+    {
+      "id": "static/skin-dark.css",
+      "kind": "file",
+      "lang": "css",
+      "span": [
+        1,
+        73
+      ],
+      "summary": {
+        "shape": "static/skin-dark.css",
+        "facts": [
+          "1 css-rule"
+        ],
+        "weight": {
+          "lines": 73
+        }
+      }
+    },
+    {
+      "id": "static/skin-dark.css:::root",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        6,
+        72
+      ],
+      "summary": {
+        "shape": ":root",
+        "facts": [
+          "--bg: #0d1117",
+          "--panel: #161b22",
+          "--line: #26303b",
+          "--ink: #e6edf3",
+          "--dim: #8b949e",
+          "--sub-ink: #b8c0c8",
+          "--mono: \"SF Mono\",ui-monospace,Menlo,Consolas,monospace",
+          "--active: #3fb950",
+          "--open: #2f9bff",
+          "--hold: #d29922",
+          "--parked: #6e7681",
+          "--done: #58a6ff",
+          "--energy-low: #3fb950",
+          "--energy-med: #d29922",
+          "--energy-hi: #f85149",
+          "--energy-none: #2f9bff",
+          "--time-na: #2f9bff",
+          "--banner-grad: linear-gradient(180deg, #11171f, #0d1117)",
+          "--row-border: #1c242d",
+          "--hover-row-bg: rgba(47,155,255,.10)",
+          "--tree-hover-bg: rgba(255,255,255,.04)",
+          "--tree-on-bg: rgba(47,155,255,.10)",
+          "--save-hover-bg: rgba(63,185,80,.08)",
+          "--del-hover-bg: rgba(210,153,34,.08)",
+          "--chip-on-bg: rgba(47,155,255,.10)",
+          "--pill-active-bg: rgba(63,185,80,.10)",
+          "--pill-open-bg: rgba(230,237,243,.08)",
+          "--pill-hold-bg: rgba(210,153,34,.10)",
+          "--pill-parked-bg: rgba(110,118,129,.10)",
+          "--pill-done-bg: rgba(88,166,255,.10)",
+          "--pill-energy-low-bg: rgba(63,185,80,.10)",
+          "--pill-energy-med-bg: rgba(210,153,34,.10)",
+          "--pill-energy-hi-bg: rgba(248,81,73,.10)",
+          "--pill-type-on-bg: rgba(47,155,255,.10)",
+          "--pill-domain-on-bg: rgba(230,237,243,.06)",
+          "--cond-old: #2f9bff",
+          "--cond-working: #3fb950",
+          "--cond-needs-attention: #d29922",
+          "--cond-broken: #f85149",
+          "--room-garage: #f97316",
+          "--room-basement: #a855f7",
+          "--room-big-bedroom: #06b6d4",
+          "--room-little-bedroom: #ec4899",
+          "--room-kitchen: #84cc16",
+          "--room-bathroom: #14b8a6",
+          "--room-main-floor: #6366f1"
+        ],
+        "weight": {
+          "lines": 67,
+          "props": 46
+        }
+      }
+    },
+    {
+      "id": "static/skin-light.css",
+      "kind": "file",
+      "lang": "css",
+      "span": [
+        1,
+        73
+      ],
+      "summary": {
+        "shape": "static/skin-light.css",
+        "facts": [
+          "1 css-rule"
+        ],
+        "weight": {
+          "lines": 73
+        }
+      }
+    },
+    {
+      "id": "static/skin-light.css:::root",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        6,
+        72
+      ],
+      "summary": {
+        "shape": ":root",
+        "facts": [
+          "--bg: #ffffff",
+          "--panel: #f6f8fa",
+          "--line: #d0d7de",
+          "--ink: #1f2328",
+          "--dim: #656d76",
+          "--sub-ink: #57606a",
+          "--mono: \"SF Mono\",ui-monospace,Menlo,Consolas,monospace",
+          "--active: #1a7f37",
+          "--open: #0969da",
+          "--hold: #9a6700",
+          "--parked: #57606a",
+          "--done: #0550ae",
+          "--energy-low: #1a7f37",
+          "--energy-med: #9a6700",
+          "--energy-hi: #cf222e",
+          "--energy-none: #0969da",
+          "--time-na: #0969da",
+          "--banner-grad: linear-gradient(180deg, #e8f0f9, #f6f8fa)",
+          "--row-border: #d8dee4",
+          "--hover-row-bg: rgba(9,105,218,.08)",
+          "--tree-hover-bg: rgba(0,0,0,.03)",
+          "--tree-on-bg: rgba(9,105,218,.08)",
+          "--save-hover-bg: rgba(26,127,55,.08)",
+          "--del-hover-bg: rgba(154,103,0,.08)",
+          "--chip-on-bg: rgba(9,105,218,.10)",
+          "--pill-active-bg: rgba(26,127,55,.12)",
+          "--pill-open-bg: rgba(31,35,40,.08)",
+          "--pill-hold-bg: rgba(154,103,0,.12)",
+          "--pill-parked-bg: rgba(87,96,106,.10)",
+          "--pill-done-bg: rgba(5,80,174,.12)",
+          "--pill-energy-low-bg: rgba(26,127,55,.12)",
+          "--pill-energy-med-bg: rgba(154,103,0,.12)",
+          "--pill-energy-hi-bg: rgba(207,34,46,.12)",
+          "--pill-type-on-bg: rgba(9,105,218,.10)",
+          "--pill-domain-on-bg: rgba(31,35,40,.05)",
+          "--cond-old: #0969da",
+          "--cond-working: #1a7f37",
+          "--cond-needs-attention: #9a6700",
+          "--cond-broken: #cf222e",
+          "--room-garage: #f97316",
+          "--room-basement: #a855f7",
+          "--room-big-bedroom: #06b6d4",
+          "--room-little-bedroom: #ec4899",
+          "--room-kitchen: #84cc16",
+          "--room-bathroom: #14b8a6",
+          "--room-main-floor: #6366f1"
+        ],
+        "weight": {
+          "lines": 67,
+          "props": 46
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css",
+      "kind": "file",
+      "lang": "css",
+      "span": [
+        1,
+        185
+      ],
+      "summary": {
+        "shape": "static/skin-skin1.css",
+        "facts": [
+          "18 css-rules"
+        ],
+        "weight": {
+          "lines": 185
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::#ed-title",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        81,
+        81
+      ],
+      "summary": {
+        "shape": "#ed-title",
+        "facts": [
+          "text-shadow: 0 0 6px rgba(242,234,158,.5)"
+        ],
+        "weight": {
+          "lines": 1,
+          "props": 1
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::.banner h1",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        80,
+        80
+      ],
+      "summary": {
+        "shape": ".banner h1",
+        "facts": [
+          "text-shadow: 0 0 8px rgba(242,234,158,.55)",
+          "letter-spacing: 3px"
+        ],
+        "weight": {
+          "lines": 1,
+          "props": 2
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::.vt-btn, .ed-btn, .vc-io-btn, #vc-detail, #vc-back, #p5-logic-toggle, #p5-scope-toggle",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        83,
+        85
+      ],
+      "summary": {
+        "shape": ".vt-btn, .ed-btn, .vc-io-btn, #vc-detail, #vc-back, #p5-logic-toggle, #p5-scope-toggle",
+        "facts": [
+          "text-transform: uppercase"
+        ],
+        "weight": {
+          "lines": 3,
+          "props": 1
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css:::root, body",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        18,
+        74
+      ],
+      "summary": {
+        "shape": ":root, body",
+        "facts": [
+          "--mono: Calibri, Carlito, \"Segoe UI\", system-ui, sans-serif",
+          "--bg: #0c0e09",
+          "--ink: #cec89a",
+          "--dim: #a9a273",
+          "--line: rgba(214,208,158,.28)",
+          "--panel: #0c0e09",
+          "--sub-ink: #a9a273",
+          "--row-border: rgba(214,208,158,.14)",
+          "--banner-grad: linear-gradient(180deg,#12140d,#0a0b07)",
+          "--hover-row-bg: rgba(0,0,0,.08)",
+          "--tree-hover-bg: rgba(214,208,158,.10)",
+          "--tree-on-bg: rgba(214,208,158,.14)",
+          "--chip-on-bg: rgba(214,208,158,.18)",
+          "--save-hover-bg: rgba(243,208,107,.15)",
+          "--del-hover-bg: rgba(231,154,134,.15)",
+          "--active: #f3d06b",
+          "--open: #eef2ec",
+          "--hold: #e79a86",
+          "--parked: #8fb6d8",
+          "--done: #93c0a0",
+          "--pill-active-bg: rgba(243,208,107,.16)",
+          "--pill-open-bg: rgba(238,242,236,.12)",
+          "--pill-hold-bg: rgba(231,154,134,.16)",
+          "--pill-parked-bg: rgba(143,182,216,.16)",
+          "--pill-done-bg: rgba(147,192,160,.16)",
+          "--pill-type-on-bg: rgba(160,160,150,.14)",
+          "--pill-domain-on-bg: rgba(160,160,150,.10)",
+          "--energy-low: #a9cf8b",
+          "--energy-med: #f0d27a",
+          "--energy-hi: #e88f79",
+          "--energy-none: #8fb6d8",
+          "--time-na: #8fb6d8",
+          "--pill-energy-low-bg: rgba(169,207,139,.16)",
+          "--pill-energy-med-bg: rgba(240,210,122,.16)",
+          "--pill-energy-hi-bg: rgba(232,143,121,.16)",
+          "--cond-old: #b8973f",
+          "--cond-working: #4f8f5a",
+          "--cond-needs-attention: #c98a2f",
+          "--cond-broken: #a83b2c",
+          "--room-garage: #8a6a3b",
+          "--room-basement: #6f7a52",
+          "--room-big-bedroom: #a8556b",
+          "--room-little-bedroom: #5b7aa8",
+          "--room-kitchen: #c98a2f",
+          "--room-bathroom: #4f8fa0",
+          "--room-main-floor: #9c8a5a"
+        ],
+        "weight": {
+          "lines": 57,
+          "props": 46
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-bb.on) #board",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        103,
+        110
+      ],
+      "summary": {
+        "shape": "body:has(#vt-bb.on) #board",
+        "facts": [
+          "background: #151a16",
+          "border: 16px solid #6f5334",
+          "border-radius: 14px",
+          "box-shadow: inset 0 0 0 2px #4a3722, inset 0 0 50px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.4)",
+          "padding: 22px",
+          "color: var(--ink)"
+        ],
+        "weight": {
+          "lines": 8,
+          "props": 6
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-bb.on) #board .card",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        111,
+        115
+      ],
+      "summary": {
+        "shape": "body:has(#vt-bb.on) #board .card",
+        "facts": [
+          "border: 1.4px dashed var(--line)",
+          "box-shadow: none",
+          "text-shadow: 0 0 1px rgba(255,255,255,.18)"
+        ],
+        "weight": {
+          "lines": 5,
+          "props": 3
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-bb.on) #board .card h2",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        116,
+        121
+      ],
+      "summary": {
+        "shape": "body:has(#vt-bb.on) #board .card h2",
+        "facts": [
+          "font-family: 'Gochi Hand', cursive",
+          "font-weight: 400",
+          "letter-spacing: .5px",
+          "text-shadow: 0 0 1px rgba(255,255,255,.28)"
+        ],
+        "weight": {
+          "lines": 6,
+          "props": 4
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-bb.on) #board, body:has(#vt-bb.on) #p5-bar",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        92,
+        102
+      ],
+      "summary": {
+        "shape": "body:has(#vt-bb.on) #board, body:has(#vt-bb.on) #p5-bar",
+        "facts": [
+          "--ink: #eef4ec",
+          "--dim: #8ba296",
+          "--sub-ink: #d3ddd4",
+          "--line: rgba(238,244,236,.24)",
+          "--row-border: rgba(238,244,236,.13)",
+          "--panel: rgba(238,244,236,.035)",
+          "--mono: 'Gaegu', cursive",
+          "font-family: 'Gaegu', cursive"
+        ],
+        "weight": {
+          "lines": 11,
+          "props": 8
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-bb.on) #p5-bar #p5-text, body:has(#vt-bb.on) #p5-bar .p5-pill",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        122,
+        125
+      ],
+      "summary": {
+        "shape": "body:has(#vt-bb.on) #p5-bar #p5-text, body:has(#vt-bb.on) #p5-bar .p5-pill",
+        "facts": [
+          "text-shadow: 0 0 1px rgba(255,255,255,.16)"
+        ],
+        "weight": {
+          "lines": 4,
+          "props": 1
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        141,
+        147
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board",
+        "facts": [
+          "background: #c9b691",
+          "border-radius: 14px",
+          "padding: 20px",
+          "box-shadow: inset 0 0 30px rgba(0,0,0,.08)",
+          "color: var(--ink)"
+        ],
+        "weight": {
+          "lines": 7,
+          "props": 5
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        148,
+        153
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board .card",
+        "facts": [
+          "border: 1px solid var(--line)",
+          "border-radius: 10px",
+          "box-shadow: 0 3px 10px rgba(0,0,0,.18)",
+          "position: relative"
+        ],
+        "weight": {
+          "lines": 6,
+          "props": 4
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card h2",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        163,
+        168
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board .card h2",
+        "facts": [
+          "font-weight: 400",
+          "letter-spacing: 1px",
+          "text-transform: uppercase",
+          "padding-left: 16px"
+        ],
+        "weight": {
+          "lines": 6,
+          "props": 4
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card::before",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        156,
+        162
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board .card::before",
+        "facts": [
+          "content: \"\"",
+          "position: absolute",
+          "left: 11px",
+          "top: 15px",
+          "width: 9px",
+          "height: 9px",
+          "border-radius: 50%",
+          "background: rgba(0,0,0,.12)",
+          "box-shadow: inset 0 0 0 1.4px rgba(138,116,79,.7)"
+        ],
+        "weight": {
+          "lines": 7,
+          "props": 9
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card:nth-of-type(even)",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        155,
+        155
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board .card:nth-of-type(even)",
+        "facts": [
+          "transform: rotate(.35deg)"
+        ],
+        "weight": {
+          "lines": 1,
+          "props": 1
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card:nth-of-type(odd)",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        154,
+        154
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board .card:nth-of-type(odd)",
+        "facts": [
+          "transform: rotate(-.4deg)"
+        ],
+        "weight": {
+          "lines": 1,
+          "props": 1
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) #board, body:has(#vt-inv.on) #p5-bar",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        130,
+        140
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) #board, body:has(#vt-inv.on) #p5-bar",
+        "facts": [
+          "--ink: #2a251c",
+          "--dim: #8a7d63",
+          "--sub-ink: #4a4436",
+          "--line: #a8926a",
+          "--row-border: #ddd0b2",
+          "--panel: #dccaa2",
+          "--mono: 'Special Elite', monospace",
+          "font-family: 'Special Elite', monospace"
+        ],
+        "weight": {
+          "lines": 11,
+          "props": 8
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) .inv-action-icon",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        170,
+        179
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) .inv-action-icon",
+        "facts": [
+          "border: 2px solid #a83b2c",
+          "color: #a83b2c !important",
+          "border-radius: 4px",
+          "padding: 0 4px",
+          "margin-left: 2px",
+          "transform: rotate(-6deg)",
+          "display: inline-flex",
+          "font-weight: 700"
+        ],
+        "weight": {
+          "lines": 10,
+          "props": 8
+        }
+      }
+    },
+    {
+      "id": "static/skin-skin1.css::body:has(#vt-inv.on) .inv-loc",
+      "kind": "css-rule",
+      "lang": "css",
+      "span": [
+        180,
+        184
+      ],
+      "summary": {
+        "shape": "body:has(#vt-inv.on) .inv-loc",
+        "facts": [
+          "font-family: 'Caveat', cursive",
+          "font-size: 13px",
+          "font-weight: 700"
+        ],
+        "weight": {
+          "lines": 5,
+          "props": 3
+        }
+      }
+    },
+    {
+      "id": "viewer.html",
+      "kind": "file",
+      "lang": "html",
+      "span": [
+        1,
+        78
+      ],
+      "summary": {
+        "shape": "viewer.html",
+        "facts": [
+          "11 elements",
+          "1 function"
+        ],
+        "weight": {
+          "lines": 78
+        }
+      }
+    },
+    {
+      "id": "viewer.html::#graph",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        34,
+        34
+      ],
+      "summary": {
+        "shape": "<div id=\"graph\">",
+        "facts": [
+          "id=\"graph\""
+        ],
+        "weight": {
+          "lines": 1,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::#hud",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        35,
+        35
+      ],
+      "summary": {
+        "shape": "<div id=\"hud\">",
+        "facts": [
+          "id=\"hud\""
+        ],
+        "weight": {
+          "lines": 1,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::body[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        33,
+        76
+      ],
+      "summary": {
+        "shape": "<body>",
+        "facts": [
+          "<body>"
+        ],
+        "weight": {
+          "lines": 44,
+          "attrs": 0
+        }
+      }
+    },
+    {
+      "id": "viewer.html::head[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        3,
+        32
+      ],
+      "summary": {
+        "shape": "<head>",
+        "facts": [
+          "<head>"
+        ],
+        "weight": {
+          "lines": 30,
+          "attrs": 0
+        }
+      }
+    },
+    {
+      "id": "viewer.html::html[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        2,
+        77
+      ],
+      "summary": {
+        "shape": "<html lang=\"en\">",
+        "facts": [
+          "lang=\"en\""
+        ],
+        "weight": {
+          "lines": 76,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::meta[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        4,
+        4
+      ],
+      "summary": {
+        "shape": "<meta charset=\"utf-8\" />",
+        "facts": [
+          "charset=\"utf-8\""
+        ],
+        "weight": {
+          "lines": 1,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::meta[2]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        5,
+        5
+      ],
+      "summary": {
+        "shape": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />",
+        "facts": [
+          "name=\"viewport\"",
+          "content=\"width=device-width, initial-scale=1\""
+        ],
+        "weight": {
+          "lines": 1,
+          "attrs": 2
+        }
+      }
+    },
+    {
+      "id": "viewer.html::script[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        23,
+        31
+      ],
+      "summary": {
+        "shape": "<script type=\"importmap\">",
+        "facts": [
+          "type=\"importmap\""
+        ],
+        "weight": {
+          "lines": 9,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::script[2]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        37,
+        75
+      ],
+      "summary": {
+        "shape": "<script type=\"module\">",
+        "facts": [
+          "type=\"module\""
+        ],
+        "weight": {
+          "lines": 39,
+          "attrs": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::setHud",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        43,
+        45
+      ],
+      "summary": {
+        "shape": "setHud(msg, isErr = false)",
+        "facts": [
+          "1 branch"
+        ],
+        "weight": {
+          "lines": 3,
+          "branches": 1
+        }
+      }
+    },
+    {
+      "id": "viewer.html::style[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        7,
+        22
+      ],
+      "summary": {
+        "shape": "<style>",
+        "facts": [
+          "<style>"
+        ],
+        "weight": {
+          "lines": 16,
+          "attrs": 0
+        }
+      }
+    },
+    {
+      "id": "viewer.html::title[1]",
+      "kind": "element",
+      "lang": "html",
+      "span": [
+        6,
+        6
+      ],
+      "summary": {
+        "shape": "<title>",
+        "facts": [
+          "<title>"
+        ],
+        "weight": {
+          "lines": 1,
+          "attrs": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js",
+      "kind": "file",
+      "lang": "javascript",
+      "span": [
+        1,
+        241
+      ],
+      "summary": {
+        "shape": "viewer/channels.js",
+        "facts": [
+          "8 functions"
+        ],
+        "weight": {
+          "lines": 241
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::__selftest",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        191,
+        240
+      ],
+      "summary": {
+        "shape": "__selftest()",
+        "facts": [
+          "loops 2 times",
+          "4 branches",
+          "try/catch"
+        ],
+        "weight": {
+          "lines": 50,
+          "branches": 4
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::colorFor",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        75,
+        92
+      ],
+      "summary": {
+        "shape": "colorFor(node, lens)",
+        "facts": [
+          "5 branches",
+          "4 return points"
+        ],
+        "weight": {
+          "lines": 18,
+          "branches": 5
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::hashIndex",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        61,
+        69
+      ],
+      "summary": {
+        "shape": "hashIndex(str, mod)",
+        "facts": [
+          "loops once"
+        ],
+        "weight": {
+          "lines": 9,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::matchesHighlight",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        172,
+        183
+      ],
+      "summary": {
+        "shape": "matchesHighlight(node, lens)",
+        "facts": [
+          "5 branches",
+          "5 return points"
+        ],
+        "weight": {
+          "lines": 12,
+          "branches": 5
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::mk",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        192,
+        201
+      ],
+      "summary": {
+        "shape": "mk(over = {})",
+        "facts": [
+          "single expression"
+        ],
+        "weight": {
+          "lines": 10,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::shapeFor",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        120,
+        137
+      ],
+      "summary": {
+        "shape": "shapeFor(node, lens)",
+        "facts": [
+          "5 branches",
+          "5 return points"
+        ],
+        "weight": {
+          "lines": 18,
+          "branches": 5
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::sizeFor",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        102,
+        114
+      ],
+      "summary": {
+        "shape": "sizeFor(node, lens)",
+        "facts": [
+          "3 branches",
+          "3 return points"
+        ],
+        "weight": {
+          "lines": 13,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/channels.js::yFor",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        147,
+        165
+      ],
+      "summary": {
+        "shape": "yFor(node, lens)",
+        "facts": [
+          "6 branches",
+          "5 return points"
+        ],
+        "weight": {
+          "lines": 19,
+          "branches": 6
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js",
+      "kind": "file",
+      "lang": "javascript",
+      "span": [
+        1,
+        281
+      ],
+      "summary": {
+        "shape": "viewer/data.js",
+        "facts": [
+          "9 functions"
+        ],
+        "weight": {
+          "lines": 281
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::__selftest",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        218,
+        280
+      ],
+      "summary": {
+        "shape": "__selftest(graph)",
+        "facts": [
+          "loops 4 times",
+          "4 branches"
+        ],
+        "weight": {
+          "lines": 63,
+          "branches": 4
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::buildGraph",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        195,
+        211
+      ],
+      "summary": {
+        "shape": "buildGraph(boardJson, now = Date.now())",
+        "facts": [
+          "loops 2 times"
+        ],
+        "weight": {
+          "lines": 17,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::computeNormalized",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        144,
+        185
+      ],
+      "summary": {
+        "shape": "computeNormalized(nodes)",
+        "facts": [
+          "loops 4 times",
+          "9 branches"
+        ],
+        "weight": {
+          "lines": 42,
+          "branches": 9
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::computeRaw",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        104,
+        113
+      ],
+      "summary": {
+        "shape": "computeRaw(nodes, now)",
+        "facts": [
+          "loops once"
+        ],
+        "weight": {
+          "lines": 10,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::computeStructural",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        116,
+        140
+      ],
+      "summary": {
+        "shape": "computeStructural(nodes)",
+        "facts": [
+          "loops 3 times",
+          "2 branches",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 25,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::desc",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        132,
+        138
+      ],
+      "summary": {
+        "shape": "desc(id)",
+        "facts": [
+          "1 branch",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 7,
+          "branches": 1
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::parseTs",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        6,
+        9
+      ],
+      "summary": {
+        "shape": "parseTs(iso)",
+        "facts": [
+          "1 branch",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 4,
+          "branches": 1
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::walkLeaf",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        64,
+        101
+      ],
+      "summary": {
+        "shape": "walkLeaf(src, domain, depth, parentId, nodes, links)",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 38,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/data.js::walkNode",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        12,
+        61
+      ],
+      "summary": {
+        "shape": "walkNode(src, domain, depth, parentId, nodes, links)",
+        "facts": [
+          "loops 2 times",
+          "3 branches"
+        ],
+        "weight": {
+          "lines": 50,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js",
+      "kind": "file",
+      "lang": "javascript",
+      "span": [
+        1,
+        194
+      ],
+      "summary": {
+        "shape": "viewer/panel.js",
+        "facts": [
+          "11 functions"
+        ],
+        "weight": {
+          "lines": 194
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::Reset",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        136,
+        140
+      ],
+      "summary": {
+        "shape": "Reset()",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 5,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::Save",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        122,
+        135
+      ],
+      "summary": {
+        "shape": "Save()",
+        "facts": [
+          "1 branch"
+        ],
+        "weight": {
+          "lines": 14,
+          "branches": 1
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::__selftest",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        151,
+        193
+      ],
+      "summary": {
+        "shape": "__selftest()",
+        "facts": [
+          "2 branches",
+          "try/catch"
+        ],
+        "weight": {
+          "lines": 43,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::applySnap",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        58,
+        63
+      ],
+      "summary": {
+        "shape": "applySnap(lens, snap)",
+        "facts": [
+          "loops once",
+          "2 branches"
+        ],
+        "weight": {
+          "lines": 6,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::createPanel",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        73,
+        147
+      ],
+      "summary": {
+        "shape": "createPanel(lens, onChange)",
+        "facts": [
+          "loops once",
+          "3 branches",
+          "3 return points"
+        ],
+        "weight": {
+          "lines": 75,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::fire",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        75,
+        75
+      ],
+      "summary": {
+        "shape": "fire()",
+        "facts": [
+          "single expression"
+        ],
+        "weight": {
+          "lines": 1,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::lsGetAll",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        28,
+        31
+      ],
+      "summary": {
+        "shape": "lsGetAll()",
+        "facts": [
+          "1 branch",
+          "2 return points",
+          "try/catch"
+        ],
+        "weight": {
+          "lines": 4,
+          "branches": 1
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::lsNames",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        33,
+        35
+      ],
+      "summary": {
+        "shape": "lsNames()",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 3,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::lsWrite",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        37,
+        41
+      ],
+      "summary": {
+        "shape": "lsWrite(name, snap)",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 5,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::onChange",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        164,
+        164
+      ],
+      "summary": {
+        "shape": "onChange()",
+        "facts": [
+          "single expression"
+        ],
+        "weight": {
+          "lines": 1,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/panel.js::snapLens",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        45,
+        55
+      ],
+      "summary": {
+        "shape": "snapLens(lens)",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 11,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js",
+      "kind": "file",
+      "lang": "javascript",
+      "span": [
+        1,
+        264
+      ],
+      "summary": {
+        "shape": "viewer/scene.js",
+        "facts": [
+          "10 functions"
+        ],
+        "weight": {
+          "lines": 264
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::__selftest",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        254,
+        263
+      ],
+      "summary": {
+        "shape": "__selftest()",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 10,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::applyLens",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        176,
+        224
+      ],
+      "summary": {
+        "shape": "applyLens(lens)",
+        "facts": [
+          "loops 2 times",
+          "3 branches"
+        ],
+        "weight": {
+          "lines": 49,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::buildGeometry",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        28,
+        39
+      ],
+      "summary": {
+        "shape": "buildGeometry(shapeName)",
+        "facts": [
+          "7 branches",
+          "7 return points"
+        ],
+        "weight": {
+          "lines": 12,
+          "branches": 7
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::buildMesh",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        98,
+        120
+      ],
+      "summary": {
+        "shape": "buildMesh(n)",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 23,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::createScene",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        86,
+        249
+      ],
+      "summary": {
+        "shape": "createScene(domEl, graph)",
+        "facts": [
+          "loops 4 times",
+          "8 branches",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 164,
+          "branches": 8
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::dispose",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        229,
+        246
+      ],
+      "summary": {
+        "shape": "dispose()",
+        "facts": [
+          "loops once",
+          "3 branches"
+        ],
+        "weight": {
+          "lines": 18,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::force",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        51,
+        73
+      ],
+      "summary": {
+        "shape": "force(alpha)",
+        "facts": [
+          "loops 2 times",
+          "2 branches"
+        ],
+        "weight": {
+          "lines": 23,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::makeClusterForce",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        47,
+        80
+      ],
+      "summary": {
+        "shape": "makeClusterForce(lens)",
+        "facts": [
+          "loops 2 times",
+          "2 branches",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 34,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::startPulse",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        144,
+        168
+      ],
+      "summary": {
+        "shape": "startPulse()",
+        "facts": [
+          "loops once",
+          "2 branches"
+        ],
+        "weight": {
+          "lines": 25,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/scene.js::tick",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        147,
+        165
+      ],
+      "summary": {
+        "shape": "tick(now)",
+        "facts": [
+          "loops once",
+          "2 branches"
+        ],
+        "weight": {
+          "lines": 19,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js",
+      "kind": "file",
+      "lang": "javascript",
+      "span": [
+        1,
+        92
+      ],
+      "summary": {
+        "shape": "viewer/score.js",
+        "facts": [
+          "5 functions"
+        ],
+        "weight": {
+          "lines": 92
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js::__selftest",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        50,
+        91
+      ],
+      "summary": {
+        "shape": "__selftest()",
+        "facts": [
+          "loops once",
+          "4 branches",
+          "try/catch"
+        ],
+        "weight": {
+          "lines": 42,
+          "branches": 4
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js::check",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        58,
+        58
+      ],
+      "summary": {
+        "shape": "check(label, cond)",
+        "facts": [
+          "2 branches"
+        ],
+        "weight": {
+          "lines": 1,
+          "branches": 2
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js::mkLens",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        55,
+        55
+      ],
+      "summary": {
+        "shape": "mkLens(score)",
+        "facts": [
+          "single expression"
+        ],
+        "weight": {
+          "lines": 1,
+          "branches": 0
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js::scoreFor",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        36,
+        48
+      ],
+      "summary": {
+        "shape": "scoreFor(node, lens)",
+        "facts": [
+          "loops once",
+          "3 branches",
+          "2 return points"
+        ],
+        "weight": {
+          "lines": 13,
+          "branches": 3
+        }
+      }
+    },
+    {
+      "id": "viewer/score.js::terms",
+      "kind": "function",
+      "lang": "javascript",
+      "span": [
+        23,
+        34
+      ],
+      "summary": {
+        "shape": "terms(node, lens)",
+        "facts": [
+          "straight through"
+        ],
+        "weight": {
+          "lines": 12,
+          "branches": 0
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "static/skin-dark.css",
+      "to": "static/skin-dark.css:::root",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-light.css",
+      "to": "static/skin-light.css:::root",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::#ed-title",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::.banner h1",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::.vt-btn, .ed-btn, .vc-io-btn, #vc-detail, #vc-back, #p5-logic-toggle, #p5-scope-toggle",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css:::root, body",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-bb.on) #board",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-bb.on) #board .card",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-bb.on) #board .card h2",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-bb.on) #board, body:has(#vt-bb.on) #p5-bar",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-bb.on) #p5-bar #p5-text, body:has(#vt-bb.on) #p5-bar .p5-pill",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card h2",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card::before",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card:nth-of-type(even)",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card:nth-of-type(odd)",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) #board, body:has(#vt-inv.on) #p5-bar",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) .inv-action-icon",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css",
+      "to": "static/skin-skin1.css::body:has(#vt-inv.on) .inv-loc",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "static/skin-skin1.css:::root, body",
+      "to": "viewer.html::body[1]",
+      "kind": "styles",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::#graph",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::#graph",
+      "kind": "touches",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::#hud",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::#hud",
+      "kind": "touches",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::body[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::head[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::html[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::meta[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::meta[2]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::script[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::script[2]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::setHud",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::setHud",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::style[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer.html::title[1]",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/data.js",
+      "kind": "imports",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/data.js::buildGraph",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/panel.js",
+      "kind": "imports",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/panel.js::createPanel",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/scene.js",
+      "kind": "imports",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer.html",
+      "to": "viewer/scene.js::createScene",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::__selftest",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::colorFor",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::hashIndex",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::matchesHighlight",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::mk",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::shapeFor",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::sizeFor",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/channels.js::yFor",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js",
+      "to": "viewer/score.js",
+      "kind": "imports",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::colorFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::matchesHighlight",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::mk",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::shapeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::sizeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::__selftest",
+      "to": "viewer/channels.js::yFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::colorFor",
+      "to": "viewer/channels.js::hashIndex",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::shapeFor",
+      "to": "viewer/channels.js::hashIndex",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::sizeFor",
+      "to": "viewer/score.js::scoreFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/channels.js::yFor",
+      "to": "viewer/score.js::scoreFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::__selftest",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::buildGraph",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::computeNormalized",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::computeRaw",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::computeStructural",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::desc",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::parseTs",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::walkLeaf",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js",
+      "to": "viewer/data.js::walkNode",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::buildGraph",
+      "to": "viewer/data.js::computeNormalized",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::buildGraph",
+      "to": "viewer/data.js::computeRaw",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::buildGraph",
+      "to": "viewer/data.js::computeStructural",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::buildGraph",
+      "to": "viewer/data.js::walkNode",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::computeStructural",
+      "to": "viewer/data.js::desc",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::walkLeaf",
+      "to": "viewer/data.js::parseTs",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::walkNode",
+      "to": "viewer/data.js::parseTs",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/data.js::walkNode",
+      "to": "viewer/data.js::walkLeaf",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::Reset",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::Save",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::__selftest",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::applySnap",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::createPanel",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::fire",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::lsGetAll",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::lsNames",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::lsWrite",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::onChange",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js",
+      "to": "viewer/panel.js::snapLens",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::Reset",
+      "to": "viewer/panel.js::applySnap",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::Reset",
+      "to": "viewer/panel.js::fire",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::Save",
+      "to": "viewer/panel.js::lsNames",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::Save",
+      "to": "viewer/panel.js::lsWrite",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::Save",
+      "to": "viewer/panel.js::snapLens",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::__selftest",
+      "to": "viewer/panel.js::applySnap",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::__selftest",
+      "to": "viewer/panel.js::createPanel",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::__selftest",
+      "to": "viewer/panel.js::onChange",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::__selftest",
+      "to": "viewer/panel.js::snapLens",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::createPanel",
+      "to": "viewer/panel.js::applySnap",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::createPanel",
+      "to": "viewer/panel.js::fire",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::createPanel",
+      "to": "viewer/panel.js::lsGetAll",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::createPanel",
+      "to": "viewer/panel.js::lsNames",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::createPanel",
+      "to": "viewer/panel.js::onChange",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::fire",
+      "to": "viewer/panel.js::onChange",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::lsNames",
+      "to": "viewer/panel.js::lsGetAll",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/panel.js::lsWrite",
+      "to": "viewer/panel.js::lsGetAll",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/channels.js",
+      "kind": "imports",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::__selftest",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::applyLens",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::buildGeometry",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::buildMesh",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::createScene",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::dispose",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::force",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::makeClusterForce",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::startPulse",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js",
+      "to": "viewer/scene.js::tick",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/channels.js::colorFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/channels.js::matchesHighlight",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/channels.js::shapeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/channels.js::sizeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/channels.js::yFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/scene.js::buildGeometry",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/scene.js::dispose",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::applyLens",
+      "to": "viewer/scene.js::makeClusterForce",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::buildMesh",
+      "to": "viewer/channels.js::colorFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::buildMesh",
+      "to": "viewer/channels.js::shapeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::buildMesh",
+      "to": "viewer/channels.js::sizeFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::buildMesh",
+      "to": "viewer/scene.js::buildGeometry",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::createScene",
+      "to": "viewer/scene.js::buildMesh",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::createScene",
+      "to": "viewer/scene.js::makeClusterForce",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::createScene",
+      "to": "viewer/scene.js::startPulse",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/scene.js::tick",
+      "to": "viewer/channels.js::matchesHighlight",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js",
+      "to": "viewer/score.js::__selftest",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js",
+      "to": "viewer/score.js::check",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js",
+      "to": "viewer/score.js::mkLens",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js",
+      "to": "viewer/score.js::scoreFor",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js",
+      "to": "viewer/score.js::terms",
+      "kind": "contains",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js::__selftest",
+      "to": "viewer/score.js::check",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js::__selftest",
+      "to": "viewer/score.js::mkLens",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js::__selftest",
+      "to": "viewer/score.js::scoreFor",
+      "kind": "calls",
+      "resolved": "exact"
+    },
+    {
+      "from": "viewer/score.js::scoreFor",
+      "to": "viewer/score.js::terms",
+      "kind": "calls",
+      "resolved": "exact"
+    }
+  ],
+  "comments": [
+    {
+      "owner": "static/skin-dark.css",
+      "file": "static/skin-dark.css",
+      "span": [
+        1,
+        5
+      ],
+      "bytes": [
+        0,
+        306
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "============================================================\n   skin-dark.css — Personal Progress dark theme (default)\n   Variables only. Structural CSS lives in dashboard.html.\n   Swap: ?skin=light  (or change the <link href> directly)\n   ============================================================",
+      "raw": "/* ============================================================\n   skin-dark.css — Personal Progress dark theme (default)\n   Variables only. Structural CSS lives in dashboard.html.\n   Swap: ?skin=light  (or change the <link href> directly)\n   ============================================================ */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        7,
+        7
+      ],
+      "bytes": [
+        317,
+        335
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Base palette",
+      "raw": "/* Base palette */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        16,
+        16
+      ],
+      "bytes": [
+        533,
+        552
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Status colors",
+      "raw": "/* Status colors */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        23,
+        23
+      ],
+      "bytes": [
+        661,
+        680
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Energy colors",
+      "raw": "/* Energy colors */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        27,
+        27
+      ],
+      "bytes": [
+        786,
+        823
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "energy unset → blue empty gauge",
+      "raw": "/* energy unset → blue empty gauge */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        29,
+        29
+      ],
+      "bytes": [
+        827,
+        882
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Time \"n/a\" clock (low/med/hi reuse energy colors)",
+      "raw": "/* Time \"n/a\" clock (low/med/hi reuse energy colors) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        32,
+        32
+      ],
+      "bytes": [
+        908,
+        920
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Banner",
+      "raw": "/* Banner */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        35,
+        35
+      ],
+      "bytes": [
+        984,
+        1003
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Row separator",
+      "raw": "/* Row separator */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        38,
+        38
+      ],
+      "bytes": [
+        1032,
+        1070
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Hover / active state backgrounds",
+      "raw": "/* Hover / active state backgrounds */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        46,
+        46
+      ],
+      "bytes": [
+        1320,
+        1359
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P5 filter pill active backgrounds",
+      "raw": "/* P5 filter pill active backgrounds */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        58,
+        58
+      ],
+      "bytes": [
+        1823,
+        1864
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P8 Inventory — condition dot colors",
+      "raw": "/* P8 Inventory — condition dot colors */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        59,
+        59
+      ],
+      "bytes": [
+        1902,
+        1929
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "blue (same as --open)",
+      "raw": "/* blue (same as --open) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        60,
+        60
+      ],
+      "bytes": [
+        1967,
+        2001
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "green (same as --energy-low)",
+      "raw": "/* green (same as --energy-low) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        61,
+        61
+      ],
+      "bytes": [
+        2039,
+        2074
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "yellow (same as --energy-med)",
+      "raw": "/* yellow (same as --energy-med) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        62,
+        62
+      ],
+      "bytes": [
+        2112,
+        2143
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "red (same as --energy-hi)",
+      "raw": "/* red (same as --energy-hi) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        64,
+        64
+      ],
+      "bytes": [
+        2147,
+        2206
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P8 Inventory — room colors (7 rooms; Brandon to tune)",
+      "raw": "/* P8 Inventory — room colors (7 rooms; Brandon to tune) */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        65,
+        65
+      ],
+      "bytes": [
+        2242,
+        2254
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "orange",
+      "raw": "/* orange */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        66,
+        66
+      ],
+      "bytes": [
+        2290,
+        2302
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "purple",
+      "raw": "/* purple */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        67,
+        67
+      ],
+      "bytes": [
+        2338,
+        2348
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "cyan",
+      "raw": "/* cyan */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        68,
+        68
+      ],
+      "bytes": [
+        2384,
+        2394
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "pink",
+      "raw": "/* pink */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        69,
+        69
+      ],
+      "bytes": [
+        2430,
+        2440
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "lime",
+      "raw": "/* lime */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        70,
+        70
+      ],
+      "bytes": [
+        2476,
+        2486
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "teal",
+      "raw": "/* teal */"
+    },
+    {
+      "owner": "static/skin-dark.css:::root",
+      "file": "static/skin-dark.css",
+      "span": [
+        71,
+        71
+      ],
+      "bytes": [
+        2522,
+        2534
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "indigo",
+      "raw": "/* indigo */"
+    },
+    {
+      "owner": "static/skin-light.css",
+      "file": "static/skin-light.css",
+      "span": [
+        1,
+        5
+      ],
+      "bytes": [
+        0,
+        285
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "============================================================\n   skin-light.css — gate-proof only (throwaway)\n   Not a finished design — exists to verify the swap mechanism.\n   Delete or replace when Brandon reskins.\n   ============================================================",
+      "raw": "/* ============================================================\n   skin-light.css — gate-proof only (throwaway)\n   Not a finished design — exists to verify the swap mechanism.\n   Delete or replace when Brandon reskins.\n   ============================================================ */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        7,
+        7
+      ],
+      "bytes": [
+        296,
+        314
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Base palette",
+      "raw": "/* Base palette */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        16,
+        16
+      ],
+      "bytes": [
+        512,
+        555
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Status colors (darkened for light bg)",
+      "raw": "/* Status colors (darkened for light bg) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        23,
+        23
+      ],
+      "bytes": [
+        664,
+        683
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Energy colors",
+      "raw": "/* Energy colors */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        27,
+        27
+      ],
+      "bytes": [
+        789,
+        826
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "energy unset → blue empty gauge",
+      "raw": "/* energy unset → blue empty gauge */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        29,
+        29
+      ],
+      "bytes": [
+        830,
+        885
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Time \"n/a\" clock (low/med/hi reuse energy colors)",
+      "raw": "/* Time \"n/a\" clock (low/med/hi reuse energy colors) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        32,
+        32
+      ],
+      "bytes": [
+        911,
+        923
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Banner",
+      "raw": "/* Banner */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        35,
+        35
+      ],
+      "bytes": [
+        987,
+        1006
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Row separator",
+      "raw": "/* Row separator */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        38,
+        38
+      ],
+      "bytes": [
+        1035,
+        1073
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Hover / active state backgrounds",
+      "raw": "/* Hover / active state backgrounds */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        46,
+        46
+      ],
+      "bytes": [
+        1313,
+        1352
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P5 filter pill active backgrounds",
+      "raw": "/* P5 filter pill active backgrounds */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        58,
+        58
+      ],
+      "bytes": [
+        1803,
+        1844
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P8 Inventory — condition dot colors",
+      "raw": "/* P8 Inventory — condition dot colors */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        59,
+        59
+      ],
+      "bytes": [
+        1882,
+        1909
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "blue (same as --open)",
+      "raw": "/* blue (same as --open) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        60,
+        60
+      ],
+      "bytes": [
+        1947,
+        1981
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "green (same as --energy-low)",
+      "raw": "/* green (same as --energy-low) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        61,
+        61
+      ],
+      "bytes": [
+        2019,
+        2048
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "yellow (same as --hold)",
+      "raw": "/* yellow (same as --hold) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        62,
+        62
+      ],
+      "bytes": [
+        2086,
+        2117
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "red (same as --energy-hi)",
+      "raw": "/* red (same as --energy-hi) */"
+    },
+    {
+      "owner": "static/skin-light.css:::root",
+      "file": "static/skin-light.css",
+      "span": [
+        64,
+        64
+      ],
+      "bytes": [
+        2121,
+        2193
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "P8 Inventory — room colors (same as dark for now; Brandon to tune)",
+      "raw": "/* P8 Inventory — room colors (same as dark for now; Brandon to tune) */"
+    },
+    {
+      "owner": "static/skin-skin1.css",
+      "file": "static/skin-skin1.css",
+      "span": [
+        1,
+        9
+      ],
+      "bytes": [
+        0,
+        588
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "================================================================\n   skin-skin1.css — \"the handwritten wrapped in the computer\"\n   Built from Skin Explorations.dc.html: wrapper = system phosphor\n   (Calibri/Carlito, aged yellow-green, glow only on headers);\n   Blackboard = one wood-framed slate (Gaegu chalk, dark slate);\n   Inventory = kraft tag-cards (Special Elite + Caveat, paper).\n   Drop into /static/skin-skin1.css and load the board with\n   ?skin=skin1. See SKIN-SPEC.md for the decisions behind this file.\n   ================================================================",
+      "raw": "/* ================================================================\n   skin-skin1.css — \"the handwritten wrapped in the computer\"\n   Built from Skin Explorations.dc.html: wrapper = system phosphor\n   (Calibri/Carlito, aged yellow-green, glow only on headers);\n   Blackboard = one wood-framed slate (Gaegu chalk, dark slate);\n   Inventory = kraft tag-cards (Special Elite + Caveat, paper).\n   Drop into /static/skin-skin1.css and load the board with\n   ?skin=skin1. See SKIN-SPEC.md for the decisions behind this file.\n   ================================================================ */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        13,
+        17
+      ],
+      "bytes": [
+        789,
+        1134
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "----------------------------------------------------------------\n   1. BASE TOKENS — the \"computer\" wrapper's defaults. Anything that\n   lives OUTSIDE #board / #p5-bar (banner, view-toggle, Search-All,\n   the entry/editor panel) reads these as-is: aged phosphor, Calibri.\n   ----------------------------------------------------------------",
+      "raw": "/* ----------------------------------------------------------------\n   1. BASE TOKENS — the \"computer\" wrapper's defaults. Anything that\n   lives OUTSIDE #board / #p5-bar (banner, view-toggle, Search-All,\n   the entry/editor panel) reads these as-is: aged phosphor, Calibri.\n   ---------------------------------------------------------------- */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        36,
+        36
+      ],
+      "bytes": [
+        1679,
+        1742
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "status colors — LOCKED, identical across both views/skins",
+      "raw": "/* status colors — LOCKED, identical across both views/skins */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        37,
+        37
+      ],
+      "bytes": [
+        1766,
+        1779
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "yellow",
+      "raw": "/* yellow  */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        38,
+        38
+      ],
+      "bytes": [
+        1804,
+        1823
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "white/outline",
+      "raw": "/* white/outline */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        39,
+        39
+      ],
+      "bytes": [
+        1848,
+        1860
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "salmon",
+      "raw": "/* salmon */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        40,
+        40
+      ],
+      "bytes": [
+        1885,
+        1895
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "blue",
+      "raw": "/* blue */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        41,
+        41
+      ],
+      "bytes": [
+        1920,
+        1931
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "green",
+      "raw": "/* green */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        50,
+        50
+      ],
+      "bytes": [
+        2234,
+        2291
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "energy / time — LOCKED, identical across both views",
+      "raw": "/* energy / time — LOCKED, identical across both views */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        54,
+        54
+      ],
+      "bytes": [
+        2394,
+        2457
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "\"n/a\" renders blue, per the locked renderer's own comment",
+      "raw": "/* \"n/a\" renders blue, per the locked renderer's own comment */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        60,
+        60
+      ],
+      "bytes": [
+        2623,
+        2699
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "inventory condition colors — LOCKED, identical everywhere they show up",
+      "raw": "/* inventory condition colors — LOCKED, identical everywhere they show up */"
+    },
+    {
+      "owner": "static/skin-skin1.css:::root, body",
+      "file": "static/skin-skin1.css",
+      "span": [
+        66,
+        66
+      ],
+      "bytes": [
+        2814,
+        2858
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "room colors (inventory location pills)",
+      "raw": "/* room colors (inventory location pills) */"
+    },
+    {
+      "owner": "static/skin-skin1.css::.banner h1",
+      "file": "static/skin-skin1.css",
+      "span": [
+        76,
+        79
+      ],
+      "bytes": [
+        3066,
+        3342
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "----------------------------------------------------------------\n   2. SYSTEM CHROME — glow lives ONLY on headers; everything else in\n   the wrapper (labels, inputs, buttons, pills, timestamps) is flat.\n   ----------------------------------------------------------------",
+      "raw": "/* ----------------------------------------------------------------\n   2. SYSTEM CHROME — glow lives ONLY on headers; everything else in\n   the wrapper (labels, inputs, buttons, pills, timestamps) is flat.\n   ---------------------------------------------------------------- */"
+    },
+    {
+      "owner": "static/skin-skin1.css::body:has(#vt-bb.on) #board, body:has(#vt-bb.on) #p5-bar",
+      "file": "static/skin-skin1.css",
+      "span": [
+        87,
+        91
+      ],
+      "bytes": [
+        3602,
+        3918
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "----------------------------------------------------------------\n   3. BLACKBOARD — one wood-framed slate. Scoping the token\n   redefinitions + font to #board (and #p5-bar, injected as its\n   sibling) keeps the entry panel + banner untouched.\n   ----------------------------------------------------------------",
+      "raw": "/* ----------------------------------------------------------------\n   3. BLACKBOARD — one wood-framed slate. Scoping the token\n   redefinitions + font to #board (and #p5-bar, injected as its\n   sibling) keeps the entry panel + banner untouched.\n   ---------------------------------------------------------------- */"
+    },
+    {
+      "owner": "static/skin-skin1.css::body:has(#vt-bb.on) #board, body:has(#vt-bb.on) #p5-bar",
+      "file": "static/skin-skin1.css",
+      "span": [
+        100,
+        100
+      ],
+      "bytes": [
+        4172,
+        4244
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "reached by #p5-text / .p5-pill's explicit font-family: var(--mono)",
+      "raw": "/* reached by #p5-text / .p5-pill's explicit font-family: var(--mono) */"
+    },
+    {
+      "owner": "static/skin-skin1.css::body:has(#vt-inv.on) #board, body:has(#vt-inv.on) #p5-bar",
+      "file": "static/skin-skin1.css",
+      "span": [
+        127,
+        129
+      ],
+      "bytes": [
+        4955,
+        5152
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "----------------------------------------------------------------\n   4. INVENTORY — kraft manifest tags. Same scoping trick.\n   ----------------------------------------------------------------",
+      "raw": "/* ----------------------------------------------------------------\n   4. INVENTORY — kraft manifest tags. Same scoping trick.\n   ---------------------------------------------------------------- */"
+    },
+    {
+      "owner": "static/skin-skin1.css::body:has(#vt-inv.on) #board .card h2",
+      "file": "static/skin-skin1.css",
+      "span": [
+        167,
+        167
+      ],
+      "bytes": [
+        6275,
+        6302
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "clears the punch hole",
+      "raw": "/* clears the punch hole */"
+    },
+    {
+      "owner": "static/skin-skin1.css::body:has(#vt-inv.on) .inv-action-icon",
+      "file": "static/skin-skin1.css",
+      "span": [
+        169,
+        169
+      ],
+      "bytes": [
+        6305,
+        6372
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "5b: action gets the rubber stamp, condition stays a plain dot",
+      "raw": "/* 5b: action gets the rubber stamp, condition stays a plain dot */"
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        1,
+        1
+      ],
+      "bytes": [
+        0,
+        76
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "channels.js — pure visual-mapping functions for the viewer \"lens\" engine.",
+      "raw": "// channels.js — pure visual-mapping functions for the viewer \"lens\" engine."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        2,
+        11
+      ],
+      "bytes": [
+        77,
+        719
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Each public function takes (node, lens) and returns ONE visual value per CONTRACTS.md.\nNo DOM, no three.js, no side effects on import. Data in, value out.\n\nCONTRACT 1 (NODE): nodes carry raw attrs (status/type/energy/… possibly null) plus a\n  normalized block `node.n` where every quantitative field is 0..1 (or null if the raw\n  value was absent). We read `node.n.<field>` for sizing/y, raw attrs for hue/shape/highlight.\nCONTRACT 2 (LENS): lens.hueBy / shapeBy / sizeBy / yMode / highlight / score select the mapping.\n\nEXTENSION POINTS are marked `// EXTEND:` — add a case to the relevant switch to grow a lever.",
+      "raw": "//\n// Each public function takes (node, lens) and returns ONE visual value per CONTRACTS.md.\n// No DOM, no three.js, no side effects on import. Data in, value out.\n//\n// CONTRACT 1 (NODE): nodes carry raw attrs (status/type/energy/… possibly null) plus a\n//   normalized block `node.n` where every quantitative field is 0..1 (or null if the raw\n//   value was absent). We read `node.n.<field>` for sizing/y, raw attrs for hue/shape/highlight.\n// CONTRACT 2 (LENS): lens.hueBy / shapeBy / sizeBy / yMode / highlight / score select the mapping.\n//\n// EXTENSION POINTS are marked `// EXTEND:` — add a case to the relevant switch to grow a lever."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        15,
+        20
+      ],
+      "bytes": [
+        761,
+        1173
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\nPALETTE — exported so panel/legend can reuse the exact same colors.\n  status: the FROZEN status hex map (do not change these values).\n  domain/type: two DISTINCT 6-hex categorical scales.\n  NULL: the fallback for any absent categorical value.\n───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// PALETTE — exported so panel/legend can reuse the exact same colors.\n//   status: the FROZEN status hex map (do not change these values).\n//   domain/type: two DISTINCT 6-hex categorical scales.\n//   NULL: the fallback for any absent categorical value.\n// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        22,
+        22
+      ],
+      "bytes": [
+        1201,
+        1245
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "FROZEN — must match the contract exactly.",
+      "raw": "// FROZEN — must match the contract exactly."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        30,
+        30
+      ],
+      "bytes": [
+        1380,
+        1466
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Categorical scale for the 6 type vocabulary values (indexed in `TYPE_ORDER` order).",
+      "raw": "// Categorical scale for the 6 type vocabulary values (indexed in `TYPE_ORDER` order)."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        32,
+        32
+      ],
+      "bytes": [
+        1545,
+        1625
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Categorical scale for domains (assigned by a stable hash of the domain NAME).",
+      "raw": "// Categorical scale for domains (assigned by a stable hash of the domain NAME)."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        37,
+        37
+      ],
+      "bytes": [
+        1727,
+        1807
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Stable ordering for the `type` vocabulary so categorical indices never drift.",
+      "raw": "// Stable ordering for the `type` vocabulary so categorical indices never drift."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        40,
+        41
+      ],
+      "bytes": [
+        1891,
+        2009
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Stable category → geometry maps. 7 geometries available:\n  sphere | box | cone | cylinder | octa | tetra | torus",
+      "raw": "// Stable category → geometry maps. 7 geometries available:\n//   sphere | box | cone | cylinder | octa | tetra | torus"
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        59,
+        59
+      ],
+      "bytes": [
+        2360,
+        2436
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Deterministic string → non-negative int hash (FNV-1a-ish). Lets us map an",
+      "raw": "// Deterministic string → non-negative int hash (FNV-1a-ish). Lets us map an"
+    },
+    {
+      "owner": "viewer/channels.js::hashIndex",
+      "file": "viewer/channels.js",
+      "span": [
+        60,
+        60
+      ],
+      "bytes": [
+        2437,
+        2516
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "open-ended category (domain name) onto a fixed-length scale stably & purely.",
+      "raw": "// open-ended category (domain name) onto a fixed-length scale stably & purely."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        71,
+        73
+      ],
+      "bytes": [
+        2733,
+        2906
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\ncolorFor(node, lens) → \"#rrggbb\"\n  by lens.hueBy. Null categorical value → PALETTE.NULL.",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// colorFor(node, lens) → \"#rrggbb\"\n//   by lens.hueBy. Null categorical value → PALETTE.NULL."
+    },
+    {
+      "owner": "viewer/channels.js::colorFor",
+      "file": "viewer/channels.js",
+      "span": [
+        74,
+        74
+      ],
+      "bytes": [
+        2907,
+        2985
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::colorFor",
+      "file": "viewer/channels.js",
+      "span": [
+        84,
+        84
+      ],
+      "bytes": [
+        3285,
+        3355
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "domain is always present; hash the name onto the categorical scale.",
+      "raw": "// domain is always present; hash the name onto the categorical scale."
+    },
+    {
+      "owner": "viewer/channels.js::colorFor",
+      "file": "viewer/channels.js",
+      "span": [
+        88,
+        88
+      ],
+      "bytes": [
+        3489,
+        3526
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "EXTEND: add a new hueBy case here.",
+      "raw": "// EXTEND: add a new hueBy case here."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        94,
+        98
+      ],
+      "bytes": [
+        3574,
+        3949
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\nsizeFor(node, lens) → number   (relative, ~1..6)\n  by lens.sizeBy. Reads the node's normalized value (node.n.<field>) and maps\n  v∈0..1 → 1 + 5*v. \"score\" delegates to scoreFor. Leaves / null value → min (1).\n───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// sizeFor(node, lens) → number   (relative, ~1..6)\n//   by lens.sizeBy. Reads the node's normalized value (node.n.<field>) and maps\n//   v∈0..1 → 1 + 5*v. \"score\" delegates to scoreFor. Leaves / null value → min (1).\n// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::sizeFor",
+      "file": "viewer/channels.js",
+      "span": [
+        103,
+        103
+      ],
+      "bytes": [
+        4032,
+        4104
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Leaves are attribute-poor; contract says they always get the minimum.",
+      "raw": "// Leaves are attribute-poor; contract says they always get the minimum."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        116,
+        118
+      ],
+      "bytes": [
+        4352,
+        4536
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\nshapeFor(node, lens) → geometry name\n  by lens.shapeBy. \"none\" → sphere. Null categorical → sphere.",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// shapeFor(node, lens) → geometry name\n//   by lens.shapeBy. \"none\" → sphere. Null categorical → sphere."
+    },
+    {
+      "owner": "viewer/channels.js::shapeFor",
+      "file": "viewer/channels.js",
+      "span": [
+        119,
+        119
+      ],
+      "bytes": [
+        4537,
+        4615
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::shapeFor",
+      "file": "viewer/channels.js",
+      "span": [
+        129,
+        129
+      ],
+      "bytes": [
+        4882,
+        4952
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "open-ended category → stable geometry via hash over the shape ring.",
+      "raw": "// open-ended category → stable geometry via hash over the shape ring."
+    },
+    {
+      "owner": "viewer/channels.js::shapeFor",
+      "file": "viewer/channels.js",
+      "span": [
+        133,
+        133
+      ],
+      "bytes": [
+        5074,
+        5113
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "EXTEND: add a new shapeBy case here.",
+      "raw": "// EXTEND: add a new shapeBy case here."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        139,
+        145
+      ],
+      "bytes": [
+        5157,
+        5606
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\nyFor(node, lens) → number|null   (0..1 target height, or null when axis is free)\n  \"free\" → null (let the simulation place y).\n  \"recency\" → 1 - n.recency  (stale = high recency value = sinks low).\n  \"age\"     → 1 - n.age      (old = high age value = sinks low).\n  \"score\"   → scoreFor       (high score rises).\n  Null metric → 0.5 (neutral mid-plane).",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// yFor(node, lens) → number|null   (0..1 target height, or null when axis is free)\n//   \"free\" → null (let the simulation place y).\n//   \"recency\" → 1 - n.recency  (stale = high recency value = sinks low).\n//   \"age\"     → 1 - n.age      (old = high age value = sinks low).\n//   \"score\"   → scoreFor       (high score rises).\n//   Null metric → 0.5 (neutral mid-plane)."
+    },
+    {
+      "owner": "viewer/channels.js::yFor",
+      "file": "viewer/channels.js",
+      "span": [
+        146,
+        146
+      ],
+      "bytes": [
+        5607,
+        5685
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::yFor",
+      "file": "viewer/channels.js",
+      "span": [
+        161,
+        161
+      ],
+      "bytes": [
+        6030,
+        6067
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "EXTEND: add a new yMode case here.",
+      "raw": "// EXTEND: add a new yMode case here."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        167,
+        170
+      ],
+      "bytes": [
+        6107,
+        6339
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\nmatchesHighlight(node, lens) → boolean\n  \"active\"→status active · \"urgent\"→urgent · \"important\"→important\n  \"energyHi\"→energy hi · \"none\"→false.",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// matchesHighlight(node, lens) → boolean\n//   \"active\"→status active · \"urgent\"→urgent · \"important\"→important\n//   \"energyHi\"→energy hi · \"none\"→false."
+    },
+    {
+      "owner": "viewer/channels.js::matchesHighlight",
+      "file": "viewer/channels.js",
+      "span": [
+        171,
+        171
+      ],
+      "bytes": [
+        6340,
+        6418
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::matchesHighlight",
+      "file": "viewer/channels.js",
+      "span": [
+        178,
+        178
+      ],
+      "bytes": [
+        6709,
+        6750
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "EXTEND: add a new highlight case here.",
+      "raw": "// EXTEND: add a new highlight case here."
+    },
+    {
+      "owner": "viewer/channels.js",
+      "file": "viewer/channels.js",
+      "span": [
+        185,
+        189
+      ],
+      "bytes": [
+        6808,
+        7198
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────\n__selftest() — runs the mappings over mock nodes + lenses and logs outputs.\n  NOTE: score.js may not exist in this session; scoreFor is imported per contract\n  but the score-dependent cases are exercised defensively (a thrown import would\n  surface at module load, which the assembly step resolves).",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────\n// __selftest() — runs the mappings over mock nodes + lenses and logs outputs.\n//   NOTE: score.js may not exist in this session; scoreFor is imported per contract\n//   but the score-dependent cases are exercised defensively (a thrown import would\n//   surface at module load, which the assembly step resolves)."
+    },
+    {
+      "owner": "viewer/channels.js::__selftest",
+      "file": "viewer/channels.js",
+      "span": [
+        190,
+        190
+      ],
+      "bytes": [
+        7199,
+        7277
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "───────────────────────────────────────────────────────────────────────────",
+      "raw": "// ───────────────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/channels.js::__selftest",
+      "file": "viewer/channels.js",
+      "span": [
+        211,
+        211
+      ],
+      "bytes": [
+        8297,
+        8316
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "status/type null",
+      "raw": "// status/type null"
+    },
+    {
+      "owner": "viewer/data.js",
+      "file": "viewer/data.js",
+      "span": [
+        1,
+        1
+      ],
+      "bytes": [
+        0,
+        62
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "data.js — pure ES module, no DOM, no side effects on import",
+      "raw": "// data.js — pure ES module, no DOM, no side effects on import"
+    },
+    {
+      "owner": "viewer/data.js",
+      "file": "viewer/data.js",
+      "span": [
+        2,
+        2
+      ],
+      "bytes": [
+        63,
+        137
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Flatten board.json into { nodes, links } for the 3D force-graph viewer.",
+      "raw": "// Flatten board.json into { nodes, links } for the 3D force-graph viewer."
+    },
+    {
+      "owner": "viewer/data.js::walkNode",
+      "file": "viewer/data.js",
+      "span": [
+        11,
+        11
+      ],
+      "bytes": [
+        295,
+        365
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Walk a full node (item or subheader, any depth) into the flat list.",
+      "raw": "// Walk a full node (item or subheader, any depth) into the flat list."
+    },
+    {
+      "owner": "viewer/data.js::walkNode",
+      "file": "viewer/data.js",
+      "span": [
+        19,
+        19
+      ],
+      "bytes": [
+        744,
+        767
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "identity / structure",
+      "raw": "// identity / structure"
+    },
+    {
+      "owner": "viewer/data.js::walkNode",
+      "file": "viewer/data.js",
+      "span": [
+        28,
+        28
+      ],
+      "bytes": [
+        956,
+        973
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "raw attributes",
+      "raw": "// raw attributes"
+    },
+    {
+      "owner": "viewer/data.js::walkNode",
+      "file": "viewer/data.js",
+      "span": [
+        37,
+        37
+      ],
+      "bytes": [
+        1273,
+        1286
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "timestamps",
+      "raw": "// timestamps"
+    },
+    {
+      "owner": "viewer/data.js::walkNode",
+      "file": "viewer/data.js",
+      "span": [
+        43,
+        43
+      ],
+      "bytes": [
+        1346,
+        1387
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "derived RAW — computed in later passes",
+      "raw": "// derived RAW — computed in later passes"
+    },
+    {
+      "owner": "viewer/data.js::walkLeaf",
+      "file": "viewer/data.js",
+      "span": [
+        63,
+        63
+      ],
+      "bytes": [
+        1872,
+        1933
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Walk an attribute-poor subcontent leaf into the flat list.",
+      "raw": "// Walk an attribute-poor subcontent leaf into the flat list."
+    },
+    {
+      "owner": "viewer/data.js::computeRaw",
+      "file": "viewer/data.js",
+      "span": [
+        103,
+        103
+      ],
+      "bytes": [
+        2827,
+        2897
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Compute age, recency, timeInStatus, churn, editCount, subtypeCount.",
+      "raw": "// Compute age, recency, timeInStatus, churn, editCount, subtypeCount."
+    },
+    {
+      "owner": "viewer/data.js::computeStructural",
+      "file": "viewer/data.js",
+      "span": [
+        115,
+        115
+      ],
+      "bytes": [
+        3250,
+        3321
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Compute childCount, descendantCount, hasChildren from the flat list.",
+      "raw": "// Compute childCount, descendantCount, hasChildren from the flat list."
+    },
+    {
+      "owner": "viewer/data.js::computeStructural",
+      "file": "viewer/data.js",
+      "span": [
+        130,
+        130
+      ],
+      "bytes": [
+        3674,
+        3716
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Memoized descendant count (depth-first)",
+      "raw": "// Memoized descendant count (depth-first)"
+    },
+    {
+      "owner": "viewer/data.js",
+      "file": "viewer/data.js",
+      "span": [
+        142,
+        142
+      ],
+      "bytes": [
+        4022,
+        4072
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Build the n.{} normalized block for every node.",
+      "raw": "// Build the n.{} normalized block for every node."
+    },
+    {
+      "owner": "viewer/data.js::computeNormalized",
+      "file": "viewer/data.js",
+      "span": [
+        143,
+        143
+      ],
+      "bytes": [
+        4073,
+        4163
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Rule: n.m = (m - min) / (max - min) across all nodes; max===min → 0.5; null raw → null.",
+      "raw": "// Rule: n.m = (m - min) / (max - min) across all nodes; max===min → 0.5; null raw → null."
+    },
+    {
+      "owner": "viewer/data.js::computeNormalized",
+      "file": "viewer/data.js",
+      "span": [
+        150,
+        150
+      ],
+      "bytes": [
+        4348,
+        4381
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "min/max per quantitative field",
+      "raw": "// min/max per quantitative field"
+    },
+    {
+      "owner": "viewer/data.js::computeNormalized",
+      "file": "viewer/data.js",
+      "span": [
+        164,
+        164
+      ],
+      "bytes": [
+        4676,
+        4706
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Quantitative min-max fields",
+      "raw": "// Quantitative min-max fields"
+    },
+    {
+      "owner": "viewer/data.js::computeNormalized",
+      "file": "viewer/data.js",
+      "span": [
+        177,
+        177
+      ],
+      "bytes": [
+        4997,
+        5071
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Fixed categorical mappings: low=0.33 med=0.66 hi=1 na=null; absent=null",
+      "raw": "// Fixed categorical mappings: low=0.33 med=0.66 hi=1 na=null; absent=null"
+    },
+    {
+      "owner": "viewer/data.js::computeNormalized",
+      "file": "viewer/data.js",
+      "span": [
+        181,
+        181
+      ],
+      "bytes": [
+        5239,
+        5257
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Boolean → 1 / 0",
+      "raw": "// Boolean → 1 / 0"
+    },
+    {
+      "owner": "viewer/data.js",
+      "file": "viewer/data.js",
+      "span": [
+        187,
+        187
+      ],
+      "bytes": [
+        5347,
+        5427
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "─── Public API ──────────────────────────────────────────────────────────────",
+      "raw": "// ─── Public API ──────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/data.js::buildGraph",
+      "file": "viewer/data.js",
+      "span": [
+        189,
+        194
+      ],
+      "bytes": [
+        5429,
+        5667
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Flatten boardJson into { nodes, links }.\n@param {object} boardJson  – parsed board.json\n@param {number} now        – epoch ms (default Date.now())\n@returns {{ nodes: object[], links: {source:string, target:string}[] }}",
+      "raw": "/**\n * Flatten boardJson into { nodes, links }.\n * @param {object} boardJson  – parsed board.json\n * @param {number} now        – epoch ms (default Date.now())\n * @returns {{ nodes: object[], links: {source:string, target:string}[] }}\n */"
+    },
+    {
+      "owner": "viewer/data.js::buildGraph",
+      "file": "viewer/data.js",
+      "span": [
+        203,
+        203
+      ],
+      "bytes": [
+        5929,
+        5986
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "domain.inventory is intentionally ignored per contract",
+      "raw": "// domain.inventory is intentionally ignored per contract"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        213,
+        217
+      ],
+      "bytes": [
+        6105,
+        6265
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Sanity-check the output of buildGraph.\nPass theoes NOT run on import.\n@param {{ nodes, links }} graph  – optional; prints usage hint if omitted",
+      "raw": "/**\n * Sanity-check the output of buildGraph.\n * Pass theoes NOT run on import.\n * @param {{ nodes, links }} graph  – optional; prints usage hint if omitted\n */"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        227,
+        227
+      ],
+      "bytes": [
+        6547,
+        6571
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Node count per domain",
+      "raw": "// Node count per domain"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        232,
+        232
+      ],
+      "bytes": [
+        6730,
+        6751
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Depth distribution",
+      "raw": "// Depth distribution"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        237,
+        237
+      ],
+      "bytes": [
+        6903,
+        6916
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Leaf count",
+      "raw": "// Leaf count"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        241,
+        241
+      ],
+      "bytes": [
+        7032,
+        7072
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Sample: a non-leaf node with children",
+      "raw": "// Sample: a non-leaf node with children"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        256,
+        256
+      ],
+      "bytes": [
+        7586,
+        7600
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Sample leaf",
+      "raw": "// Sample leaf"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        262,
+        262
+      ],
+      "bytes": [
+        7829,
+        7841
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "both null",
+      "raw": "// both null"
+    },
+    {
+      "owner": "viewer/data.js::__selftest",
+      "file": "viewer/data.js",
+      "span": [
+        267,
+        267
+      ],
+      "bytes": [
+        7874,
+        7933
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Verify every node has the n block with all expected keys",
+      "raw": "// Verify every node has the n block with all expected keys"
+    },
+    {
+      "owner": "viewer/panel.js",
+      "file": "viewer/panel.js",
+      "span": [
+        3,
+        3
+      ],
+      "bytes": [
+        28,
+        109
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "── Contract enums (CONTRACT 2) ───────────────────────────────────────────────",
+      "raw": "// ── Contract enums (CONTRACT 2) ───────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js",
+      "file": "viewer/panel.js",
+      "span": [
+        24,
+        24
+      ],
+      "bytes": [
+        767,
+        848
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "── localStorage helpers ──────────────────────────────────────────────────────",
+      "raw": "// ── localStorage helpers ──────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::snapLens",
+      "file": "viewer/panel.js",
+      "span": [
+        43,
+        43
+      ],
+      "bytes": [
+        1192,
+        1273
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "── Lens snapshot / restore ───────────────────────────────────────────────────",
+      "raw": "// ── Lens snapshot / restore ───────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::applySnap",
+      "file": "viewer/panel.js",
+      "span": [
+        57,
+        57
+      ],
+      "bytes": [
+        1534,
+        1615
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Mutates lens in place from a stored snapshot; missing keys keep current value.",
+      "raw": "// Mutates lens in place from a stored snapshot; missing keys keep current value."
+    },
+    {
+      "owner": "viewer/panel.js",
+      "file": "viewer/panel.js",
+      "span": [
+        65,
+        65
+      ],
+      "bytes": [
+        1850,
+        1931
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "── createPanel ───────────────────────────────────────────────────────────────",
+      "raw": "// ── createPanel ───────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        67,
+        72
+      ],
+      "bytes": [
+        1933,
+        2176
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "Build the lil-gui control panel.\n@param {object} lens   - CONTRACT 2 lens object; mutated in place on every control change.\n@param {function} onChange - called as onChange(lens) after every mutation.\n@returns {{ gui: GUI }}",
+      "raw": "/**\n * Build the lil-gui control panel.\n * @param {object} lens   - CONTRACT 2 lens object; mutated in place on every control change.\n * @param {function} onChange - called as onChange(lens) after every mutation.\n * @returns {{ gui: GUI }}\n */"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        77,
+        77
+      ],
+      "bytes": [
+        2312,
+        2391
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "── Layout ──────────────────────────────────────────────────────────────────",
+      "raw": "// ── Layout ──────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        82,
+        82
+      ],
+      "bytes": [
+        2566,
+        2645
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "── Appearance ──────────────────────────────────────────────────────────────",
+      "raw": "// ── Appearance ──────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        88,
+        89
+      ],
+      "bytes": [
+        2895,
+        3065
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "── Score (weight sliders) ───────────────────────────────────────────────────\nExtension point: add new score weights here; scoreFor() picks them up automatically.",
+      "raw": "// ── Score (weight sliders) ───────────────────────────────────────────────────\n  // Extension point: add new score weights here; scoreFor() picks them up automatically."
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        95,
+        95
+      ],
+      "bytes": [
+        3264,
+        3344
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "── Highlight ────────────────────────────────────────────────────────────────",
+      "raw": "// ── Highlight ────────────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        99,
+        99
+      ],
+      "bytes": [
+        3466,
+        3546
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "── Lens persistence ─────────────────────────────────────────────────────────",
+      "raw": "// ── Lens persistence ─────────────────────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        105,
+        105
+      ],
+      "bytes": [
+        3674,
+        3740
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Load dropdown — selecting a name immediately applies that lens.",
+      "raw": "// Load dropdown — selecting a name immediately applies that lens."
+    },
+    {
+      "owner": "viewer/panel.js::createPanel",
+      "file": "viewer/panel.js",
+      "span": [
+        116,
+        116
+      ],
+      "bytes": [
+        4082,
+        4134
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Refresh every control to reflect restored values.",
+      "raw": "// Refresh every control to reflect restored values."
+    },
+    {
+      "owner": "viewer/panel.js::Save",
+      "file": "viewer/panel.js",
+      "span": [
+        129,
+        129
+      ],
+      "bytes": [
+        4469,
+        4517
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Refresh load dropdown with updated name list.",
+      "raw": "// Refresh load dropdown with updated name list."
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        149,
+        149
+      ],
+      "bytes": [
+        4938,
+        5019
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "── Self-test (must NOT run on import) ────────────────────────────────────────",
+      "raw": "// ── Self-test (must NOT run on import) ────────────────────────────────────────"
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        152,
+        152
+      ],
+      "bytes": [
+        5054,
+        5098
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Build a lens matching DEFAULT_LENS shape.",
+      "raw": "// Build a lens matching DEFAULT_LENS shape."
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        169,
+        169
+      ],
+      "bytes": [
+        5498,
+        5582
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Simulate a control mutation (the way lil-gui fires onChange on the bound object).",
+      "raw": "// Simulate a control mutation (the way lil-gui fires onChange on the bound object)."
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        174,
+        174
+      ],
+      "bytes": [
+        5727,
+        5766
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Verify snapLens round-trips cleanly.",
+      "raw": "// Verify snapLens round-trips cleanly."
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        179,
+        179
+      ],
+      "bytes": [
+        5999,
+        6028
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Verify applySnap restores.",
+      "raw": "// Verify applySnap restores."
+    },
+    {
+      "owner": "viewer/panel.js::__selftest",
+      "file": "viewer/panel.js",
+      "span": [
+        186,
+        186
+      ],
+      "bytes": [
+        6322,
+        6366
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Expected in a non-DOM (Node) environment.",
+      "raw": "// Expected in a non-DOM (Node) environment."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        5,
+        6
+      ],
+      "bytes": [
+        161,
+        295
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Distance from y=0 to each y extreme when a node is pinned.\nExtension point: define X_SPAN / Z_SPAN here when x/z pins are added.",
+      "raw": "// Distance from y=0 to each y extreme when a node is pinned.\n// Extension point: define X_SPAN / Z_SPAN here when x/z pins are added."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        9,
+        11
+      ],
+      "bytes": [
+        317,
+        544
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Visual tuning — EYES-ONLY, adjust to taste (Brandon's dial).\nNodes self-glow with their own color so they're visible regardless of scene\nlighting. Raise BASE for brighter, lower for moodier. HILITE = highlighted pulse.",
+      "raw": "// Visual tuning — EYES-ONLY, adjust to taste (Brandon's dial).\n// Nodes self-glow with their own color so they're visible regardless of scene\n// lighting. Raise BASE for brighter, lower for moodier. HILITE = highlighted pulse."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        15,
+        16
+      ],
+      "bytes": [
+        605,
+        746
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "Fallback used only for the initial render, before the assembly fires\napplyLens(DEFAULT_LENS). Values match the contract's DEFAULT_LENS.",
+      "raw": "// Fallback used only for the initial render, before the assembly fires\n// applyLens(DEFAULT_LENS). Values match the contract's DEFAULT_LENS."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        23,
+        26
+      ],
+      "bytes": [
+        986,
+        1273
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------\nGeometry factory — maps shape name to a unit-scale THREE geometry.\nmesh.scale carries the size channel; geometry is the shape channel.\nExtension point: add entries here as the shape vocabulary grows.",
+      "raw": "// ---------------------------------------------------------------------------\n// Geometry factory — maps shape name to a unit-scale THREE geometry.\n// mesh.scale carries the size channel; geometry is the shape channel.\n// Extension point: add entries here as the shape vocabulary grows."
+    },
+    {
+      "owner": "viewer/scene.js::buildGeometry",
+      "file": "viewer/scene.js",
+      "span": [
+        27,
+        27
+      ],
+      "bytes": [
+        1274,
+        1352
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------",
+      "raw": "// ---------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        41,
+        45
+      ],
+      "bytes": [
+        1900,
+        2226
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------\nCluster force factory — nudges nodes on x and z toward the centroid of\ntheir clusterBy group. y is never nudged because it may be pinned.\nExtension point: if x or z become pinnable, gate their nudge here too,\nmirroring the y exclusion.",
+      "raw": "// ---------------------------------------------------------------------------\n// Cluster force factory — nudges nodes on x and z toward the centroid of\n// their clusterBy group. y is never nudged because it may be pinned.\n// Extension point: if x or z become pinnable, gate their nudge here too,\n// mirroring the y exclusion."
+    },
+    {
+      "owner": "viewer/scene.js::makeClusterForce",
+      "file": "viewer/scene.js",
+      "span": [
+        46,
+        46
+      ],
+      "bytes": [
+        2227,
+        2305
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------",
+      "raw": "// ---------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::makeClusterForce",
+      "file": "viewer/scene.js",
+      "span": [
+        48,
+        48
+      ],
+      "bytes": [
+        2373,
+        2426
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "tune at assembly if clustering is too sticky/loose",
+      "raw": "// tune at assembly if clustering is too sticky/loose"
+    },
+    {
+      "owner": "viewer/scene.js::force",
+      "file": "viewer/scene.js",
+      "span": [
+        55,
+        55
+      ],
+      "bytes": [
+        2564,
+        2623
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Accumulate group centroids on the free axes only (x, z).",
+      "raw": "// Accumulate group centroids on the free axes only (x, z)."
+    },
+    {
+      "owner": "viewer/scene.js::force",
+      "file": "viewer/scene.js",
+      "span": [
+        64,
+        64
+      ],
+      "bytes": [
+        2897,
+        2948
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Apply velocity nudge toward centroid on x and z.",
+      "raw": "// Apply velocity nudge toward centroid on x and z."
+    },
+    {
+      "owner": "viewer/scene.js::makeClusterForce",
+      "file": "viewer/scene.js",
+      "span": [
+        75,
+        76
+      ],
+      "bytes": [
+        3297,
+        3429
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "d3-force calls initialize(nodes) when the force is registered or replaced,\ngiving the force the simulation's live node list.",
+      "raw": "// d3-force calls initialize(nodes) when the force is registered or replaced,\n  // giving the force the simulation's live node list."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        82,
+        84
+      ],
+      "bytes": [
+        3505,
+        3655
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------\ncreateScene — main export\nReturns { applyLens(lens), dispose() }.",
+      "raw": "// ---------------------------------------------------------------------------\n// createScene — main export\n// Returns { applyLens(lens), dispose() }."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        85,
+        85
+      ],
+      "bytes": [
+        3656,
+        3734
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------",
+      "raw": "// ---------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        87,
+        87
+      ],
+      "bytes": [
+        3781,
+        3850
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Live lens — read by buildMesh (via closure) and by the pulse loop.",
+      "raw": "// Live lens — read by buildMesh (via closure) and by the pulse loop."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        90,
+        90
+      ],
+      "bytes": [
+        3889,
+        3942
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Pulse rAF handle; kept so dispose() can cancel it.",
+      "raw": "// Pulse rAF handle; kept so dispose() can cancel it."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        93,
+        97
+      ],
+      "bytes": [
+        3971,
+        4339
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\nMesh builder — called by nodeThreeObject on initial render and on any\nlibrary-triggered node rebuild. Always reads currentLens, so a forced\nrebuild after applyLens produces correctly styled meshes.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // Mesh builder — called by nodeThreeObject on initial render and on any\n  // library-triggered node rebuild. Always reads currentLens, so a forced\n  // rebuild after applyLens produces correctly styled meshes.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::buildMesh",
+      "file": "viewer/scene.js",
+      "span": [
+        115,
+        115
+      ],
+      "bytes": [
+        4882,
+        4954
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Stored on the node for the pulse loop and applyLens in-place updates.",
+      "raw": "// Stored on the node for the pulse loop and applyLens in-place updates."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        122,
+        124
+      ],
+      "bytes": [
+        5033,
+        5262
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\n3d-force-graph init — API crib used verbatim per CONTRACT §scene.js.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // 3d-force-graph init — API crib used verbatim per CONTRACT §scene.js.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        128,
+        128
+      ],
+      "bytes": [
+        5440,
+        5475
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "hover tooltip; NO always-on text",
+      "raw": "// hover tooltip; NO always-on text"
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        130,
+        130
+      ],
+      "bytes": [
+        5586,
+        5616
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "depth fog — density tunable",
+      "raw": "// depth fog — density tunable"
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        132,
+        136
+      ],
+      "bytes": [
+        5620,
+        5992
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\nCluster force — registered now with the default lens; replaced on each\napplyLens call. d3-force calls force.initialize(nodes) on registration,\nso the force always holds the simulation's live node list.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // Cluster force — registered now with the default lens; replaced on each\n  // applyLens call. d3-force calls force.initialize(nodes) on registration,\n  // so the force always holds the simulation's live node list.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        139,
+        143
+      ],
+      "bytes": [
+        6055,
+        6417
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\nPulse loop — bare rAF so it runs at a steady 60 fps regardless of\nsimulation temperature. Highlights matching nodes with a sin-wave scale\nand emissive glow; resets non-matching to base state.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // Pulse loop — bare rAF so it runs at a steady 60 fps regardless of\n  // simulation temperature. Highlights matching nodes with a sin-wave scale\n  // and emissive glow; resets non-matching to base state.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::tick",
+      "file": "viewer/scene.js",
+      "span": [
+        149,
+        149
+      ],
+      "bytes": [
+        6587,
+        6597
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "seconds",
+      "raw": "// seconds"
+    },
+    {
+      "owner": "viewer/scene.js::tick",
+      "file": "viewer/scene.js",
+      "span": [
+        156,
+        156
+      ],
+      "bytes": [
+        6755,
+        6798
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Contract spec: scale by 1 + 0.25*sin(t).",
+      "raw": "// Contract spec: scale by 1 + 0.25*sin(t)."
+    },
+    {
+      "owner": "viewer/scene.js::tick",
+      "file": "viewer/scene.js",
+      "span": [
+        158,
+        158
+      ],
+      "bytes": [
+        6883,
+        6950
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Emissive pulses in phase with scale, riding above the base glow.",
+      "raw": "// Emissive pulses in phase with scale, riding above the base glow."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        172,
+        175
+      ],
+      "bytes": [
+        7250,
+        7551
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\napplyLens — hot-swap all visual channels, y-pins, and cluster force.\nCalled by the panel's onChange and by the assembly's initial call.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // applyLens — hot-swap all visual channels, y-pins, and cluster force.\n  // Called by the panel's onChange and by the assembly's initial call.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        179,
+        180
+      ],
+      "bytes": [
+        7610,
+        7748
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Recolor / resize / reshape all existing meshes in-place.\nTHREE.js allows swapping mesh.geometry; old geometry is disposed first.",
+      "raw": "// Recolor / resize / reshape all existing meshes in-place.\n    // THREE.js allows swapping mesh.geometry; old geometry is disposed first."
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        194,
+        196
+      ],
+      "bytes": [
+        8139,
+        8348
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Only reset scale/emissive when not currently highlighted.\nHighlighted nodes are under pulse-loop control; resetting here would\ncause a one-frame pop before the next pulse tick corrects it.",
+      "raw": "// Only reset scale/emissive when not currently highlighted.\n      // Highlighted nodes are under pulse-loop control; resetting here would\n      // cause a one-frame pop before the next pulse tick corrects it."
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        203,
+        207
+      ],
+      "bytes": [
+        8510,
+        8792
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Y-pin: map yFor result (0..1 or null) to a y position.\nnull → undefined (free); otherwise centred around 0 with ±Y_SPAN/2 range.\nx and z are intentionally left free (fx/fz undefined).\n\nExtension point: to add an x or z pin, mirror the fy block exactly:",
+      "raw": "// Y-pin: map yFor result (0..1 or null) to a y position.\n    // null → undefined (free); otherwise centred around 0 with ±Y_SPAN/2 range.\n    // x and z are intentionally left free (fx/fz undefined).\n    //\n    // Extension point: to add an x or z pin, mirror the fy block exactly:"
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        208,
+        209
+      ],
+      "bytes": [
+        8797,
+        8891
+      ],
+      "where": "interior",
+      "what": "dead",
+      "text": "const xv = xFor(n, lens);\n  n.fx = (xv == null) ? undefined : (xv - 0.5) * X_SPAN;",
+      "raw": "//   const xv = xFor(n, lens);\n    //   n.fx = (xv == null) ? undefined : (xv - 0.5) * X_SPAN;"
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        210,
+        210
+      ],
+      "bytes": [
+        8896,
+        8947
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "then gate the x nudge out of makeClusterForce.",
+      "raw": "//   then gate the x nudge out of makeClusterForce."
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        214,
+        215
+      ],
+      "bytes": [
+        9079,
+        9233
+      ],
+      "where": "interior",
+      "what": "dead",
+      "text": "n.fx = undefined;  // x free — make explicit if an x-pin lever is added\nn.fz = undefined;  // z free — make explicit if a z-pin lever is added",
+      "raw": "// n.fx = undefined;  // x free — make explicit if an x-pin lever is added\n      // n.fz = undefined;  // z free — make explicit if a z-pin lever is added"
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        218,
+        219
+      ],
+      "bytes": [
+        9245,
+        9390
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Replace cluster force with one bound to the new lens object.\nd3-force calls initialize(nodes) on the replacement, re-binding sim nodes.",
+      "raw": "// Replace cluster force with one bound to the new lens object.\n    // d3-force calls initialize(nodes) on the replacement, re-binding sim nodes."
+    },
+    {
+      "owner": "viewer/scene.js::applyLens",
+      "file": "viewer/scene.js",
+      "span": [
+        222,
+        222
+      ],
+      "bytes": [
+        9450,
+        9515
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Reheat so pins and the new cluster force take effect promptly.",
+      "raw": "// Reheat so pins and the new cluster force take effect promptly."
+    },
+    {
+      "owner": "viewer/scene.js::createScene",
+      "file": "viewer/scene.js",
+      "span": [
+        226,
+        228
+      ],
+      "bytes": [
+        9555,
+        9778
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "-------------------------------------------------------------------------\ndispose — stop loops, free GPU resources, clear the container.\n-------------------------------------------------------------------------",
+      "raw": "// -------------------------------------------------------------------------\n  // dispose — stop loops, free GPU resources, clear the container.\n  // -------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/scene.js::dispose",
+      "file": "viewer/scene.js",
+      "span": [
+        243,
+        243
+      ],
+      "bytes": [
+        10079,
+        10154
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "Pause the internal render loop; fall back to DOM clear if not available.",
+      "raw": "// Pause the internal render loop; fall back to DOM clear if not available."
+    },
+    {
+      "owner": "viewer/scene.js",
+      "file": "viewer/scene.js",
+      "span": [
+        251,
+        252
+      ],
+      "bytes": [
+        10298,
+        10433
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------\nSelf-test — logs wiring sanity. NOT called on import.",
+      "raw": "// ---------------------------------------------------------------------------\n// Self-test — logs wiring sanity. NOT called on import."
+    },
+    {
+      "owner": "viewer/scene.js::__selftest",
+      "file": "viewer/scene.js",
+      "span": [
+        253,
+        253
+      ],
+      "bytes": [
+        10434,
+        10512
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "---------------------------------------------------------------------------",
+      "raw": "// ---------------------------------------------------------------------------"
+    },
+    {
+      "owner": "viewer/score.js",
+      "file": "viewer/score.js",
+      "span": [
+        1,
+        1
+      ],
+      "bytes": [
+        0,
+        28
+      ],
+      "where": "header",
+      "what": "prose",
+      "text": "score.js — agent 3 (pure)",
+      "raw": "// score.js — agent 3 (pure)"
+    },
+    {
+      "owner": "viewer/score.js",
+      "file": "viewer/score.js",
+      "span": [
+        2,
+        19
+      ],
+      "bytes": [
+        29,
+        735
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "scoreFor(node, lens) → number in 0..1\n\nWeighted average of the lens score terms over the node's NORMALIZED metrics\n(node.n, each already 0..1 or null — produced by data.js per CONTRACT 1).\n\nPer CONTRACT 2, lens.score = { wAge, wRecency, wChurn, wEnergy, wUrgent, wImportant },\neach weight 0..1. The term→metric mapping is FROZEN by the spec:\n\n    wAge       → n.age\n    wRecency   → n.recency\n    wChurn     → n.churn\n    wEnergy    → n.energy\n    wUrgent    → n.urgent\n    wImportant → n.important\n\nRule: sum (weight * value) over terms where weight > 0 AND value is non-null,\ndivide by the sum of those qualifying weights. If nothing qualifies, return 0.",
+      "raw": "//\n// scoreFor(node, lens) → number in 0..1\n//\n// Weighted average of the lens score terms over the node's NORMALIZED metrics\n// (node.n, each already 0..1 or null — produced by data.js per CONTRACT 1).\n//\n// Per CONTRACT 2, lens.score = { wAge, wRecency, wChurn, wEnergy, wUrgent, wImportant },\n// each weight 0..1. The term→metric mapping is FROZEN by the spec:\n//\n//     wAge       → n.age\n//     wRecency   → n.recency\n//     wChurn     → n.churn\n//     wEnergy    → n.energy\n//     wUrgent    → n.urgent\n//     wImportant → n.important\n//\n// Rule: sum (weight * value) over terms where weight > 0 AND value is non-null,\n// divide by the sum of those qualifying weights. If nothing qualifies, return 0."
+    },
+    {
+      "owner": "viewer/score.js",
+      "file": "viewer/score.js",
+      "span": [
+        21,
+        21
+      ],
+      "bytes": [
+        737,
+        822
+      ],
+      "where": "orphan",
+      "what": "prose",
+      "text": "EXTENSION POINT: to add a new score lever, add a { w, v } pair here and a matching",
+      "raw": "// EXTENSION POINT: to add a new score lever, add a { w, v } pair here and a matching"
+    },
+    {
+      "owner": "viewer/score.js::terms",
+      "file": "viewer/score.js",
+      "span": [
+        22,
+        22
+      ],
+      "bytes": [
+        823,
+        907
+      ],
+      "where": "leading",
+      "what": "prose",
+      "text": "slider in panel.js + weight key in the lens.score contract. Nothing else changes.",
+      "raw": "// slider in panel.js + weight key in the lens.score contract. Nothing else changes."
+    },
+    {
+      "owner": "viewer/score.js::scoreFor",
+      "file": "viewer/score.js",
+      "span": [
+        40,
+        40
+      ],
+      "bytes": [
+        1365,
+        1430
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "skip zero/absent weights and null (or undefined) metric values",
+      "raw": "// skip zero/absent weights and null (or undefined) metric values"
+    },
+    {
+      "owner": "viewer/score.js::scoreFor",
+      "file": "viewer/score.js",
+      "span": [
+        41,
+        41
+      ],
+      "bytes": [
+        1465,
+        1507
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "also rejects null/undefined/NaN weights",
+      "raw": "// also rejects null/undefined/NaN weights"
+    },
+    {
+      "owner": "viewer/score.js::scoreFor",
+      "file": "viewer/score.js",
+      "span": [
+        42,
+        42
+      ],
+      "bytes": [
+        1542,
+        1593
+      ],
+      "where": "trailing",
+      "what": "prose",
+      "text": "null OR undefined metric → not a qualifying term",
+      "raw": "// null OR undefined metric → not a qualifying term"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        51,
+        51
+      ],
+      "bytes": [
+        1726,
+        1818
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "mock node: some normalized metrics present, energy null (should be skipped when weighted)",
+      "raw": "// mock node: some normalized metrics present, energy null (should be skipped when weighted)"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        60,
+        60
+      ],
+      "bytes": [
+        2129,
+        2159
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "1) no qualifying weight → 0",
+      "raw": "// 1) no qualifying weight → 0"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        64,
+        64
+      ],
+      "bytes": [
+        2353,
+        2394
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "2) single weight → exactly that metric",
+      "raw": "// 2) single weight → exactly that metric"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        68,
+        69
+      ],
+      "bytes": [
+        2564,
+        2709
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "3) mixed weights, output in 0..1, and equals hand-computed average\nwAge=0.5*0.2 + wRecency=0.5*0.8 = 0.1+0.4=0.5 over weightsum 1.0 → 0.5",
+      "raw": "// 3) mixed weights, output in 0..1, and equals hand-computed average\n  // wAge=0.5*0.2 + wRecency=0.5*0.8 = 0.1+0.4=0.5 over weightsum 1.0 → 0.5"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        74,
+        74
+      ],
+      "bytes": [
+        2954,
+        3047
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "4) null metric is skipped: weighting energy(null) alongside urgent(1) → only urgent counts",
+      "raw": "// 4) null metric is skipped: weighting energy(null) alongside urgent(1) → only urgent counts"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        78,
+        78
+      ],
+      "bytes": [
+        3244,
+        3312
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "5) all-null metrics with positive weights → 0 (nothing qualifies)",
+      "raw": "// 5) all-null metrics with positive weights → 0 (nothing qualifies)"
+    },
+    {
+      "owner": "viewer/score.js::__selftest",
+      "file": "viewer/score.js",
+      "span": [
+        83,
+        83
+      ],
+      "bytes": [
+        3571,
+        3632
+      ],
+      "where": "interior",
+      "what": "prose",
+      "text": "6) defensive: missing n / missing score blocks don't throw",
+      "raw": "// 6) defensive: missing n / missing score blocks don't throw"
+    }
+  ]
+}

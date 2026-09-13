@@ -1,0 +1,8 @@
+session 85b19c53d41a
+D1: FAIL — tab1 WINDOW_ID=w-mr62zhrk, tab2 WINDOW_ID=w-mr62zhrk; added editor-mtyl540u-1 in tab1; tab2 elements with that instance=0 — Docs/Reports/phase0-redpen/D1-tab2-after-add.png
+D2: FAIL — tab2 slot for terminal-mtyl56dc-1={'col': 6, 'row': 4, 'w': 4, 'h': 4}; tab1 slot=None — Docs/Reports/phase0-redpen/D2-tab1-after-move.png
+D3: FAIL — closed editor-mtyl540u-1 in tab1; tab2 held it before close=0; tab2 shows 0 after — tab2 never had it, removal not demonstrated — Docs/Reports/phase0-redpen/D3-tab2-after-close.png
+D4: FAIL — tab1 editor tabs=[{'key': 'editor-mtyl5c14-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}]; tab2 editor tabs=None — Docs/Reports/phase0-redpen/D4-tab2-editor.png
+D5: FAIL — remote emit: tab1 fired 1, tab2 fired 0; local emit: tab1 total 2, tab2 total 0; widget_bus frames that reached tab2's socket: [{'channel': 't', 'inst': 'w-mr62zhrk'}]; tab2 WINDOW_ID=w-mr62zhrk — Docs/Reports/phase0-redpen/D5-bus.png
+D6: OBSERVED — surface one=w-mr62zhrk, surface two=w-v50liydl; opened CLAUDE.md on surface one; surface two editor tabs before=[] after=[]; surface two widgets now=['editor'] — Docs/Reports/phase0-redpen/D6-other-surface.png
+D7: FAIL — tab1 3 widgets, tab2 5 widgets, layouts match=False; most grid writes inside any 2s window=1 (loop threshold >3) — Docs/Reports/phase0-redpen/D7-after-burst-reload.png

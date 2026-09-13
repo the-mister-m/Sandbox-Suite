@@ -336,7 +336,10 @@
       head.className = "cq-head";
       c.picker = document.createElement("select");
       c.picker.className = "cq-pick";
-      c.picker.addEventListener("change", () => setRegion(frame, c.picker.value));
+      c.picker.addEventListener("change", () => {
+        setRegion(frame, c.picker.value);
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+      });
       c.livePill = document.createElement("button");
       c.livePill.type = "button";
       c.livePill.className = "cq-pill";
@@ -444,7 +447,11 @@
       if (msg.type === "ade_init" || msg.type === "track_list") {
         c.regions = MX.gates.regionRows(msg);
         c.names = MX.gates.namesFrom(msg, Object.create(null));
-        if (!rid && c.regions.length) { setRegion(frame, c.regions[0].id); return; }
+        if (!rid && c.regions.length) {
+          setRegion(frame, c.regions[0].id);
+          if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+          return;
+        }
         // a region carried in from a matrix template still needs its transcript
         if (rid && !c.bound) {
           c.bound = true;
@@ -454,9 +461,14 @@
         return;
       }
 
-      if (msg.type === "track_removed" && msg.id === rid) { setRegion(frame, ""); return; }
+      if (msg.type === "track_removed" && msg.id === rid) {
+        setRegion(frame, "");
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+        return;
+      }
       if (msg.type === "region_replaced" && msg.old_id === rid) {
         setRegion(frame, msg.new_id);
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
         return;
       }
 

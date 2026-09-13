@@ -1,0 +1,59 @@
+15:13:04 [harness] final run session e76d0d6f4e3e
+[fence] e76d0d6f4e3e before: ['w-ywzvtxv8']
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[fence] 0d78d246515f before: ['w-8924kcue']
+[fence] bc64260f82ad before: ['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+[fence] 8c3abc75b244 before: ['w-ywzvtxv8']
+[fence] ae83cfb77344 before: ['w-4iqbeqvo', 'w-cikyi7tb', 'w-n32ximig']
+15:13:11 [harness] P surface=w-4cuo5gzh url=http://127.0.0.1:5000/matrix/e76d0d6f4e3e?s=w-4cuo5gzh t1=t-zklvg4y8 t2=t-d5y3b5vl
+15:13:42 [obs] 1 t1 markDirty calls=[{'at': 12, 'id': 'browser-mtyrj648-1'}, {'at': 8581, 'id': 'browser-mtyrj648-1'}, {'at': 12555, 'id': 'editor-mtyrj81w-2'}, {'at': 17518, 'id': 'editor-mtyrj81w-2'}, {'at': 23051, 'id': 'editor-mtyrj81w-2'}]
+15:13:42 [obs] 1 t1 socket file frames=[{'at': 12555, 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/AUDIT-BRIEF-phase3.md', 'inst': 'editor-mtyrj81w-2'}, {'at': 17518, 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/HOWTO-frames.md', 'inst': 'editor-mtyrj81w-2'}]
+15:13:42 [obs] 1 t2 held=[{'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}]
+15:13:42 [obs] 1 t1 held=[{'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}, {'n': 2, 'a': 'editor-mtyrj81w-2-t1'}]
+15:13:42 [step] 1 PASS
+15:13:50 [obs] 2 t1 browser expanded=['/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit', '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/audit/arrange-old'] rows=16
+15:13:50 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:13:50 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:13:50 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:13:50 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:13:58 [step] 2 PASS
+15:14:01 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:14:01 [P-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-4cuo5gzh net::ERR_ABORTED
+15:14:07 [obs] 3 grid PUTs from tab2=1 aborted=1
+15:14:07 [step] 3 PASS
+15:14:31 [step] 4 PASS
+15:14:31 [step] 5a PASS
+15:14:32 [step] 5b PASS
+15:14:34 [step] 5c PASS
+15:14:35 [step] 5d PASS
+15:14:47 [step] 5e PASS
+15:14:49 [step] 5f PASS
+15:14:53 [harness] chat roster on e76d0d6f4e3e: [{'id': '9548242d650d', 'name': 'test'}]
+15:14:56 [step] 5g PASS
+15:15:08 [step] 5ha PASS
+15:15:12 [step] 5hb OBSERVED
+15:15:13 [step] 6 PASS
+[sweep] e76d0d6f4e3e before=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e made=['w-4cuo5gzh']
+[sweep] e76d0d6f4e3e after=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e intact=True
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=[]
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True
+[sweep] 0d78d246515f before=['w-8924kcue']
+[sweep] 0d78d246515f made=[]
+[sweep] 0d78d246515f after=['w-8924kcue']
+[sweep] 0d78d246515f intact=True
+[sweep] bc64260f82ad before=['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+[sweep] bc64260f82ad made=['w-mkpsee33']
+[sweep] bc64260f82ad after=['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+[sweep] bc64260f82ad intact=True
+[sweep] 8c3abc75b244 before=['w-ywzvtxv8']
+[sweep] 8c3abc75b244 made=[]
+[sweep] 8c3abc75b244 after=['w-ywzvtxv8']
+[sweep] 8c3abc75b244 intact=True
+[sweep] ae83cfb77344 before=['w-4iqbeqvo', 'w-cikyi7tb', 'w-n32ximig']
+[sweep] ae83cfb77344 made=[]
+[sweep] ae83cfb77344 after=['w-4iqbeqvo', 'w-cikyi7tb', 'w-n32ximig']
+[sweep] ae83cfb77344 intact=True

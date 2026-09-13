@@ -10,6 +10,8 @@
   let _state = "blank";
   const _listeners = [];
   const _stateListeners = [];
+  // frames sent while a bind is still connecting; flushed on open
+  let _pending = [];
 
   function _setState(s, detail) {
     _state = s;
@@ -45,17 +47,29 @@
     },
 
     send(obj) {
-      if (!_ws || _ws.readyState !== WebSocket.OPEN) return false;
-      _ws.send(JSON.stringify(obj));
-      return true;
+      if (!_ws) return false;
+      if (_ws.readyState === WebSocket.OPEN) {
+        _ws.send(JSON.stringify(obj));
+        return true;
+      }
+      // bind in flight: hold the frame for onopen
+      if (_ws.readyState === WebSocket.CONNECTING) {
+        _pending.push(obj);
+        return true;
+      }
+      return false;
     },
 
     close() {
       const old = _ws;
       _ws = null;
       _sid = null;
+      _pending = [];
       if (old) {
-        try { old.close(); } catch (e) { /* already gone */ }
+        old.onmessage = null;
+        old.onclose = null;
+        old.onerror = null;
+        try { old.close(1000); } catch (e) { /* already gone */ }
       }
       _setState("blank");
     },
@@ -65,8 +79,12 @@
       if (_ws) {
         const old = _ws;
         _ws = null;
-        try { old.close(); } catch (e) { /* already gone */ }
+        old.onmessage = null;
+        old.onclose = null;
+        old.onerror = null;
+        try { old.close(1000); } catch (e) { /* already gone */ }
       }
+      _pending = [];
       _sid = sid;
       _setState("opening");
       const scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -74,11 +92,19 @@
       _ws = ws;
 
       ws.onopen = function () {
-        if (_ws === ws) _setState("live");
+        if (_ws !== ws) return;
+        // flush held frames in order, then drop the queue
+        const queued = _pending;
+        _pending = [];
+        for (const obj of queued) {
+          try { ws.send(JSON.stringify(obj)); } catch (e) { /* one frame does not stop the rest */ }
+        }
+        _setState("live");
       };
       ws.onclose = function () {
         if (_ws === ws) {
           _ws = null;
+          _pending = [];
           _setState("closed");
         }
       };

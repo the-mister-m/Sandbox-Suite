@@ -1,0 +1,93 @@
+[
+  {
+    "n": 1,
+    "name": "Cards on target graph shows the empty text",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/01-cards-empty.png",
+    "note": "Pick a node in any graph widget on this target."
+  },
+  {
+    "n": 2,
+    "name": "Force Graph draws, settles inside 4s, freeze stops movement",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/02a-force-settled.png ;; Docs/Reports/phase2-2H-fix/02b-force-frozen.png",
+    "note": "drawn=84 settle_ms=318 ticks=933 frozen_stable=True samples=[10330.243, 10637.474, 10760.092]"
+  },
+  {
+    "n": 3,
+    "name": "pick viewer.html: Cards WHO + mermaid line viewer.html -->",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/03-pick-viewer-html.png",
+    "note": "clicked=True who='viewer.html' lines=18 matching=18 first='viewer.html --> #graph'"
+  },
+  {
+    "n": 4,
+    "name": "shift+click panel.js: two Cards tabs, mermaid gains panel.js -->",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/04-shift-pick-panel-js.png",
+    "note": "clicked=True tabs=['viewer.html', 'panel.js'] lines=30 matching=12"
+  },
+  {
+    "n": 5,
+    "name": "copy button clipboard equals the frame's stripped text",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/05-copy-clipboard.png",
+    "note": "clip_len=705 pre_len=705 equal=True"
+  },
+  {
+    "n": 6,
+    "name": "Cards search score, click the hit: Force picks score.js, Cards shows it",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/06-search-score.png",
+    "note": "hits=['viewer/score.js', 'viewer/score.js::__selftest', 'viewer/score.js::check', 'viewer/score.js::mkLens', 'viewer/score.js::scoreFor', 'viewer/score.js::terms'] force_class='wf-node kind-file lang-javascript is-file lit picked' who='score.js'"
+  },
+  {
+    "n": 7,
+    "name": "Editor opens fixtures/viewer/viewer/score.js at the span's first line",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/07-editor-follows.png",
+    "note": "clicked=True path='/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer/score.js' pos={'lineNumber': 1, 'column': 1} tabs=[{'key': 'editor-mtz10b0p-3-t1', 'path': '/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer/score.js'}, {'key': 'editor-mtz10b0p-3-t2', 'path': '/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer.html'}] followGraph_set_by=panel openInEditor_set_by=panel"
+  },
+  {
+    "n": 8,
+    "name": "pick data.js in Stack: Force, Files and Cards all show it picked",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/08-stack-pick-data-js.png",
+    "note": "clicked=True force='wf-node kind-file lang-javascript is-file lit picked' files='wf-node kind-file lang-javascript is-file is-box lit picked' who='data.js'"
+  },
+  {
+    "n": 9,
+    "name": "Files local: corner everything, drill viewer/, home returns",
+    "pass": false,
+    "shot": "Docs/Reports/phase2-2H-fix/09a-files-local-everything.png ;; Docs/Reports/phase2-2H-fix/09b-files-drilled.png ;; Docs/Reports/phase2-2H-fix/09c-files-home.png",
+    "note": "top={'hidden': False, 'text': 'everything'} drilled={'hidden': False, 'text': 'everything'} home_btn=False back={'hidden': False, 'text': 'everything'}"
+  },
+  {
+    "n": 10,
+    "name": "guesses off mirrors into every drawn widget, edges drop or hold",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/10-guesses-off.png",
+    "note": "guesses={'graph_cards-mtz0zz4w-1': 'off', 'graph_force-mtz101or-2': 'off', 'graph_stack-mtz10i3j-4': 'off', 'graph_files-mtz10jgy-5': 'off'} edges 142 -> 142 new_pageerrors=0"
+  },
+  {
+    "n": 11,
+    "name": "reload returns all four with target, selection, camera, files view + trail",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/11-after-reload.png",
+    "note": "graph_cards-mtz0zz4w-1: target='graph' sel=['viewer/data.js'] focus='viewer/data.js' cam=None; graph_force-mtz101or-2: target='graph' sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': -0.42, 'pitch': 0.92, 'scale': 0.12}; graph_stack-mtz10i3j-4: target='graph' sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': -0.42, 'pitch': 0.92, 'scale': 0.12}; graph_files-mtz10jgy-5: target='graph' sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': 0, 'pitch': 0, 'scale': 0.12} ;; files view='local' trail=['viewer'] ;; SERVER before reload [['graph_cards', None], ['graph_force', {'pitch': 0.92, 'scale': 0.12, 'yaw': -0.42}], ['graph_stack', {'pitch': 0.92, 'scale': 0.12, 'yaw': -0.42}], ['graph_files', {'pitch': 0, 'scale': 0.12, 'yaw': 0}]] ;; RAW restored camera {'graph_force-mtz101or-2': {'pitch': 0.92, 'scale': 0.12, 'yaw': -0.42}, 'graph_stack-mtz10i3j-4': {'pitch': 0.92, 'scale': 0.12, 'yaw': -0.42}, 'graph_files-mtz10jgy-5': {'pitch': 0, 'scale': 0.12, 'yaw': 0}} ;; PRE graph_cards-mtz0zz4w-1: sel=['viewer/data.js'] focus='viewer/data.js' cam=None; graph_force-mtz101or-2: sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': -0.42, 'pitch': 0.92, 'scale': 0.12}; graph_stack-mtz10i3j-4: sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': -0.42, 'pitch': 0.92, 'scale': 0.12}; graph_files-mtz10jgy-5: sel=['viewer/data.js'] focus='viewer/data.js' cam={'yaw': 0, 'pitch': 0, 'scale': 0.12}"
+  },
+  {
+    "n": 12,
+    "name": "second tab's Cards follows a pick made in the first tab",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/12-second-tab-follows.png",
+    "note": "clicked=True tab2 who 'viewer.html' -> 'score.js' tab1={'force_sel': ['viewer/score.js'], 'force_focus': 'viewer/score.js', 'cards_focus': 'viewer/score.js', 'who': 'score.js'} tab2={'cards_focus': 'viewer/score.js'} solo_before_tab2=(True, 'viewer.html') events=[] immediate=[['viewer/score.js', 'viewer/score.js', 'viewer/score.js'], ['viewer/score.js', 'viewer/score.js', 'viewer/score.js'], ['viewer/score.js', 'viewer/score.js', 'viewer/score.js'], ['viewer/score.js', 'viewer/score.js', 'viewer/score.js'], ['viewer/score.js', 'viewer/score.js', 'viewer/score.js']] view_after_click={'sel': ['viewer/score.js'], 'focus': 'viewer/score.js', 'placed': 84, 'nodes': 84, 'hasNode': True, 'optFocus': 'viewer/score.js', 'frozen': True} trace=[{'at': 50, 't1_force': 'viewer/score.js', 't1_cards': 'viewer/score.js', 't2_cards': 'viewer/score.js'}, {'at': 60, 't1_force': 'viewer/score.js', 't1_cards': 'viewer/score.js', 't2_cards': 'viewer/score.js'}, {'at': 150, 't1_force': 'viewer/score.js', 't1_cards': 'viewer/score.js', 't2_cards': 'viewer/score.js'}, {'at': 1000, 't1_force': 'viewer/score.js', 't1_cards': 'viewer/score.js', 't2_cards': 'viewer/score.js'}, {'at': 3000, 't1_force': 'viewer/score.js', 't1_cards': 'viewer/score.js', 't2_cards': 'viewer/score.js'}]"
+  },
+  {
+    "n": 13,
+    "name": "zero pageerrors across the pass",
+    "pass": true,
+    "shot": "Docs/Reports/phase2-2H-fix/13-final-state.png",
+    "note": "none"
+  }
+]

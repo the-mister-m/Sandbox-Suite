@@ -1,0 +1,1 @@
+[harness] targets after surface two's tab closed: ['graph', 'other']

@@ -30,7 +30,10 @@ class WebIO:
 
     def _send(self, frame):
         with self._send_lock:
-            self.ws.send(json.dumps(frame))
+            try:
+                self.ws.send(json.dumps(frame))
+            except Exception:
+                pass  # socket already closed on the client's side
 
     def ask(self, prompt, region=""):
         gid  = uuid.uuid4().hex[:8]

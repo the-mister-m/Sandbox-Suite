@@ -5,6 +5,7 @@ import json
 import os
 import re
 import signal
+import socket
 import subprocess
 import threading
 import time
@@ -434,6 +435,10 @@ def matrix_page(sid=None):
     # the page binds itself to a session; the id is read there
     return _serve_skinned("static/matrix.html")
 
+
+@app.route("/favicon.ico")
+def favicon():
+    return ("", 204)
 
 
 def _pkill(pattern, exact=False):
@@ -1241,7 +1246,15 @@ def api_transcripts():
 
 @app.route("/api/sessions/open")
 def api_sessions_open():
-    return jsonify({"list": ade_tracks.environment_rows()})
+    rows = ade_tracks.environment_rows()
+    for row in rows:
+        d = os.path.join(GRIDS_DIR, row["id"])
+        try:
+            row["surfaces"] = len([f for f in os.listdir(d) if f.endswith(".json")])
+        except OSError:
+            row["surfaces"] = 0
+        row["last"] = row.get("last_ts")
+    return jsonify({"list": rows})
 
 
 @app.route("/api/sessions/<sid>/save", methods=["POST"])
@@ -1446,6 +1459,107 @@ def api_library_preset_rename(name):
     return jsonify({"ok": True, "list": engine_settings.list_presets()})
 
 
+GRAPHS_DIR = os.path.join(SUITE_ROOT, "library", "graphs")
+
+
+# graph name: no slashes, no dot/dotdot — same rule as preset names
+def _graph_name(name):
+    name = (name or "").strip()
+    if not name or "/" in name or "\\" in name or name in (".", ".."):
+        return None
+    return name
+
+
+def _graph_path(name):
+    return os.path.join(GRAPHS_DIR, name + ".json")
+
+
+@app.route("/api/library/graphs")
+def api_library_graphs():
+    out = []
+    try:
+        fnames = os.listdir(GRAPHS_DIR)
+    except OSError:
+        fnames = []
+    for fname in fnames:
+        if not fname.endswith(".json"):
+            continue
+        name = fname[:-len(".json")]
+        path = os.path.join(GRAPHS_DIR, fname)
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                body = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        if not isinstance(body, dict):
+            continue
+        out.append({
+            "name": name,
+            "root": body.get("root") or "",
+            "mtime": os.path.getmtime(path),
+            "nodes": len(body.get("nodes") or []),
+            "edges": len(body.get("edges") or []),
+            "comments": len(body.get("comments") or []),
+        })
+    return jsonify({"list": out})
+
+
+@app.route("/api/library/graphs/<name>")
+def api_library_graph_read(name):
+    name_n = _graph_name(name)
+    if name_n is None:
+        return jsonify({"error": "no graph"}), 404
+    try:
+        with open(_graph_path(name_n), "r", encoding="utf-8") as fh:
+            body = json.load(fh)
+    except (OSError, ValueError):
+        return jsonify({"error": "no graph"}), 404
+    return jsonify(body)
+
+
+@app.route("/api/library/graphs/import", methods=["POST"])
+def api_library_graph_import():
+    body = request.get_json(silent=True) or {}
+    raw = body.get("path") or ""
+    if not raw:
+        return jsonify({"error": "no path"}), 400
+    expanded = os.path.expanduser(raw)
+    path = os.path.abspath(expanded)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    except ValueError as e:
+        return jsonify({"error": f"invalid json: {e}"}), 400
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        return jsonify({"error": "schema_version must be 1"}), 400
+    bn = os.path.basename(path)
+    if bn.endswith(".json"):
+        bn = bn[:-len(".json")]
+    name_n = _graph_name(bn)
+    if name_n is None:
+        return jsonify({"error": "bad name"}), 400
+    try:
+        os.makedirs(GRAPHS_DIR, exist_ok=True)
+        with open(_graph_path(name_n), "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"ok": True, "name": name_n})
+
+
+@app.route("/api/widget-bus", methods=["POST"])
+def api_widget_bus():
+    body = request.get_json(silent=True) or {}
+    channel = body.get("channel")
+    if not isinstance(channel, str) or not channel:
+        return jsonify({"error": "no channel"}), 400
+    payload = body.get("payload")
+    ade_frames._broadcast_all("send_widget_bus", channel, payload, "agent")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/library/providers")
 def api_library_providers():
     return jsonify({"list": engine_settings.load_provider_registry()})
@@ -1530,11 +1644,53 @@ def api_fs_put():
         parent = os.path.dirname(path)
         if parent:
             os.makedirs(parent, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(body.get("text", ""))
-    except OSError as e:
+        # b64: base64 payload written as bytes. text: utf-8 string.
+        if body.get("b64"):
+            import base64
+            with open(path, "wb") as fh:
+                fh.write(base64.b64decode(body.get("b64", "")))
+        else:
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(body.get("text", ""))
+    except (OSError, ValueError) as e:
         return jsonify({"error": str(e)}), 400
     return jsonify({"ok": True, "path": path})
+
+
+# screenshot one canvas instance's iframe, for the annotate widget's
+# playwright snapshot method. 501 when playwright is not importable.
+@app.route("/api/snapshot", methods=["POST"])
+def api_snapshot():
+    body = request.get_json(silent=True) or {}
+    sid = body.get("sid") or ""
+    surface = body.get("surface") or ""
+    inst = body.get("inst") or ""
+    if not sid or not inst:
+        return jsonify({"error": "no sid or inst"}), 400
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return jsonify({"error": "no playwright"}), 501
+    url = f"http://127.0.0.1:5000/matrix/{sid}"
+    if surface:
+        url += f"?s={surface}"
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(channel="chrome", headless=True)
+            try:
+                context = browser.new_context()
+                page = context.new_page()
+                resp = page.goto(url, wait_until="load", timeout=15000)
+                if resp is None or not resp.ok:
+                    return jsonify({"error": f"failed to load {url}"}), 500
+                selector = f'[data-instance="{inst}"] iframe'
+                page.wait_for_selector(selector, timeout=10000)
+                png_bytes = page.locator(selector).screenshot()
+            finally:
+                browser.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return app.response_class(png_bytes, mimetype="image/png")
 
 
 # browser and viewer routes — Job 8, File Browser and Viewer
@@ -1717,7 +1873,7 @@ def _grid_path(sid, window_id):
     return os.path.join(GRIDS_DIR, sid, window_id + ".json")
 
 
-# one window's stored grid: cols, rows, and its widget list
+# one surface's stored grid: cols, rows, name, and its widget list
 def _grid_body(body):
     widgets = []
     for w in (body.get("widgets") or []):
@@ -1733,8 +1889,88 @@ def _grid_body(body):
     return {
         "cols": body.get("cols") or 12,
         "rows": body.get("rows") or 12,
+        "name": body.get("name") or "",
         "widgets": widgets,
     }
+
+
+@app.route("/api/grid/<sid>", methods=["GET"])
+def api_grid_list(sid):
+    sid_n = _grid_name(sid)
+    if sid_n is None:
+        return jsonify({"error": "bad name"}), 400
+    d = os.path.join(GRIDS_DIR, sid_n)
+    out = []
+    if os.path.isdir(d):
+        for fname in os.listdir(d):
+            if not fname.endswith(".json"):
+                continue
+            surface_id = fname[:-len(".json")]
+            path = os.path.join(d, fname)
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    body = json.load(fh)
+                out.append({
+                    "id": surface_id,
+                    "name": (body.get("name") or "") if isinstance(body, dict) else "",
+                    "mtime": os.path.getmtime(path),
+                    "widgets": len((body or {}).get("widgets") or []),
+                })
+            except (OSError, ValueError):
+                continue
+    return jsonify({"list": out})
+
+
+@app.route("/api/targets/<sid>")
+def api_targets(sid):
+    sid_n = _grid_name(sid)
+    if sid_n is None:
+        return jsonify({"targets": []})
+    d = os.path.join(GRIDS_DIR, sid_n)
+    agg = {}
+    if os.path.isdir(d):
+        for fname in os.listdir(d):
+            if not fname.endswith(".json"):
+                continue
+            surface_id = fname[:-len(".json")]
+            path = os.path.join(d, fname)
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    body = json.load(fh)
+            except (OSError, ValueError):
+                continue
+            for w in (body or {}).get("widgets") or []:
+                if not isinstance(w, dict):
+                    continue
+                options = w.get("options") if isinstance(w.get("options"), dict) else {}
+                value = options.get("target")
+                if not isinstance(value, str) or not value:
+                    continue
+                row = agg.setdefault(value, {"widgets": 0, "surfaces": set()})
+                row["widgets"] += 1
+                row["surfaces"].add(surface_id)
+    targets = [{"value": v, "widgets": row["widgets"], "surfaces": sorted(row["surfaces"])}
+               for v, row in sorted(agg.items())]
+    return jsonify({"targets": targets})
+
+
+@app.route("/api/grid/<sid>/<surface_id>/name", methods=["POST"])
+def api_grid_rename(sid, surface_id):
+    sid_n, win_n = _grid_name(sid), _grid_name(surface_id)
+    if sid_n is None or win_n is None:
+        return jsonify({"error": "bad name"}), 400
+    path = _grid_path(sid_n, win_n)
+    body = request.get_json(silent=True) or {}
+    name = (body.get("name") or "").strip()
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            grid = json.load(fh)
+    except (OSError, ValueError):
+        return jsonify({"error": "no stored grid"}), 404
+    grid["name"] = name
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(grid, fh, indent=2)
+    return jsonify({"ok": True})
 
 
 @app.route("/api/grid/<sid>/<window_id>", methods=["GET"])
@@ -1865,18 +2101,19 @@ def ws_ade_handler(ws, sid):
             if conn_sid in _registry:
                 _registry[conn_sid]["sess"] = sess
 
-    webio.send_models(client.list_models(), client.model)
-    webio.send_crew_list(compiler.roster_entries(), None)
-    webio.send_gate_edges(ade_tracks.gate_edge_list())
-    webio.send_rail_catalog(ade_rails.catalog())
-    webio.send_ade_init(ade_tracks.session_meta(environment),
-                        ade_tracks.list_regions(environment),
-                        ade_tracks.list_tracks(environment))
-
     ctx = ade_frames.AdeCtx(webio, conn_sid, _ade_live_runner, _rebind,
                             environment, _sanitize_media)
 
+    # opening burst sits inside the try: a close that lands mid-burst
+    # still reaches the teardown below
     try:
+        webio.send_models(client.list_models(), client.model)
+        webio.send_crew_list(compiler.roster_entries(), None)
+        webio.send_gate_edges(ade_tracks.gate_edge_list())
+        webio.send_rail_catalog(ade_rails.catalog())
+        webio.send_ade_init(ade_tracks.session_meta(environment),
+                            ade_tracks.list_regions(environment),
+                            ade_tracks.list_tracks(environment))
         while True:
             raw = ws.receive()
             if raw is None:
@@ -1893,6 +2130,18 @@ def ws_ade_handler(ws, sid):
             _registry.pop(conn_sid, None)
         ade_frames.unregister_conn(webio)
         ade_frames.disconnect(ctx)
+        # close frame answered so the browser sees a clean goodbye
+        try:
+            ws.close()
+        except Exception:
+            pass
+        # reader thread sends the close reply; wait for it, then shut the
+        # socket so werkzeug's HTTP tail never reaches the browser
+        try:
+            ws.thread.join(2)
+            ws.sock.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

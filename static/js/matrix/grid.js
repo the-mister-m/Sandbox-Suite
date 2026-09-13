@@ -21,7 +21,11 @@
     return id;
   }
 
-  const WINDOW_ID = windowId();
+  let WINDOW_ID = windowId();
+
+  // which tab this is, never the surface; new value every page load
+  const TAB_ID = "t-" + Math.random().toString(36).slice(2, 10);
+  MX.TAB_ID = TAB_ID;
 
   function gridUrl(sid) {
     return `/api/grid/${encodeURIComponent(sid)}/${encodeURIComponent(WINDOW_ID)}`;
@@ -34,6 +38,19 @@
     sid: null,
     instances: [],
     frames: Object.create(null),
+    surfaceName: "",
+    saveFailed: false, // true once a save has failed twice in a row
+    _applying: false, // true while a remote mirror frame is being applied
+    _unloading: false, // true once the page is going away
+    _dirtyTimers: Object.create(null), // one debounce timer per frame id, "" is grid-level
+
+    // this tab points at a different saved surface file
+    adoptSurface(id) {
+      WINDOW_ID = id;
+      MX.WINDOW_ID = id;
+      try { window.sessionStorage.setItem("mx.window", id); } catch (e) { /* memory only */ }
+      if (MX.setSurfaceState) MX.setSurfaceState();
+    },
 
     init(el) {
       this.el = el;
@@ -44,6 +61,16 @@
           if (f) f.deliver(msg);
         }
       });
+      MX.bus.on("surface.layout", (payload) => this._onLayoutMirror(payload));
+      MX.bus.on("surface.widget", (payload) => this._onWidgetMirror(payload));
+      MX.bus.on("surface.name", (payload) => this._onNameMirror(payload));
+    },
+
+    // another tab renamed this surface; follow without re-writing the name
+    _onNameMirror(payload) {
+      if (!payload || payload.surface !== MX.WINDOW_ID) return;
+      this.surfaceName = payload.name;
+      if (MX.setSurfaceState) MX.setSurfaceState();
     },
 
     _applyDims() {
@@ -63,22 +90,129 @@
       if (saved && Array.isArray(saved.widgets)) {
         this.cols = saved.cols || COLS;
         this.rows = saved.rows || ROWS;
+        this.surfaceName = saved.name || "";
+        if (MX.setSurfaceState) MX.setSurfaceState();
         return saved.widgets;
       }
       // a window with no stored grid starts blank
       this.cols = COLS;
       this.rows = ROWS;
+      this.surfaceName = "";
+      if (MX.setSurfaceState) MX.setSurfaceState();
       return [];
     },
 
-    save() {
+    save(opts) {
+      if (this._applying) return;
       if (!this.sid) return;
-      const body = { cols: this.cols, rows: this.rows, widgets: this.snapshot() };
-      fetch(gridUrl(this.sid), {
+      const body = {
+        cols: this.cols, rows: this.rows,
+        name: this.surfaceName, widgets: this.snapshot(),
+      };
+      const json = JSON.stringify(body);
+      if (opts && opts.beacon) {
+        navigator.sendBeacon(gridUrl(this.sid), new Blob([json], { type: "application/json" }));
+        return;
+      }
+      const url = gridUrl(this.sid);
+      const attempt = () => fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }).catch(() => { /* layout stays in memory for this window */ });
+        body: json,
+      }).then((r) => { if (!r.ok) throw new Error("save failed: " + r.status); });
+      const onOk = () => {
+        if (this.saveFailed) {
+          this.saveFailed = false;
+          if (MX.setSurfaceState) MX.setSurfaceState();
+        }
+      };
+      attempt().then(onOk).catch(() => {
+        // page going away: the abort is expected, no retry and no flag
+        if (this._unloading) return;
+        // one retry after one second; only then does the corner say "unsaved"
+        setTimeout(() => {
+          if (this._unloading) return;
+          attempt().then(onOk).catch(() => {
+            if (this._unloading) return;
+            this.saveFailed = true;
+            if (MX.setSurfaceState) MX.setSurfaceState();
+          });
+        }, 1000);
+      });
+    },
+
+    // widgets may call this on internal change; batches saves two seconds
+    // apart, one timer per frame so two widgets changing at once both announce
+    markDirty(frame) {
+      const key = frame ? frame.id : "";
+      clearTimeout(this._dirtyTimers[key]);
+      this._dirtyTimers[key] = setTimeout(() => {
+        delete this._dirtyTimers[key];
+        this.save();
+        if (frame) {
+          MX.bus.emit("surface.widget",
+            { surface: MX.WINDOW_ID, id: frame.id, options: frame.getOptions() },
+            { remote: true });
+        }
+      }, 2000);
+    },
+
+    // mirrors this window's layout to any other tab open on the same surface
+    _announce() {
+      if (this._applying) return;
+      MX.bus.emit("surface.layout",
+        { surface: MX.WINDOW_ID, snapshot: this.snapshot() },
+        { remote: true });
+    },
+
+    // another tab on our surface changed layout; apply without re-saving
+    _onLayoutMirror(payload) {
+      if (!payload || payload.surface !== MX.WINDOW_ID) return;
+      this._applying = true;
+      const snapshot = Array.isArray(payload.snapshot) ? payload.snapshot : [];
+      const bySnap = Object.create(null);
+      for (const w of snapshot) bySnap[w.id] = w;
+      const byInst = Object.create(null);
+      for (const inst of this.instances) byInst[inst.id] = inst;
+
+      for (const inst of this.instances.slice()) {
+        if (bySnap[inst.id]) continue;
+        const f = this.frames[inst.id];
+        if (f) { f.unmount(); delete this.frames[inst.id]; }
+        this._removeEl(inst.id);
+      }
+      this.instances = this.instances.filter((i) => bySnap[i.id]);
+
+      for (const w of snapshot) {
+        if (byInst[w.id]) continue;
+        const inst = this._normalize(w);
+        this.instances.push(inst);
+        if (this.el) this.el.appendChild(this._build(inst));
+      }
+
+      for (const inst of this.instances) {
+        if (!byInst[inst.id]) continue; // just added, already matches
+        const w = bySnap[inst.id];
+        const s = w.slot || {};
+        if (s.col !== inst.slot.col || s.row !== inst.slot.row || s.w !== inst.slot.w || s.h !== inst.slot.h) {
+          inst.slot = Object.assign({}, s);
+          const el = this.el ? this.el.querySelector(`[data-instance="${inst.id}"]`) : null;
+          if (el) this._place(el, inst.slot);
+        }
+        const f = this.frames[inst.id];
+        if (f && w.options && JSON.stringify(w.options) !== JSON.stringify(f.getOptions())) {
+          f.applyOptions(w.options);
+        }
+      }
+
+      this._applying = false;
+    },
+
+    // another tab on our surface changed one widget's options
+    _onWidgetMirror(payload) {
+      if (!payload || payload.surface !== MX.WINDOW_ID) return;
+      const f = this.frames[payload.id];
+      if (f) f.applyOptions(payload.options);
     },
 
     snapshot() {
@@ -114,16 +248,42 @@
       this.render();
     },
 
-    // the grid stays, every widget rebinds
-    async rebind(sid) {
-      const carried = this.snapshot();
+    // base name with the smallest unused " n" suffix among this session's surfaces
+    async _uniqueSurfaceName(base) {
+      let list = [];
+      try {
+        const r = await fetch(`/api/grid/${encodeURIComponent(this.sid)}`);
+        const d = await r.json();
+        list = Array.isArray(d.list) ? d.list : [];
+      } catch (e) { list = []; }
+      const names = new Set(list.map((s) => s.name || ""));
+      if (!names.has(base)) return base;
+      let n = 2;
+      while (names.has(`${base} ${n}`)) n++;
+      return `${base} ${n}`;
+    },
+
+    // a brand new, empty surface file for the bound session
+    async newSurface(base) {
+      const name = await this._uniqueSurfaceName(base);
       this.unmountAll();
-      this.sid = sid;
-      const saved = await this.load(sid);
-      this.instances = (saved.length ? saved : carried).map((w) => this._normalize(w));
-      this._applyDims();
+      const id = "w-" + Math.random().toString(36).slice(2, 10);
+      this.adoptSurface(id);
+      this.surfaceName = name;
+      if (MX.setSurfaceState) MX.setSurfaceState();
+      this.instances = [];
       this.render();
       this.save();
+      this._announce();
+      return id;
+    },
+
+    // this tab points at no surface; nothing writes until one is picked
+    unbindSurface() {
+      this.unmountAll();
+      this.sid = null;
+      this.instances = [];
+      if (MX.setSurfaceState) MX.setSurfaceState();
     },
 
     _normalize(w) {
@@ -159,6 +319,7 @@
       // frame from scratch and would wipe every other widget's live state
       if (this.el) this.el.appendChild(this._build(inst));
       this.save();
+      this._announce();
       return inst;
     },
 
@@ -167,8 +328,9 @@
       const f = this.frames[id];
       if (!f) {
         this.instances = this.instances.filter((i) => i.id !== id);
-        this.render();
+        this._removeEl(id);
         this.save();
+        this._announce();
         return Promise.resolve(true);
       }
       return f.canClose().then((ok) => {
@@ -176,10 +338,18 @@
         f.unmount();
         delete this.frames[id];
         this.instances = this.instances.filter((i) => i.id !== id);
-        this.render();
+        this._removeEl(id);
         this.save();
+        this._announce();
         return true;
       });
+    },
+
+    // removes only the closed widget's element; the rest stay mounted
+    _removeEl(id) {
+      if (!this.el) return;
+      const el = this.el.querySelector(`[data-instance="${id}"]`);
+      if (el) el.remove();
     },
 
     unmountAll() {
@@ -204,6 +374,7 @@
       this._applyDims();
       this.render();
       this.save();
+      this._announce();
     },
 
     _occupied() {
@@ -369,6 +540,7 @@
         target.removeEventListener("pointerup", onUp);
         target.removeEventListener("pointercancel", onUp);
         this.save();
+        this._announce();
       };
       target.addEventListener("pointermove", onMove);
       target.addEventListener("pointerup", onUp);
@@ -439,9 +611,15 @@
       inst.slot.row = landing.row;
       this._place(el, inst.slot);
       this.save();
+      this._announce();
     },
   };
 
   MX.grid = grid;
   MX.WINDOW_ID = WINDOW_ID;
+
+  window.addEventListener("pagehide", () => {
+    MX.grid._unloading = true;
+    MX.grid.save({ beacon: true });
+  });
 })();

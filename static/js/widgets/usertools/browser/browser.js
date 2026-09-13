@@ -68,6 +68,7 @@
       root: null,
       nodeMap: new Map(),
       sizeCache: new Map(),
+      expandedWant: new Set(),
       treeEl: null,
       rootLine: null,
       menuEl: null,
@@ -227,6 +228,7 @@
       node.expanded = !node.expanded;
       if (node._chev) node._chev.textContent = node.expanded ? "▾" : "▸";
       if (node._ul) node._ul.hidden = !node.expanded;
+      if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
     }
 
     function applyEntries(node, entries) {
@@ -257,6 +259,15 @@
       st.nodeMap.forEach((node) => { if (node.isDir && node.loaded) requestTree(node.path); });
     }
 
+    // requests any still-unloaded dir named in the last-known expanded set
+    function tryExpandPending() {
+      st.expandedWant.forEach((p) => {
+        if (p === st.root) return;
+        const node = st.nodeMap.get(p);
+        if (node && node.isDir && !node.loaded) requestTree(node.path);
+      });
+    }
+
     function setRoot(path) {
       st.root = path;
       st.nodeMap.clear();
@@ -264,10 +275,33 @@
       if (st.rootLine) st.rootLine.textContent = path;
     }
 
+    // reconciles the widget's expanded dirs to a given set — remote or restore
+    function applyExpanded(list) {
+      const want = new Set(Array.isArray(list) ? list : []);
+      st.expandedWant = want;
+      st.nodeMap.forEach((node) => {
+        if (!node.isDir || node.path === st.root) return;
+        if (want.has(node.path)) {
+          if (!node.loaded) { requestTree(node.path); return; }
+          if (!node.expanded) {
+            node.expanded = true;
+            if (node._chev) node._chev.textContent = "▾";
+            if (node._ul) { node._ul.hidden = false; renderChildren(node); }
+          }
+        } else if (node.expanded) {
+          node.expanded = false;
+          if (node._chev) node._chev.textContent = "▸";
+          if (node._ul) node._ul.hidden = true;
+        }
+      });
+    }
+
     function chooseRoot() {
-      // display only, no persist
       fetch("/api/fs/pick?kind=folder").then((r) => r.json()).then((d) => {
-        if (d && d.path) setRoot(d.path);
+        if (d && d.path) {
+          setRoot(d.path);
+          if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+        }
       }).catch(() => {});
     }
 
@@ -289,7 +323,11 @@
       });
     }
 
-    frame._browserHooks = { requestTree, refreshDir, refreshAllLoaded, applyEntries, renderRoot, setRoot };
+    frame._browserHooks = {
+      requestTree, refreshDir, refreshAllLoaded, applyEntries, renderRoot, setRoot,
+      getRoot: () => st.root,
+      applyExpanded,
+    };
 
     const wrap = document.createElement("div");
     wrap.className = "mx-browser";
@@ -324,17 +362,8 @@
     frame.host.appendChild(wrap);
     frame.subscribe(["tree", "saved", "deleted", "moved", "renamed", "made", "tree_dirty"]);
 
-    // session root
-    const sid = MX.socket && MX.socket.sid ? MX.socket.sid() : null;
-    if (sid) {
-      fetch("/api/session-settings/" + encodeURIComponent(sid))
-        .then((r) => r.json()).then((d) => {
-          const root = (d && d.effective && d.effective.root) || "";
-          if (root && !st.root) setRoot(root);
-        }).catch(() => {});
-    }
-
-    // exposed for onFrame below (closure over st via frame._browser)
+    // exposed for onFrame below (closure over st via frame._browser); the
+    // tree reply must find its listener, so this is set before any send
     frame._browserApply = function (msg) {
       if (msg.type === "tree" && msg.data) {
         const data = msg.data;
@@ -347,6 +376,7 @@
           st.nodeMap.set(st.root, rootNode);
           applyEntries(rootNode, data.entries);
           renderRoot();
+          tryExpandPending();
           return;
         }
         const node = st.nodeMap.get(data.path);
@@ -355,12 +385,34 @@
         node.expanded = true;
         if (node._chev) node._chev.textContent = "▾";
         if (node._ul) { node._ul.hidden = false; renderChildren(node); }
+        tryExpandPending();
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
         return;
       }
       if (["saved", "deleted", "moved", "renamed", "made", "tree_dirty"].indexOf(msg.type) >= 0) {
         refreshAllLoaded();
       }
     };
+
+    // root and expanded dirs ride the grid; restore before falling back
+    if (frame.options.expanded && Array.isArray(frame.options.expanded)) {
+      st.expandedWant = new Set(frame.options.expanded);
+    }
+    if (frame.options.root) {
+      setRoot(frame.options.root);
+    } else {
+      const sid = MX.socket && MX.socket.sid ? MX.socket.sid() : null;
+      if (sid) {
+        fetch("/api/session-settings/" + encodeURIComponent(sid))
+          .then((r) => r.json()).then((d) => {
+            const root = (d && d.effective && d.effective.root) || "";
+            if (root && !st.root) {
+              setRoot(root);
+              if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+            }
+          }).catch(() => {});
+      }
+    }
   }
 
   MX.registerWidget("browser", {
@@ -380,8 +432,24 @@
       if (frame._browserApply) frame._browserApply(msg);
     },
 
+    onOption(frame, key, value) {
+      const hooks = frame._browserHooks;
+      if (!hooks) return;
+      if (key === "root") {
+        if (value && value !== hooks.getRoot()) hooks.setRoot(value);
+        return;
+      }
+      if (key === "expanded") hooks.applyExpanded(value);
+    },
+
     getOptions(frame) {
-      return JSON.parse(JSON.stringify(frame.options));
+      const st = frame._browser;
+      if (!st) return JSON.parse(JSON.stringify(frame.options));
+      const expanded = [];
+      st.nodeMap.forEach((node) => {
+        if (node.isDir && node.expanded && node.path !== st.root) expanded.push(node.path);
+      });
+      return { root: st.root || "", expanded };
     },
   });
 })();

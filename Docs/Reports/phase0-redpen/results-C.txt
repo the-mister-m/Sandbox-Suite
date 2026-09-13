@@ -1,0 +1,4 @@
+session 85b19c53d41a
+C1: PASS — surface w-wiwk1qxp; opened CLAUDE.md; tabs=[{'key': 'editor-mtyl2qsc-1-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}]; no options panel touched — Docs/Reports/phase0-redpen/C1-file-open.png
+C2: PASS — tabs before [{'key': 'editor-mtyl2qsc-1-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}] / after [{'key': 'editor-mtyl2qsc-1-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}] — Docs/Reports/phase0-redpen/C2-after-reload.png
+C3: PASS — slot {'col': 5, 'row': 1, 'w': 4, 'h': 4} -> moved {'col': 10, 'row': 4, 'w': 4, 'h': 4} -> after reload {'col': 10, 'row': 4, 'w': 4, 'h': 4} (drag actually moved it=True) — Docs/Reports/phase0-redpen/C3-after-move-reload.png

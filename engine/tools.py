@@ -5,6 +5,7 @@ import difflib
 import json
 import os
 import re
+import urllib.request
 
 from engine import read_tool as rt
 from engine import compiler
@@ -992,6 +993,62 @@ def _reset_region_denied(sess, args):
     return f"[reset_region denied by user: '{args.get('region', '')}' was not reset]"
 
 
+# ---------------------------------------------------------------- widget_bus_emit
+
+_SUITE_PORT = 5000  # matches server.py app.run port
+
+_BUS_MARKER = re.compile(r"^\s*BUS:\s*(\S+)\s+(\{.*\})\s*$", re.MULTILINE)
+
+_BUS_HINT = ("To EMIT on the widget bus, output a line:\n"
+             "    BUS: <channel> <json payload>")
+
+_BUS_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "widget_bus_emit",
+        "description": "Emit a payload on a widget bus channel.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "channel": {"type": "string", "description": "Widget bus channel."},
+                "payload": {"type": "object", "description": "JSON payload to emit."},
+            },
+            "required": ["channel", "payload"],
+        },
+    },
+}
+
+
+def _bus_parse(m):
+    try:
+        payload = json.loads(m.group(2))
+    except ValueError:
+        return None
+    return {"channel": m.group(1), "payload": payload}
+
+
+def _bus_prompt(sess, args):
+    return f"emit {args.get('channel', '')} on the widget bus\n\napprove? [y/N] "
+
+
+def _bus_run(sess, args):
+    channel = args.get("channel", "")
+    body = json.dumps({"channel": channel, "payload": args.get("payload")}).encode("utf-8")
+    req = urllib.request.Request(
+        f"http://127.0.0.1:{_SUITE_PORT}/api/widget-bus", data=body,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+        return f"[bus: emitted {channel}]"
+    except Exception as e:
+        return f"[bus failed: {e}]"
+
+
+def _bus_summary(args, result):
+    return f"{args.get('channel', '')}"
+
+
 # ---------------------------------------------------------------- the table
 
 TOOLS = [
@@ -1136,6 +1193,11 @@ TOOLS = [
          lambda m: {"path": m.group(1) or "."},
          _LIST_HINT, _list_prompt, _list_run, _list_summary,
          queue_type="read", denied=_list_denied),
+
+    Tool("widget_bus_emit", "widget_bus_emit", _scope_any, _BUS_SCHEMA,
+         _BUS_MARKER, "BUS", _bus_parse,
+         _BUS_HINT, _bus_prompt, _bus_run, _bus_summary,
+         queue_type="widget_bus_emit"),
 ]
 
 TOOL_INDEX = {t.name: t for t in TOOLS}

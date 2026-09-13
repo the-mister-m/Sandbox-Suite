@@ -1,0 +1,19 @@
+13:48:47 [harness] session 85b19c53d41a other 0d78d246515f fallbacks ['0d78d246515f', 'bc64260f82ad', 'e76d0d6f4e3e', '8c3abc75b244', 'ae83cfb77344']
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[fence] 0d78d246515f before: ['w-8924kcue']
+13:48:53 [step] G1a PASS
+13:49:02 [step] G1b OBSERVED
+13:49:05 [step] G2a PASS
+13:49:06 [step] G2b PASS
+13:49:13 [step] G3 PASS
+13:49:17 [G-t1:console:error] WebSocket connection to 'ws://127.0.0.1:5000/ws/ade/85b19c53d41a' failed: Invalid frame header
+13:49:21 [step] G4 FAIL
+13:49:21 [harness] block G console errors: 1
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=['w-j7tytiya']
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True
+[sweep] 0d78d246515f before=['w-8924kcue']
+[sweep] 0d78d246515f made=[]
+[sweep] 0d78d246515f after=['w-8924kcue']
+[sweep] 0d78d246515f intact=True

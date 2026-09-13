@@ -1,0 +1,3 @@
+[harness] viewer.html off the box in graph_force-mtz1bwr3-2; pressing fit
+[harness] viewer/data.js off the box in graph_stack-mtz1cdyh-4; pressing fit
+[harness] solo pick before tab two: clicked=True focus='viewer.html'

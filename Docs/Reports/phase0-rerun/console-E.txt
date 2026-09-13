@@ -1,0 +1,18 @@
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[fence] 0d78d246515f before: ['w-8924kcue']
+12:45:54 [step] E1 PASS
+12:46:03 [step] E2 PASS
+12:46:10 [step] E3 PASS
+12:46:10 [step] E5 PASS
+12:46:17 [E:console:error] WebSocket connection to 'ws://127.0.0.1:5000/ws/ade/85b19c53d41a' failed: Invalid frame header
+12:46:20 [step] E4 PASS
+12:46:20 [step] E6 PASS
+[harness] block E console errors: 1 (favicon among them: 0)
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=['w-270ai6cl', 'w-5lecz2n0', 'w-bof0hx8n', 'w-c03v16mp', 'w-uga8kliw']
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True
+[sweep] 0d78d246515f before=['w-8924kcue']
+[sweep] 0d78d246515f made=[]
+[sweep] 0d78d246515f after=['w-8924kcue']
+[sweep] 0d78d246515f intact=True

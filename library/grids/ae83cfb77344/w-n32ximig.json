@@ -1,0 +1,17 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "widgets": [
+    {
+      "id": "browser-mtwbdwtc-2",
+      "type": "browser",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 13
+      },
+      "options": {}
+    }
+  ]
+}

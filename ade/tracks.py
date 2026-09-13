@@ -791,6 +791,7 @@ class Region:
                 m["_turn"] = self._turn_ordinal
         if self.environment is not None:
             autosave(self.environment)
+            self.environment.last_ts = _now_iso()  # state: last touch
         self._check_context_cap(rec)
         return rec
 
@@ -913,6 +914,8 @@ class Environment:
         self.archived_tracks = 0
         # sockets bound to this environment; maintained by ade.frames
         self.windows = 0
+        # state: last touch
+        self.last_ts = None
         # session tier: unset keys inherit global, seeded at creation
         self.settings = settings_table.session_defaults()
 
@@ -954,6 +957,7 @@ class Environment:
             "tracks":  (len(self.tracks) if self.hydrated
                         else self.archived_tracks),
             "windows": self.windows,
+            "last_ts": self.last_ts,
         }
 
     def save_on_shutdown(self):

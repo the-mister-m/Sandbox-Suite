@@ -1,0 +1,26 @@
+tally {
+  "H": {
+    "errors": 1,
+    "pageerrors": 0,
+    "requestfailed": 7,
+    "favicon": 0,
+    "websocket": 1
+  },
+  "I": {
+    "errors": 0,
+    "pageerrors": 0,
+    "requestfailed": 0,
+    "favicon": 0,
+    "websocket": 0
+  }
+}
+
+14:32:09 [H-switch:console:error] WebSocket connection to 'ws://127.0.0.1:5000/ws/ade/e76d0d6f4e3e' failed: Invalid frame header
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:31:35 [H-t2:requestfailed] http://127.0.0.1:5000/api/grid/e76d0d6f4e3e/w-xfvnq96z net::ERR_ABORTED
+14:32:09 [H-switch:console:error] WebSocket connection to 'ws://127.0.0.1:5000/ws/ade/e76d0d6f4e3e' failed: Invalid frame header

@@ -25,21 +25,27 @@
     css.rel = "stylesheet";
     css.href = "/static/vendor/xterm.css";
     document.head.appendChild(css);
+    // Monaco's AMD define is hidden while the UMD bundles load, else they
+    // take the AMD path and Monaco's loader throws
+    const amdDefine = window.define;
+    window.define = undefined;
+    const restoreDefine = function () { window.define = amdDefine; };
     const s1 = document.createElement("script");
     s1.src = "/static/vendor/xterm.min.js";
     s1.onload = function () {
       const s2 = document.createElement("script");
       s2.src = "/static/vendor/xterm-addon-fit.min.js";
       s2.onload = function () {
+        restoreDefine();
         _xtermState = "ready";
         const waiters = _xtermWaiters.slice();
         _xtermWaiters.length = 0;
         for (const fn of waiters) fn();
       };
-      s2.onerror = function () { _xtermState = "idle"; };
+      s2.onerror = function () { restoreDefine(); _xtermState = "idle"; };
       document.head.appendChild(s2);
     };
-    s1.onerror = function () { _xtermState = "idle"; };
+    s1.onerror = function () { restoreDefine(); _xtermState = "idle"; };
     document.head.appendChild(s1);
   }
 
@@ -177,6 +183,7 @@
     frame.options.region = rid;
     renderTabs(frame);
     openPty(frame, tab);
+    if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
     return tab;
   }
 
@@ -214,6 +221,44 @@
     t.tabs.splice(i, 1);
     if (t.active === key) t.active = t.tabs.length ? t.tabs[Math.max(0, i - 1)].key : null;
     renderTabs(frame);
+    if (t.live && MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+  }
+
+  // a remote tab list arrived through applyOptions; each surviving tab keeps
+  // its shell key, so a new entry here follows the same live PTY, not a new one
+  function applyTabsOption(frame, incoming) {
+    const t = frame._term;
+    if (!t) return;
+    const list = Array.isArray(incoming) ? incoming : [];
+    const keep = new Set(list.map((x) => x && x.key));
+    for (let i = t.tabs.length - 1; i >= 0; i--) {
+      const tab = t.tabs[i];
+      if (keep.has(tab.key)) continue;
+      if (t.followed[tab.region]) {
+        t.followed[tab.region] -= 1;
+        if (t.followed[tab.region] <= 0) {
+          delete t.followed[tab.region];
+          frame.send({ type: "unfollow", track: tab.region, inst: frame.id });
+        }
+      }
+      if (tab.ro) { try { tab.ro.disconnect(); } catch (e) { /* teardown best effort */ } }
+      if (tab.term) { try { tab.term.dispose(); } catch (e) { /* teardown best effort */ } }
+      if (tab.host && tab.host.parentNode) tab.host.parentNode.removeChild(tab.host);
+      t.tabs.splice(i, 1);
+      if (t.active === tab.key) t.active = null;
+    }
+    for (const saved of list) {
+      if (!saved || !saved.region) continue;
+      if (t.tabs.some((x) => x.key === saved.key)) continue;
+      const tab = {
+        key: saved.key, region: saved.region,
+        term: null, fit: null, ro: null, host: null, backlog: [], opened: false,
+      };
+      t.tabs.push(tab);
+      openPty(frame, tab);
+    }
+    if (!t.active && t.tabs.length) t.active = t.tabs[0].key;
+    renderTabs(frame);
   }
 
   function renderTabs(frame) {
@@ -232,7 +277,12 @@
       x.textContent = "×";
       x.addEventListener("click", (ev) => { ev.stopPropagation(); closeTab(frame, tab.key); });
       el.appendChild(x);
-      el.addEventListener("click", () => { t.active = tab.key; renderTabs(frame); });
+      el.addEventListener("click", () => {
+        const switching = t.active !== tab.key;
+        t.active = tab.key;
+        renderTabs(frame);
+        if (switching && MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+      });
       t.tabBar.appendChild(el);
 
       if (!tab.host) {
@@ -358,6 +408,19 @@
         const text = String(data).replace(/\r?\n/g, "\r\n");
         if (tab.term) tab.term.write(text);
         else tab.backlog.push(text);
+      }
+    },
+
+    onOption(frame, key, value) {
+      const t = frame._term;
+      if (!t) return;
+      if (key === "region") {
+        if (t.select) t.select.value = value || "";
+        return;
+      }
+      if (key === "tabs") { applyTabsOption(frame, value); return; }
+      if (key === "active") {
+        if (value && t.tabs.some((x) => x.key === value)) { t.active = value; renderTabs(frame); }
       }
     },
 

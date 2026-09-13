@@ -36,3 +36,14 @@
 - Decide the library/maps and grid window cleanup: library/maps/ (Music History.json, Music History.2.json, Desktop.json), library/grids/9883b6bec3df/ throwaway window files, Docs/Reports/phase3-test/<box>/ (keep), two unnamed empty sessions from 2026-09-06 (85b19c53d41a, 0d78d246515f), archives/9883b6bec3df/ region jsonl files.
 - Browser widget two skins, Finder columns versus VS Code tree — idea from this session, not specced.
 - Rule conflict raised by four boxes, unresolved: the harness bypass notice tells agents to read and edit through Bash; the project rules say Read and Edit tools so Brandon sees edits.
+- anchor-chat's markdown `.bub` CSS lives in two hand-matched copies — ade.css (still unloaded by matrix.html) and anchor-chat.js's own injected style — drift risk if one is edited without the other. Not tonight.
+- Widget-closes-resets-siblings cause found: grid.js removeWidget calls render() on both branches and rebuilds every widget; addWidget already has the fix. See [Docs/Scope/Code Canvas port/SCOPE-phase0-foundation.md](Docs/Scope/Code%20Canvas%20port/SCOPE-phase0-foundation.md) job A.
+- Run phase 0 from [Docs/Scope/Code Canvas port/SCOPE-phase0-foundation.md](Docs/Scope/Code%20Canvas%20port/SCOPE-phase0-foundation.md) in a fresh session.
+- Check pre-2C agents (1A, 1B, 1D, 1R, 1H, 2A, 2A-fix, 2A-fix2, 2B, 2R-2B, 2D) for decision comments in code left before the comment rule (label, function, state only) was repeated verbatim from 2C on. Known: [RECEIPT-phase2-2A.md](Docs/Reports/RECEIPT-phase2-2A.md) cards.js FILTER_FIELDS note.
+- Name an owner for any shared file two parallel specs touch — 2C and 2D both wrote drawn-widget.js this session. See [SESSION-REVIEW-2026-09-12-phases1-3-build.md](Docs/Reports/SESSION-REVIEW-2026-09-12-phases1-3-build.md).
+- Region 0c2be647998d carries twelve real model turns from Phase 3's 3H line 14 across three test runs.
+- Taste pass on Stack and Files Graph 3D projection and Force Graph empty planes — seen mid-2H, not a test line.
+- 3R-3E cosmetic: annotate status shows "playwright missing page" instead of the route's own error text.
+- Goto agent definition recites an older seven-rule block with a 500K cap; the first Code Canvas port 1A spawn stalled on it. Check ~/.claude/agents/Goto.md.
+- Phase 4 (Code Canvas port, motion/3D): scope doc only. No specs until Brandon rules.
+- Harness token counts ran above spec caps on most Code Canvas port jobs this session (table in [SESSION-REVIEW-2026-09-12-phases1-3-build.md](Docs/Reports/SESSION-REVIEW-2026-09-12-phases1-3-build.md)); agents' own counts were under. Decide which count the rule reads.

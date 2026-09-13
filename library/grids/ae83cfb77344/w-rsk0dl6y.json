@@ -1,0 +1,231 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "Empty surface 5",
+  "widgets": [
+    {
+      "id": "graph_cards-mtyzjw3v-1",
+      "type": "graph_cards",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 7,
+        "h": 10
+      },
+      "options": {
+        "target": "graph",
+        "selectedIds": [
+          "dir:viewer"
+        ],
+        "focusedId": "dir:viewer",
+        "openInEditor": true,
+        "query": "score",
+        "codeFiles": true,
+        "otherFiles": true,
+        "duplicates": true,
+        "guesses": "off",
+        "nestFolders": false,
+        "capLevels": false,
+        "searchName": true,
+        "searchFacts": false,
+        "searchComments": false,
+        "reachMap": false,
+        "reachCard": false,
+        "reachDeep": false,
+        "reachCommon": false,
+        "commentHeader": false,
+        "commentLeading": true,
+        "commentTrailing": true,
+        "commentInterior": true,
+        "commentOrphan": false,
+        "commentProse": true,
+        "commentDead": true,
+        "commentTodo": false,
+        "commentDirective": false
+      }
+    },
+    {
+      "id": "graph_force-mtyzjyof-2",
+      "type": "graph_force",
+      "slot": {
+        "col": 8,
+        "row": 1,
+        "w": 11,
+        "h": 12
+      },
+      "options": {
+        "target": "graph",
+        "selectedIds": [
+          "dir:viewer"
+        ],
+        "focusedId": "dir:viewer",
+        "camera": {
+          "yaw": -0.42,
+          "pitch": 0.92,
+          "scale": 1
+        },
+        "frozen": true,
+        "dims": 3,
+        "mermaidCollapsed": false,
+        "query": "score",
+        "sim": {
+          "repulsion": 1000,
+          "attraction": 0.05,
+          "damping": 0.05,
+          "step": 0.2,
+          "gravity": 0.012,
+          "dims": 3
+        },
+        "codeFiles": true,
+        "otherFiles": true,
+        "duplicates": true,
+        "guesses": "off",
+        "nestFolders": false,
+        "capLevels": false,
+        "searchName": true,
+        "searchFacts": false,
+        "searchComments": false,
+        "reachMap": false,
+        "reachCard": false,
+        "reachDeep": false,
+        "reachCommon": false,
+        "commentHeader": false,
+        "commentLeading": true,
+        "commentTrailing": true,
+        "commentInterior": true,
+        "commentOrphan": false,
+        "commentProse": true,
+        "commentDead": true,
+        "commentTodo": false,
+        "commentDirective": false
+      }
+    },
+    {
+      "id": "editor-mtyzk8wn-3",
+      "type": "editor",
+      "slot": {
+        "col": 1,
+        "row": 11,
+        "w": 7,
+        "h": 8
+      },
+      "options": {
+        "showPreview": false,
+        "tabs": [
+          {
+            "key": "editor-mtyzk8wn-3-t1",
+            "path": "/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer/score.js"
+          },
+          {
+            "key": "editor-mtyzk8wn-3-t2",
+            "path": "/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer.html"
+          },
+          {
+            "key": "editor-mtyzk8wn-3-t3",
+            "path": "/Users/moth3rship/Desktop/AI Design/Wayfinder/fixtures/viewer/viewer/data.js"
+          }
+        ],
+        "active": "editor-mtyzk8wn-3-t3",
+        "followGraph": true,
+        "graphTarget": ""
+      }
+    },
+    {
+      "id": "graph_stack-mtyzkg0j-4",
+      "type": "graph_stack",
+      "slot": {
+        "col": 19,
+        "row": 1,
+        "w": 10,
+        "h": 9
+      },
+      "options": {
+        "target": "graph",
+        "selectedIds": [
+          "dir:viewer"
+        ],
+        "focusedId": "dir:viewer",
+        "camera": {
+          "yaw": -0.42,
+          "pitch": 0.92,
+          "scale": 1
+        },
+        "mermaidCollapsed": false,
+        "query": "score",
+        "codeFiles": true,
+        "otherFiles": true,
+        "duplicates": true,
+        "guesses": "off",
+        "nestFolders": false,
+        "capLevels": false,
+        "searchName": true,
+        "searchFacts": false,
+        "searchComments": false,
+        "reachMap": false,
+        "reachCard": false,
+        "reachDeep": false,
+        "reachCommon": false,
+        "commentHeader": false,
+        "commentLeading": true,
+        "commentTrailing": true,
+        "commentInterior": true,
+        "commentOrphan": false,
+        "commentProse": true,
+        "commentDead": true,
+        "commentTodo": false,
+        "commentDirective": false
+      }
+    },
+    {
+      "id": "graph_files-mtyzkheo-5",
+      "type": "graph_files",
+      "slot": {
+        "col": 19,
+        "row": 10,
+        "w": 10,
+        "h": 9
+      },
+      "options": {
+        "target": "graph",
+        "selectedIds": [
+          "dir:viewer"
+        ],
+        "focusedId": "dir:viewer",
+        "camera": {
+          "yaw": -0.42,
+          "pitch": 0.92,
+          "scale": 0.12
+        },
+        "mermaidCollapsed": false,
+        "view": "local",
+        "trail": [
+          "viewer"
+        ],
+        "page": 0,
+        "query": "score",
+        "codeFiles": true,
+        "otherFiles": true,
+        "duplicates": true,
+        "guesses": "off",
+        "nestFolders": false,
+        "capLevels": false,
+        "searchName": true,
+        "searchFacts": false,
+        "searchComments": false,
+        "reachMap": false,
+        "reachCard": false,
+        "reachDeep": false,
+        "reachCommon": false,
+        "commentHeader": false,
+        "commentLeading": true,
+        "commentTrailing": true,
+        "commentInterior": true,
+        "commentOrphan": false,
+        "commentProse": true,
+        "commentDead": true,
+        "commentTodo": false,
+        "commentDirective": false
+      }
+    }
+  ]
+}

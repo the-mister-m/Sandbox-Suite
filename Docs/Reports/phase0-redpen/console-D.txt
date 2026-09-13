@@ -1,0 +1,2 @@
+[D1:console:error] Failed to load resource: the server responded with a status of 404 (NOT FOUND)
+[harness] tab1 WINDOW_ID=w-mr62zhrk tab2 WINDOW_ID=w-mr62zhrk surface=w-mr62zhrk

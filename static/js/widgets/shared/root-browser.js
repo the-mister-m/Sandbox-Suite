@@ -4,6 +4,7 @@
 // at. commit(path) fires on Select (folder mode) or on a file click when
 // opts.ext is set. opts.ext lists files with that extension and commits on
 // click; without it the picker shows folders only and commits via Select.
+// opts.ext takes a string or an array of strings.
 // Moved from devagent.js as is; CSS id becomes mx-root-browser-css, class
 // names stay the same.
 
@@ -68,6 +69,12 @@
   // without it the picker shows folders only and commits via Select.
   MX.openRootBrowser = function (start, commit, opts) {
     opts = opts || {};
+    // ext: one extension or a list. extList is the lowercased list, empty
+    // in folder mode. extLabel is what the modal text shows.
+    const extList = (opts.ext === undefined || opts.ext === null || opts.ext === "")
+      ? []
+      : (Array.isArray(opts.ext) ? opts.ext : [opts.ext]).map((e) => String(e).toLowerCase());
+    const extLabel = extList.join(" or ");
     ensureRootCss();
     const stale = document.querySelector(".dv-rootmodal");
     if (stale) stale.remove();
@@ -75,14 +82,14 @@
     const ov = el("div", "dv-rootmodal");
     const box = el("div", "dv-rootbox");
     const head = el("div", "dv-roothead");
-    const h3 = el("h3", null, opts.ext ? "Pick a " + opts.ext + " file" : "Agent root");
+    const h3 = el("h3", null, extList.length ? "Pick a " + extLabel + " file" : "Agent root");
     head.appendChild(h3);
     const closeBtn = el("button", "dv-rootx", "×");
     closeBtn.type = "button";
     head.appendChild(closeBtn);
     box.appendChild(head);
-    const sub = el("div", "dv-rootsub", opts.ext
-      ? "Browse the filesystem and click a " + opts.ext + " file. The path is "
+    const sub = el("div", "dv-rootsub", extList.length
+      ? "Browse the filesystem and click a " + extLabel + " file. The path is "
         + "copied into the field — nothing else changes."
       : "Browse the filesystem and pick a folder. Select copies the path into "
         + "root — nothing else changes; the server still validates it on submit.");
@@ -98,7 +105,7 @@
     const selectBtn = el("button", "dv-rootbtn", "Select");
     selectBtn.type = "button";
     // in file mode the click on a file is the commit, so Select has no job
-    if (!opts.ext) selectRow.appendChild(selectBtn);
+    if (!extList.length) selectRow.appendChild(selectBtn);
     body.appendChild(pathLine);
     body.appendChild(listBox);
     body.appendChild(selectRow);
@@ -134,12 +141,12 @@
             listBox.appendChild(up);
           }
           const dirs = Array.isArray(data.dirs) ? data.dirs : [];
-          const files = opts.ext
+          const files = extList.length
             ? (Array.isArray(data.files) ? data.files : [])
-              .filter((n) => n.toLowerCase().endsWith(opts.ext))
+              .filter((n) => extList.some((e) => n.toLowerCase().endsWith(e)))
             : [];
           if (!dirs.length && !files.length) {
-            listBox.appendChild(scopeLine(opts.ext ? "nothing here" : "no subfolders"));
+            listBox.appendChild(scopeLine(extList.length ? "nothing here" : "no subfolders"));
           }
           for (const name of dirs) {
             const item = el("div", "dv-rootitem", name);

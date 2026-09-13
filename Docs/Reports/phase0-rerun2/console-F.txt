@@ -1,0 +1,35 @@
+13:52:01 [harness] session 85b19c53d41a other 0d78d246515f fallbacks ['0d78d246515f', 'bc64260f82ad', 'e76d0d6f4e3e', '8c3abc75b244', 'ae83cfb77344']
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+13:52:09 [harness] F surface=w-2jqbnyx8 url=http://127.0.0.1:5000/matrix/85b19c53d41a?s=w-2jqbnyx8 t1=t-s0y040w6 t2=t-szmic5a4
+13:52:33 [obs] t1 dirty=[{'at': 11, 'id': 'browser-mtyomy2t-1'}, {'at': 5065, 'id': 'browser-mtyomy2t-1'}]
+13:52:33 [obs] t1 mirror-out=[{'at': 2014, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 2023, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 7067, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 9078, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}]
+13:52:33 [obs] t2 mirror-in=[{'at': 2017, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 2023, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 7068, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}, {'at': 9073, 'id': 'browser-mtyomy2t-1', 'keys': ['root', 'expanded'], 'tabs': None}]
+13:52:33 [obs] t2 file-frames=[]
+13:52:34 [step] F1a FAIL
+13:52:41 [F-t2:pageerror] Canceled
+13:52:46 [obs] F1b t1 editor announces=[{'at': 32274, 'id': 'editor-mtyon00e-2', 'keys': ['showPreview', 'tabs', 'active'], 'tabs': [{'key': 'editor-mtyon00e-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}, {'key': 'editor-mtyon00e-2-t2', 'path': '/Users/moth3rship/Desktop/AI Design/Run generator scope.md'}]}]
+13:52:46 [obs] F1b t2 editor arrivals=[{'at': 32286, 'id': 'editor-mtyon00e-2', 'keys': ['showPreview', 'tabs', 'active'], 'tabs': [{'key': 'editor-mtyon00e-2-t1', 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md'}, {'key': 'editor-mtyon00e-2-t2', 'path': '/Users/moth3rship/Desktop/AI Design/Run generator scope.md'}]}]
+13:52:46 [obs] F1b t2 file frames=[{'at': 32293, 'path': '/Users/moth3rship/Desktop/AI Design/CLAUDE.md', 'inst': 'editor-mtyon00e-2'}, {'at': 32295, 'path': '/Users/moth3rship/Desktop/AI Design/Run generator scope.md', 'inst': 'editor-mtyon00e-2'}]
+13:52:46 [obs] F1b t1 dirty=[{'at': 11, 'id': 'browser-mtyomy2t-1'}, {'at': 5065, 'id': 'browser-mtyomy2t-1'}, {'at': 30269, 'id': 'editor-mtyon00e-2'}]
+13:52:46 [step] F1b FAIL
+13:52:48 [step] F1c PASS
+13:52:58 [step] F1d OBSERVED
+13:53:10 [step] F2 PASS
+13:53:23 [step] F3a PASS
+13:53:25 [step] F3b PASS
+13:53:25 [step] F4 OBSERVED
+13:53:25 [step] F5 OBSERVED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:28 [F-t2:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-2jqbnyx8 net::ERR_ABORTED
+13:53:42 [step] F6 FAIL
+13:53:58 [step] F7 PASS
+13:53:58 [step] G5 PASS
+13:53:58 [harness] block F console errors: 1
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=['w-2jqbnyx8', 'w-z6hqwzjz']
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True

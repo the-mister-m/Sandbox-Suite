@@ -208,6 +208,8 @@
       st.tabs.splice(i, 1);
       if (frame.options.path === path) {
         frame.setOption("path", st.tabs.length ? st.tabs[Math.max(0, i - 1)] : "");
+      } else if (MX.grid && MX.grid.markDirty) {
+        MX.grid.markDirty(frame);
       }
       renderTabs();
     }
@@ -389,8 +391,15 @@
     },
 
     onOption(frame, key, value) {
-      if (key !== "path") return;
       const st = frame._viewer;
+      if (key === "tabs") {
+        if (st && Array.isArray(value)) {
+          st.tabs = value.slice();
+          if (st.renderTabs) st.renderTabs();
+        }
+        return;
+      }
+      if (key !== "path") return;
       if (st) {
         if (st.input) st.input.value = value || "";
         if (value && st.tabs.indexOf(value) < 0) st.tabs.push(value);

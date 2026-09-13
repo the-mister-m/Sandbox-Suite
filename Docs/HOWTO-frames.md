@@ -65,6 +65,7 @@ below.
 | rename_preset | old_name, new_name | out | none | no | no |
 | delete_preset | name | out | none | no | no |
 | roster | (added by S2) | (added by S2) | (added by S2) | (added by S2) | (added by S2) |
+| widget_bus | channel, payload, inst | none | widget_bus to environment | no | no |
 | (unknown type) | type | out ("unknown frame") | none | no | no |
 
 A second `change_answer` on a taken token prints "unknown token" and
@@ -88,6 +89,7 @@ stops — that is fine as-is.
 | chat_history | id, records | `_anchor()`, frames.py:265 — same call sites as track_transcript |
 | transcript | id, region, inst, messages | transcript frame, frames.py:806 |
 | feed | records, inst, totals | feed frame, frames.py:772 |
+| widget_bus | channel, payload, inst | `send_widget_bus()`, ade/web_io.py — frames.py handle() widget_bus branch |
 | wp_feed | lines, counts | wp_feed frame, frames.py:783 |
 | file | path, inst, content | open frame, frames.py:832 |
 | tree | data, inst | tree frame, frames.py:815 |

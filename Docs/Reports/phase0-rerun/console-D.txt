@@ -1,0 +1,10 @@
+[fence] 85b19c53d41a before: ['w-2l3u8v3j', 'w-88ebk2bl', 'w-8924kcue', 'w-8oeqlihz', 'w-8y4r4kj1', 'w-fzsn00w1', 'w-m08neawh', 'w-t0eip5z4', 'w-ywzvtxv8', 'w-zvc46lwr']
+[harness] {'t1_tab': 't-9143ob68', 't2_tab': 't-n8mn50km', 't1_win': 'w-lv56257i', 't2_win': 'w-lv56257i'} surface=w-lv56257i
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[D-t1:requestfailed] http://127.0.0.1:5000/api/grid/85b19c53d41a/w-lv56257i net::ERR_ABORTED
+[harness] block D console errors: 0

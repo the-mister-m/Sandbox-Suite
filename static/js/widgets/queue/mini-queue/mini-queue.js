@@ -161,6 +161,9 @@
       }
     },
 
+    // no default options for this type; nothing to apply back
+    onOption() {},
+
     getOptions(frame) {
       return JSON.parse(JSON.stringify(frame.options));
     },

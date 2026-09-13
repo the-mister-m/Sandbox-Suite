@@ -559,6 +559,7 @@ def _write_refused(result):
 
 
 def handle(ctx, msg):
+    ctx.environment.last_ts = tracks._now_iso()  # state: last touch
     webio = ctx.webio
     t = msg.get("type")
     # the instance that sent this frame; every reply echoes it back
@@ -1155,6 +1156,12 @@ def handle(ctx, msg):
             return
         ok, result = st.delete_preset(name)
         webio.out(f"[preset deleted: {result}]" if ok else f"[delete_preset failed: {result}]", dim=True)
+
+    elif t == "widget_bus":
+        channel = msg.get("channel")
+        if channel:
+            _broadcast(ctx.environment, "send_widget_bus",
+                channel, msg.get("payload"), msg.get("inst"))
 
     else:
         webio.out(f"[ade: unknown frame {t}]", dim=True)

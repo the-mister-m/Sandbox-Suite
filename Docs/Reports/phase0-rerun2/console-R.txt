@@ -1,0 +1,28 @@
+13:44:58 [harness] session 85b19c53d41a other 0d78d246515f fallbacks ['0d78d246515f', 'bc64260f82ad', 'e76d0d6f4e3e', '8c3abc75b244', 'ae83cfb77344']
+[fence] 85b19c53d41a before: ['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+13:45:10 [harness] chat roster on 85b19c53d41a: []
+[fence] 0d78d246515f before: ['w-8924kcue']
+13:45:21 [harness] chat roster on 0d78d246515f: []
+[fence] bc64260f82ad before: ['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+13:45:32 [harness] chat roster on bc64260f82ad: []
+[fence] e76d0d6f4e3e before: ['w-ywzvtxv8']
+13:45:42 [harness] chat roster on e76d0d6f4e3e: [{'id': '9548242d650d', 'name': 'test'}]
+13:45:46 [step] F4b PASS
+13:45:57 [step] F5ba PASS
+13:46:02 [step] F5bb OBSERVED
+[sweep] 85b19c53d41a before=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a made=['w-xypludym']
+[sweep] 85b19c53d41a after=['w-88ebk2bl', 'w-8924kcue', 'w-fzsn00w1', 'w-ywzvtxv8', 'w-zvc46lwr']
+[sweep] 85b19c53d41a intact=True
+[sweep] 0d78d246515f before=['w-8924kcue']
+[sweep] 0d78d246515f made=['w-uketzhbd']
+[sweep] 0d78d246515f after=['w-8924kcue']
+[sweep] 0d78d246515f intact=True
+[sweep] bc64260f82ad before=['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+[sweep] bc64260f82ad made=['w-o5ohdeoa']
+[sweep] bc64260f82ad after=['w-0t09563v', 'w-6r9sradu', 'w-aw9thhhm', 'w-ywzvtxv8']
+[sweep] bc64260f82ad intact=True
+[sweep] e76d0d6f4e3e before=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e made=['w-0likd352']
+[sweep] e76d0d6f4e3e after=['w-ywzvtxv8']
+[sweep] e76d0d6f4e3e intact=True

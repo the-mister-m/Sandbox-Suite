@@ -481,17 +481,18 @@ const Suite = (() => {
       tr.innerHTML = `
         <td>${row.name || "(unnamed)"}</td>
         <td>${row.saved ? "saved" : "unsaved"}</td>
-        <td>${row.saved_ts ? new Date(row.saved_ts).toLocaleString() : ""}</td>
+        <td>${row.last ? new Date(row.last).toLocaleString() : ""}</td>
         <td>${row.tracks}</td>
-        <td>${row.windows}</td>
+        <td>${row.surfaces}</td>
         <td class="actions">
           <button data-act="select">Select</button>
-          <button data-act="start">Start Matrix Window</button>
           <button data-act="save">Save</button>
           <button data-act="end">End</button>
         </td>`;
-      tr.querySelector('[data-act="select"]').onclick = () => selectSession(row.id);
-      tr.querySelector('[data-act="start"]').onclick = () => window.open(`/matrix/${row.id}`, "_blank");
+      tr.querySelector('[data-act="select"]').onclick = () => {
+        selectSession(row.id);
+        window.open(`/matrix/${row.id}`, "_blank");
+      };
       tr.querySelector('[data-act="save"]').onclick = () => Api.saveSession(row.id, row.name).then(renderOpenSessions);
       tr.querySelector('[data-act="end"]').onclick = () => openEndModal(row.id);
       el.appendChild(tr);

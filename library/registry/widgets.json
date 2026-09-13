@@ -17,5 +17,13 @@
   { "type": "ledger",      "label": "Ledger",      "path": "/static/js/widgets/adetools/ledger/ledger.js", "group": "adetools" },
   { "type": "queue_log",   "label": "Queue Log",   "path": "/static/js/widgets/queue/queue-log/queue-log.js", "group": "queue" },
   { "type": "transcript",  "label": "Transcript",  "path": "/static/js/widgets/adetools/transcript/transcript.js", "group": "adetools" },
-  { "type": "arrange",     "label": "Arrange",     "path": "/static/js/widgets/adetools/arrange/arrange.js", "group": "adetools" }
+  { "type": "arrange",     "label": "Arrange",     "path": "/static/js/widgets/adetools/arrange/arrange.js", "group": "adetools" },
+  { "type": "pipes",       "label": "Pipes",       "path": "/static/js/widgets/test/pipes/pipes.js", "group": "test" },
+  { "type": "graph_cards", "label": "Cards",       "path": "/static/js/widgets/graph/cards/cards.js", "group": "graph" },
+  { "type": "graph_force", "label": "Force Graph", "path": "/static/js/widgets/graph/force/force.js", "group": "graph" },
+  { "type": "graph_stack", "label": "Stack Graph", "path": "/static/js/widgets/graph/stack/stack.js", "group": "graph" },
+  { "type": "graph_files", "label": "Files Graph", "path": "/static/js/widgets/graph/files/files.js", "group": "graph" },
+  { "type": "canvas",      "label": "Canvas",      "path": "/static/js/widgets/canvas/canvas/canvas.js", "group": "canvas" },
+  { "type": "canvas_tools", "label": "Tools",      "path": "/static/js/widgets/canvas/tools/tools.js", "group": "canvas" },
+  { "type": "canvas_code", "label": "Code",        "path": "/static/js/widgets/canvas/code/code.js", "group": "canvas" }
 ]

@@ -194,6 +194,12 @@ class AdeSenders:
         with self._send_lock:
             self.ws.send(json.dumps({"type": "tree_dirty", "track": track_id}))
 
+    def send_widget_bus(self, channel, payload, inst):
+        with self._send_lock:
+            self.ws.send(json.dumps({
+                "type": "widget_bus", "channel": channel,
+                "payload": payload, "inst": inst}))
+
     def send_track_status(self, track_id, phase):
         with self._send_lock:
             self.ws.send(json.dumps({

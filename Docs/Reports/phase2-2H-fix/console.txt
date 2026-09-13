@@ -1,0 +1,5 @@
+[harness] viewer.html off the box in graph_force-mtz101or-2; pressing fit
+[harness] viewer/data.js off the box in graph_stack-mtz10i3j-4; pressing fit
+[harness] dir:viewer off the box in graph_files-mtz10jgy-5; pressing fit
+[harness] pick dir:viewer in graph_files-mtz10jgy-5: no clickable point ({"found": true, "pts": [], "box": null})
+[harness] solo pick before tab two: clicked=True focus='viewer.html'
