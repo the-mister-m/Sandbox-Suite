@@ -3,7 +3,7 @@
 // MX.targetsFor(sid): target values held by any widget on a session.
 // MX.targetControl(listFn, onNew): optionControls entry for a select.
 // MX.graphTargets(): shelf names merged with the grid's current targets.
-// MX.graphTargetNew(frame): pick a graph file, import it, set the target.
+// MX.graphTargetNew(frame): pick a codebase folder, scan it, set the target.
 // Routes are section 2.5 of SPEC-session-agent-phases1-3.md, 1A's to
 // build. 1A's receipt was not in when this was written; response shapes
 // below are assumed from that section and named in the receipt.
@@ -44,16 +44,24 @@
 
   MX.graphTargetNew = function (frame) {
     return new Promise((resolve) => {
-      MX.openRootBrowser("/", (path) => {
-        fetch("/api/library/graphs/import", {
+      // native macOS folder picker; cancel returns path null
+      fetch("/api/fs/pick?kind=folder").then((r) => r.json()).then((picked) => {
+        const path = picked && picked.path;
+        if (!path) { resolve(); return; }
+        fetch("/api/library/graphs/scan", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: path }),
+          body: JSON.stringify({ root: path }),
         })
           .then((r) => r.json().then((data) => ({ ok: r.ok, data: data })))
           .then(({ ok, data }) => {
             if (ok && data && data.name) {
-              frame.setOption("target", data.name);
+              if (data.problems && data.problems.length) {
+                console.warn("graph scan problems:", data.problems);
+              }
+              // widgets already on this name reload; this frame switches if it isn't
+              if (MX.graphRescanned) MX.graphRescanned(data.name);
+              if (frame.options.target !== data.name) frame.setOption("target", data.name);
             } else {
               console.warn("graphTargetNew refused:", (data && data.error) || data);
             }
@@ -63,7 +71,10 @@
             console.warn("graphTargetNew failed:", e);
             resolve();
           });
-      }, { ext: ".json" });
+      }).catch((e) => {
+        console.warn("graphTargetNew pick failed:", e);
+        resolve();
+      });
     });
   };
 })();

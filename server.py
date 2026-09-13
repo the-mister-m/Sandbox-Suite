@@ -1549,6 +1549,65 @@ def api_library_graph_import():
     return jsonify({"ok": True, "name": name_n})
 
 
+# wayfinder analyzer: compiled TS port, left in the Wayfinder repo
+WAYFINDER_ROOT = os.environ.get("WAYFINDER_ROOT") or os.path.join(
+    os.path.dirname(SUITE_ROOT), "Wayfinder")
+WAYFINDER_ANALYZER = os.path.join(WAYFINDER_ROOT, "out", "ts", "analyzer", "index.js")
+
+
+# scan: folder in, library/graphs/<name>.json out; failed scan keeps the old file
+@app.route("/api/library/graphs/scan", methods=["POST"])
+def api_library_graph_scan():
+    body = request.get_json(silent=True) or {}
+    raw = body.get("root") or ""
+    if not raw:
+        return jsonify({"error": "no root"}), 400
+    root = os.path.abspath(os.path.expanduser(raw))
+    if not os.path.isdir(root):
+        return jsonify({"error": f"not a folder: {root}"}), 400
+    name_n = _graph_name(body.get("name") or os.path.basename(root.rstrip("/")))
+    if name_n is None:
+        return jsonify({"error": "bad name"}), 400
+    if not os.path.isfile(WAYFINDER_ANALYZER):
+        return jsonify({"error": f"analyzer not found: {WAYFINDER_ANALYZER}"}), 500
+    final = _graph_path(name_n)
+    tmp = final + ".scan.tmp"
+    try:
+        os.makedirs(GRAPHS_DIR, exist_ok=True)
+        proc = subprocess.run(
+            ["node", WAYFINDER_ANALYZER, root, tmp],
+            cwd=WAYFINDER_ROOT, capture_output=True, text=True, timeout=300)
+    except FileNotFoundError:
+        return jsonify({"error": "node not found on PATH"}), 500
+    except subprocess.TimeoutExpired:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return jsonify({"error": "scan timed out"}), 500
+    # exit 1 = graph written with problems; anything else = no graph
+    if proc.returncode not in (0, 1) or not os.path.isfile(tmp):
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-5:]
+        return jsonify({"error": "scan failed", "detail": tail}), 500
+    try:
+        with open(tmp, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if not isinstance(data, dict) or data.get("schema_version") != 1:
+            raise ValueError("schema_version must be 1")
+        os.replace(tmp, final)
+    except (OSError, ValueError) as e:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return jsonify({"error": str(e)}), 500
+    problems = [ln.strip() for ln in (proc.stderr or "").splitlines() if "PROBLEM" in ln]
+    return jsonify({
+        "ok": True, "name": name_n, "root": root,
+        "nodes": len(data.get("nodes") or []),
+        "edges": len(data.get("edges") or []),
+        "problems": problems,
+    })
+
+
 @app.route("/api/widget-bus", methods=["POST"])
 def api_widget_bus():
     body = request.get_json(silent=True) or {}

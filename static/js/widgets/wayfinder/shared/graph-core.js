@@ -6,7 +6,8 @@
 // object built from the option keys every graph widget persists.
 // MX.graphKindClass(node): css class a node's kind paints as.
 // MX.graphOptionControls(): the shared optionControls entries.
-// MX.graphMirrors(frame, handlers): the three graph.* mirrors one frame.
+// MX.graphMirrors(frame, handlers): the four graph.* mirrors one frame.
+// MX.graphRescanned(target): drop the cached Index, tell every tab to reload.
 
 (function () {
   "use strict";
@@ -74,6 +75,21 @@
 
   MX.graphDrop = function (target) {
     delete _indexCache[target];
+  };
+
+  // rescan stamp per target: one drop per scan, however many frames hear it
+  const _rescanSeen = Object.create(null);
+
+  function dropOnce(target, stamp) {
+    if (_rescanSeen[target] === stamp) return;
+    _rescanSeen[target] = stamp;
+    MX.graphDrop(target);
+  }
+
+  MX.graphRescanned = function (target) {
+    const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    dropOnce(target, stamp);
+    MX.bus.emit("graph.rescan", { target: target, inst: "", stamp: stamp }, { remote: true });
   };
 
   // filters.js's own constructor defaults, copied here so a widget's
@@ -223,6 +239,10 @@
     const select = MX.mirror(frame, "graph.select", handlers.select || (() => {}));
     const filters = MX.mirror(frame, "graph.filters", handlers.filters || (() => {}));
     const reach = MX.mirror(frame, "graph.reach", handlers.reach || (() => {}));
+    const rescan = MX.mirror(frame, "graph.rescan", (payload) => {
+      dropOnce(payload.target, payload.stamp);
+      (handlers.rescan || (() => {}))(payload);
+    });
 
     // select emit: one per tick, last fields win
     const sendSelect = select.emit;
@@ -239,8 +259,8 @@
     };
 
     return {
-      select, filters, reach,
-      off() { select.off(); filters.off(); reach.off(); },
+      select, filters, reach, rescan,
+      off() { select.off(); filters.off(); reach.off(); rescan.off(); },
     };
   };
 })();

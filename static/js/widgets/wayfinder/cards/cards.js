@@ -423,6 +423,7 @@
         select: (payload) => applySelect(frame, payload),
         filters: (payload) => applyFilters(frame, payload),
         reach: () => {},
+        rescan: () => loadTarget(frame),
       });
       st.openMirror = MX.mirror(frame, "graph.open", () => {});
 

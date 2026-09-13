@@ -31,7 +31,7 @@
 - static/js/widgets/<name>/ — one folder per widget, shared/ holds cross-widget modules (F2 added root-browser.js, add-controls.js, settings-rows.js, derived.js); Phase 3 ports added strip, devagent, anchor-chat, gate-list, timeline, queue-log, ledger, changes, messenger, transcript; arrange/ added by F4, one file, plan read from and written to a doc generator project file; Phase 4's S3 regroups widget folders into chat, queue, usertools, agent, adetools, shared; Code Canvas port added wayfinder/ (shared, cards, force, stack, files) and codecanvas/ (shared, canvas, tools, code), renamed from graph/ and canvas/ 2026-09-13, picker groups match folder names
 - static/js/matrix/bus.js — MX.bus: on/off/emit, carries surface.layout/surface.widget/surface.name over one widget_bus frame, drops frames stamped with its own tab id
 - static/vendor/ — vendored libraries (Monaco, marked, DOMPurify, xterm); wayfinder/ and dom-to-image/ added by Code Canvas port phases 2-3
-- server.py — Flask, ADE socket, API routes
+- server.py — Flask, ADE socket, API routes; /api/library/graphs/scan calls Wayfinder's analyzer in ../Wayfinder/out/ts/analyzer/ (WAYFINDER_ROOT overrides), restart to pick up route changes
 - speech.py — speech handling
 
 Root files: .env, .sessions_index.json, global.json, log.jsonl, machines.json, policy.json, queue.json, requirements.txt, waypoint.jsonl

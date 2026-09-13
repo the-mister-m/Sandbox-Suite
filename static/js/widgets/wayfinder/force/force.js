@@ -489,6 +489,7 @@
         select: (payload) => applySelect(frame, payload),
         filters: (payload) => applyFilters(frame, payload),
         reach: (payload) => applyReach(frame, payload),
+        rescan: () => loadTarget(frame),
       });
 
       loadTarget(frame);

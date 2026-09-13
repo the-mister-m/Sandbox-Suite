@@ -429,3 +429,14 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 - NOT CHANGED: group `test` (Pipes) is still missing from `GROUP_ORDER`. It was already like that.
 - No server restart needed: [settings.py:519](engine/settings.py#L519) reads the registry from disk on every request. Hard reload only.
 - Old paths stay as history in specs, receipts and the entries above. INDEX links updated.
+
+### 2026-09-13 — graph target is a codebase, Opus 5, Wayfinder scan wired in
+- FOUND: the graph widgets' target was a graph file, not a codebase. [SCOPE-phase2-graph-widgets.md:181-184](Docs/Scope/Code%20Canvas%20port/SCOPE-phase2-graph-widgets.md#L181-L184) took the target as a graph name; phase 0 jobs E and G (scan route) were put on hold ([SESSION-REVIEW-2026-09-12-phase0.md:39](Docs/Reports/SESSION-REVIEW-2026-09-12-phase0.md#L39)). "New" imported a picked .json through [server.py:1520](server.py#L1520). Brandon: a spec-phase miss, not a build fault.
+- FOUND: Wayfinder's TS analyzer runs by itself — `node out/ts/analyzer/index.js <root> [out-file] [--config <path>]` ([index.ts:149](../Wayfinder/TS%20port/analyzer/index.ts#L149)); exit 1 means written with problems. Compiled build has css, html, javascript, python. `npm run scan` still points at the old analyzer, no python.
+- DECIDED (Brandon): the analyzer stays in the Wayfinder repo; the suite calls it there.
+- DONE: [server.py:1552](server.py#L1552) `POST /api/library/graphs/scan` — runs the analyzer on a folder, writes `library/graphs/<folder name>.json` through a temp file; a failed scan keeps the old file. `WAYFINDER_ROOT` env var, default the sibling `Wayfinder/` folder.
+- DONE: [target-option.js:45](static/js/widgets/shared/target-option.js#L45) — New opens the native macOS folder picker ([server.py:1779](server.py#L1779) `/api/fs/pick?kind=folder`, already there) and scans.
+- DONE: [graph-core.js](static/js/widgets/wayfinder/shared/graph-core.js) `MX.graphRescanned` plus a fourth mirror `graph.rescan` — drops the cached Index once per scan, every widget on that target reloads, every tab. One `rescan` handler line each in stack, files, force, cards.
+- CHECKED: py_compile and node --check clean. Analyzer run by hand on Sandbox Suite into scratchpad: 1835 files, 7223 nodes, 11636 edges, 4 s. Not run through the live server — restart needed ([server.py:2256](server.py#L2256), no reloader).
+- OPEN: `static/vendor/` likely in the scan, unchecked; the route passes no `--config`. Graph name is the folder basename — same-named folders overwrite. Import route left in place, now uncalled.
+- STRAY: scratchpad `suite-scan.json`, session scratchpad only.
