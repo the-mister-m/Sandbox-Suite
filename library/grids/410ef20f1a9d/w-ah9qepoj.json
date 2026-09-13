@@ -4,19 +4,21 @@
   "name": "Empty surface 2",
   "widgets": [
     {
-      "id": "canvas-mu02uz9h-2",
+      "id": "canvas-mu067zet-1",
       "type": "canvas",
       "slot": {
         "col": 1,
         "row": 1,
         "w": 12,
-        "h": 18
+        "h": 16
       },
       "options": {
-        "target": "",
-        "mode": "preview",
+        "target": "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/Mock CodecanvasV3/9-1 codecanvas specs/TEST/nirvana-canvas.html",
+        "mode": "code",
         "zoom": 100,
-        "selection": [],
+        "selection": [
+          "path-1-0-0-1-0-0"
+        ],
         "schematic": false,
         "page": "",
         "assetMode": "data",
@@ -25,6 +27,47 @@
         "snapshot": "raster",
         "annotateTrack": ""
       }
+    },
+    {
+      "id": "canvas_tools-mu06838l-2",
+      "type": "canvas_tools",
+      "slot": {
+        "col": 13,
+        "row": 1,
+        "w": 8,
+        "h": 7
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/Mock CodecanvasV3/9-1 codecanvas specs/TEST/nirvana-canvas.html",
+        "canvas": "focused",
+        "section": "tools",
+        "followTarget": ""
+      }
+    },
+    {
+      "id": "anchor_chat-mu06phx1-5",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 21,
+        "row": 1,
+        "w": 7,
+        "h": 13
+      },
+      "options": {
+        "region": "",
+        "speech_enabled": false
+      }
+    },
+    {
+      "id": "devagent-mu06q212-8",
+      "type": "devagent",
+      "slot": {
+        "col": 13,
+        "row": 8,
+        "w": 8,
+        "h": 11
+      },
+      "options": {}
     }
   ]
 }

@@ -296,13 +296,14 @@
       });
     }
 
+    // shared root browser, native or suite per global.json
     function chooseRoot() {
-      fetch("/api/fs/pick?kind=folder").then((r) => r.json()).then((d) => {
-        if (d && d.path) {
-          setRoot(d.path);
+      MX.openRootBrowser(st.root || "/", (path) => {
+        if (path) {
+          setRoot(path);
           if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
         }
-      }).catch(() => {});
+      }, {});
     }
 
     function makeSessionRoot() {

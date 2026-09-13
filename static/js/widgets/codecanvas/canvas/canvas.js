@@ -1434,6 +1434,14 @@
       annotate: false, snapshot: "raster", annotateTrack: ""
     },
 
+    optionControls: {
+      target: MX.canvasTargetControl(true),
+      mode: { kind: "select", values: () => MODES.slice() },
+      assetMode: { kind: "select", values: () => ASSET_MODES.slice() },
+      snapshot: { kind: "select", values: () => SNAPSHOT_MODES.slice() },
+      annotateTrack: { kind: "select", values: (f) => trackNamesFor(f) }
+    },
+
     mount(frame) {
       ensureStyles();
 
@@ -1511,12 +1519,6 @@
         if (!cv.live) return;
         cv.core = core;
         cv.patch = core.patch;
-        MOD.optionControls = Object.assign({}, core.optionControls(), {
-          mode: { kind: "select", values: () => MODES.slice() },
-          assetMode: { kind: "select", values: () => ASSET_MODES.slice() },
-          snapshot: { kind: "select", values: () => SNAPSHOT_MODES.slice() },
-          annotateTrack: { kind: "select", values: (f) => trackNamesFor(f) }
-        });
         cv.mirrors = core.mirrors(frame, {
           select: (payload) => applySelection(cv, payload.ids),
           freeze: (payload) => applyFreeze(cv, payload.on)

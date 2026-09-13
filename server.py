@@ -1779,15 +1779,28 @@ def api_fs_raw():
 @app.route("/api/fs/pick")
 def api_fs_pick():
     kind = (request.args.get("kind") or "file").strip().lower()
+    # start: folder the dialog opens at; a file path opens at its folder
+    start = (request.args.get("start") or "").strip()
+    if start and os.path.isfile(start):
+        start = os.path.dirname(start)
+    where = ""
+    if start and os.path.isdir(start):
+        where = ' default location (POSIX file "%s")' % start.replace("\\", "\\\\").replace('"', '\\"')
     if kind == "folder":
         # folder picker
-        script = 'tell application "Finder"\nactivate\nPOSIX path of (choose folder)\nend tell'
+        script = ('tell application "Finder"\nactivate\n'
+                  'POSIX path of (choose folder%s)\nend tell' % where)
     else:
-        ext = (request.args.get("ext") or "json").strip().lower()
-        utype = {"json": "public.json"}.get(ext, "public.data")
+        # ext: one extension, a comma list, or * for any file
+        raw_ext = (request.args.get("ext") or "json").strip().lower()
+        exts = [e.strip().lstrip(".") for e in raw_ext.split(",")]
+        utypes = sorted({{"json": "public.json", "html": "public.html"}.get(e, "public.data")
+                         for e in exts if e})
+        types = ", ".join('"%s"' % u for u in (utypes or ["public.json"]))
+        of_type = "" if raw_ext == "*" else " of type {%s}" % types
         # file picker
         script = ('tell application "Finder"\nactivate\n'
-                  'POSIX path of (choose file of type {"%s"})\nend tell' % utype)
+                  'POSIX path of (choose file%s%s)\nend tell' % (of_type, where))
     try:
         r = subprocess.run(["osascript", "-e", script],
                            capture_output=True, text=True, timeout=300)
@@ -2005,10 +2018,13 @@ def api_targets(sid):
                 value = options.get("target")
                 if not isinstance(value, str) or not value:
                     continue
-                row = agg.setdefault(value, {"widgets": 0, "surfaces": set()})
+                row = agg.setdefault(value, {"widgets": 0, "surfaces": set(), "types": set()})
                 row["widgets"] += 1
                 row["surfaces"].add(surface_id)
-    targets = [{"value": v, "widgets": row["widgets"], "surfaces": sorted(row["surfaces"])}
+                if isinstance(w.get("type"), str):
+                    row["types"].add(w["type"])
+    targets = [{"value": v, "widgets": row["widgets"], "surfaces": sorted(row["surfaces"]),
+                "types": sorted(row["types"])}
                for v, row in sorted(agg.items())]
     return jsonify({"targets": targets})
 

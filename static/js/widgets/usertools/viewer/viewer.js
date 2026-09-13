@@ -173,9 +173,9 @@
     openBtn.type = "button";
     openBtn.textContent = "Open";
     openBtn.addEventListener("click", () => {
-      fetch("/api/fs/pick?kind=file").then((r) => r.json()).then((d) => {
-        if (d && d.path) { input.value = d.path; openTab(d.path); }
-      }).catch(() => {});
+      MX.openRootBrowser(input.value || "/", (path) => {
+        if (path) { input.value = path; openTab(path); }
+      }, { ext: "*" });
     });
     bar.appendChild(input);
     bar.appendChild(openBtn);

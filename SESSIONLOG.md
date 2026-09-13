@@ -440,3 +440,12 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 - CHECKED: py_compile and node --check clean. Analyzer run by hand on Sandbox Suite into scratchpad: 1835 files, 7223 nodes, 11636 edges, 4 s. Not run through the live server — restart needed ([server.py:2256](server.py#L2256), no reloader).
 - OPEN: `static/vendor/` likely in the scan, unchecked; the route passes no `--config`. Graph name is the folder basename — same-named folders overwrite. Import route left in place, now uncalled.
 - STRAY: scratchpad `suite-scan.json`, session scratchpad only.
+
+### 2026-09-13 — target picker and picker setting, Opus 5, Canvas target and native or suite browse
+- FOUND: Canvas attached its optionControls only after `MX.canvasCore()` resolved (3B pick), so the gear panel could show target as plain text with no New. /api/targets pooled every widget's target, so Canvas and Wayfinder lists crossed.
+- DONE: [canvas-core.js:292](static/js/widgets/codecanvas/shared/canvas-core.js#L292) `MX.canvasTargetControl` sync; Canvas, Code, Tools set optionControls at registration. [server.py:1996](server.py#L1996) rows carry `types`; [target-option.js:20](static/js/widgets/shared/target-option.js#L20) filters by type. Code and Tools list Canvas targets only, no New.
+- DECIDED (Brandon): Code and Tools follow the Canvas; one `picker` setting, native or suite, default native.
+- DONE: [settings.py:167](engine/settings.py#L167) `picker`; [root-browser.js:92](static/js/widgets/shared/root-browser.js#L92) routes per click; [server.py:1779](server.py#L1779) `/api/fs/pick` takes ext lists, `*`, and `start`. Session panel copy removed; Suite workspace root, Canvas New, Wayfinder New, Viewer Open (any file), Browser choose root all follow the setting.
+- NOT CHANGED: Canvas media Upload ([kit.js:278](static/js/widgets/codecanvas/shared/kit.js#L278)), needs file bytes not a path.
+- CHECKED: node --check and py_compile clean; settings validation run by hand. No browser test; server restart needed.
+- Review: [SESSION-REVIEW-2026-09-13-target-picker.md](Docs/Reports/SESSION-REVIEW-2026-09-13-target-picker.md).

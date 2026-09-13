@@ -16,6 +16,7 @@ const Suite = (() => {
   const TTS_ENGINES = ["say", "browser"];
   const STT_ENGINES = ["parakeet_mlx", "whisper", "browser"];
   const LISTEN_MODES = ["ptt", "vad", "off"];
+  const PICKERS = ["native", "suite"];
 
   function getAtPath(obj, path) {
     let node = obj;
@@ -320,8 +321,20 @@ const Suite = (() => {
     return e;
   }
 
-  // filesystem folder picker; commit takes the chosen path, opens at start
-  function openRootBrowser(start, commit) {
+  // folder picker; global.json picker picks native dialog or suite modal
+  async function openRootBrowser(start, commit) {
+    let picker = "native";
+    try { picker = (await Api.getGlobal()).picker || "native"; } catch (e) { /* native */ }
+    if (picker === "suite") { openSuiteBrowser(start, commit); return; }
+    try {
+      const q = start && start !== "/" ? "&start=" + encodeURIComponent(start) : "";
+      const d = await (await fetch("/api/fs/pick?kind=folder" + q)).json();
+      if (d && d.path) commit(d.path.length > 1 ? d.path.replace(/\/+$/, "") : d.path);
+    } catch (e) { console.warn("native picker failed:", e); }
+  }
+
+  // suite modal folder picker; commit takes the chosen path, opens at start
+  function openSuiteBrowser(start, commit) {
     ensureRootCss();
     const stale = document.querySelector(".st-rootmodal");
     if (stale) stale.remove();
@@ -564,6 +577,7 @@ const Suite = (() => {
     buildSimpleDropdown(form, "modal_mode_ade", ["modal_mode_ade"], ADE_MODAL_MODES);
     buildSimpleToggle(form, "gate_keyboard", ["gate_keyboard"]);
     buildSimpleToggle(form, "approve_hold", ["approve_hold"]);
+    buildSimpleDropdown(form, "picker", ["picker"], PICKERS);
     buildConfirm(form);
     buildKillswitch(form);
     buildKillHolds(form);

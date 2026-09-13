@@ -8,7 +8,8 @@
 // script appended.
 // channels: the six canvas.* names, contract 2.7.
 // optionControls(): the target select, current targets filtered to
-// .json and .html, New opens the root browser.
+// .json and .html, New opens the shared root browser.
+// MX.canvasTargetControl(withNew): the same target select, sync.
 // mirrors(frame, handlers): one mirror per channel, plus off().
 
 (function () {
@@ -283,15 +284,19 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
       + "</head>\n<body>\n<div id=\"matrix\"></div>\n</body>\n</html>";
   }
 
-  // function: the target select. Current targets filtered to .json and
-  // .html; New picks a file from the root browser.
-  function optionControls() {
+  // state: widget types of the canvas family.
+  const CANVAS_TYPES = ["canvas", "canvas_code", "canvas_tools"];
+
+  // function: the target select, sync. Targets held by canvas family
+  // widgets, .json and .html only. withNew adds New, the shared root browser.
+  MX.canvasTargetControl = function (withNew) {
     function listFn() {
       const sid = MX.grid && MX.grid.sid;
-      return MX.targetsFor(sid).then((values) =>
+      return MX.targetsFor(sid, CANVAS_TYPES).then((values) =>
         values.filter((v) => /\.(json|html)$/i.test(String(v))));
     }
 
+    // shared root browser, native or suite per global.json
     function onNew(frame) {
       return new Promise((resolve) => {
         MX.openRootBrowser("/", (path) => {
@@ -301,7 +306,12 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
       });
     }
 
-    return { target: MX.targetControl(listFn, onNew) };
+    return MX.targetControl(listFn, withNew ? onNew : null);
+  };
+
+  // function: the Canvas widget's target entry, with New.
+  function optionControls() {
+    return { target: MX.canvasTargetControl(true) };
   }
 
   // function: one mirror per canvas channel. handlers keyed by short name.

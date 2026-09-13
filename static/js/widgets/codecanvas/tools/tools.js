@@ -842,6 +842,11 @@
   const MOD = {
     defaults: { target: "", canvas: "focused", section: "tools", followTarget: "" },
 
+    optionControls: {
+      target: MX.canvasTargetControl(false),
+      canvas: { kind: "select", values: (f) => ["focused"].concat(canvasIdsFor(f)) }
+    },
+
     mount(frame) {
       ensureStyles();
 
@@ -884,12 +889,6 @@
         if (!tl.live) return;
         tl.core = core;
         tl.tools = toolTable(tl);
-        MOD.optionControls = Object.assign({}, core.optionControls(), {
-          canvas: {
-            kind: "select",
-            values: (f) => ["focused"].concat(canvasIdsFor(f))
-          }
-        });
         tl.mirrors = core.mirrors(frame, {
           select: (payload) => {
             if (payload.notes) {

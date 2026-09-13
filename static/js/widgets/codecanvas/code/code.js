@@ -393,6 +393,13 @@
   const MOD = {
     defaults: { target: "", canvas: "focused", view: "blocks", codeMode: "resolved", docEditable: false, locked: false },
 
+    optionControls: {
+      target: MX.canvasTargetControl(false),
+      canvas: { kind: "select", values: (f) => ["focused"].concat(canvasIdsFor(f)) },
+      view: { kind: "select", values: () => VIEWS.slice() },
+      codeMode: { kind: "select", values: () => CODE_MODES.slice() }
+    },
+
     mount(frame) {
       ensureStyles();
 
@@ -429,11 +436,6 @@
       MX.canvasCore().then((core) => {
         if (!cs.live) return;
         cs.core = core;
-        MOD.optionControls = Object.assign({}, core.optionControls(), {
-          canvas: { kind: "select", values: (f) => ["focused"].concat(canvasIdsFor(f)) },
-          view: { kind: "select", values: () => VIEWS.slice() },
-          codeMode: { kind: "select", values: () => CODE_MODES.slice() }
-        });
         cs.mirrors = core.mirrors(frame, {
           select: (payload) => scrollToWidget(cs, payload.ids && payload.ids[0]),
           change: () => { if (!cs.locked) return; renderCurrent(cs); },

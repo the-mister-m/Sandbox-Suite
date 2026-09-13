@@ -164,6 +164,7 @@ KILLSWITCH_SCOPES = ("models", "hosts", "suite")
 TTS_ENGINES = ("say", "browser")
 STT_ENGINES = ("parakeet_mlx", "whisper", "browser")
 LISTEN_MODES = ("ptt", "vad", "off")
+PICKERS = ("native", "suite")
 
 GLOBAL_DEFAULTS = {
     "skin": "og",
@@ -171,6 +172,7 @@ GLOBAL_DEFAULTS = {
     "modal_mode_ade": "inherit",
     "gate_keyboard": True,
     "approve_hold": False,
+    "picker": "native",
     "library_archives": True,
     "confirm": {k: "ask" for k in CONFIRM_KEYS},
     "killswitch": {"scope": "models", "hold_to_fire": True},
@@ -225,6 +227,8 @@ def load_global():
         merged["gate_keyboard"] = data["gate_keyboard"]
     if isinstance(data.get("approve_hold"), bool):
         merged["approve_hold"] = data["approve_hold"]
+    if data.get("picker") in PICKERS:
+        merged["picker"] = data["picker"]
     if isinstance(data.get("confirm"), dict):
         for k in CONFIRM_KEYS:
             if data["confirm"].get(k) in CONFIRM_STATES:
@@ -264,6 +268,8 @@ def _validate_global(body):
         raise GlobalError(f"unknown modal_mode: {body['modal_mode']!r}")
     if "modal_mode_ade" in body and body["modal_mode_ade"] not in ADE_MODAL_MODES:
         raise GlobalError(f"unknown modal_mode_ade: {body['modal_mode_ade']!r}")
+    if "picker" in body and body["picker"] not in PICKERS:
+        raise GlobalError(f"unknown picker: {body['picker']!r}")
     for k in ("gate_keyboard", "approve_hold"):
         if k in body and not isinstance(body[k], bool):
             raise GlobalError(f"{k} must be a boolean")

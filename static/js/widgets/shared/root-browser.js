@@ -1,10 +1,12 @@
-// shared root browser — filesystem picker modal
+// shared root browser — filesystem picker, native dialog or suite modal
 //
 // MX.openRootBrowser(start, commit, opts). start: path to open the browser
 // at. commit(path) fires on Select (folder mode) or on a file click when
 // opts.ext is set. opts.ext lists files with that extension and commits on
 // click; without it the picker shows folders only and commits via Select.
-// opts.ext takes a string or an array of strings.
+// opts.ext takes a string, an array of strings, or "*" for any file.
+// global.json picker, read on each call: native opens the macOS dialog
+// through /api/fs/pick, suite opens the modal below.
 // Moved from devagent.js as is; CSS id becomes mx-root-browser-css, class
 // names stay the same.
 
@@ -64,17 +66,49 @@
   }
   ensureRootCss();
 
-  // filesystem picker; commit takes the chosen path, opens at start.
-  // opts.ext lists files with that extension and commits on click —
-  // without it the picker shows folders only and commits via Select.
-  MX.openRootBrowser = function (start, commit, opts) {
-    opts = opts || {};
-    // ext: one extension or a list. extList is the lowercased list, empty
-    // in folder mode. extLabel is what the modal text shows.
-    const extList = (opts.ext === undefined || opts.ext === null || opts.ext === "")
+  // extension list from opts.ext, lowercased; empty means folder mode
+  function extListOf(opts) {
+    return (opts.ext === undefined || opts.ext === null || opts.ext === "")
       ? []
       : (Array.isArray(opts.ext) ? opts.ext : [opts.ext]).map((e) => String(e).toLowerCase());
-    const extLabel = extList.join(" or ");
+  }
+
+  // native dialog through /api/fs/pick; cancel commits nothing
+  function openNativePicker(start, commit, opts) {
+    const exts = extListOf(opts).map((e) => e.replace(/^\./, ""));
+    let url = "/api/fs/pick?kind=" + (exts.length
+      ? "file&ext=" + encodeURIComponent(exts.join(","))
+      : "folder");
+    if (start && start !== "/") url += "&start=" + encodeURIComponent(start);
+    return fetch(url)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.path) commit(d.path.length > 1 ? d.path.replace(/\/+$/, "") : d.path);
+      })
+      .catch((e) => console.warn("native picker failed:", e));
+  }
+
+  // picker setting from global.json; missing or unreadable reads native
+  MX.openRootBrowser = function (start, commit, opts) {
+    opts = opts || {};
+    return fetch("/api/global")
+      .then((r) => r.json())
+      .then((g) => (g && g.picker) || "native")
+      .catch(() => "native")
+      .then((picker) => (picker === "suite"
+        ? openSuiteBrowser(start, commit, opts)
+        : openNativePicker(start, commit, opts)));
+  };
+
+  // suite modal; commit takes the chosen path, opens at start.
+  // opts.ext lists files with that extension and commits on click —
+  // without it the picker shows folders only and commits via Select.
+  function openSuiteBrowser(start, commit, opts) {
+    // ext: one extension or a list. extList is the lowercased list, empty
+    // in folder mode. extLabel is what the modal text shows.
+    const extList = extListOf(opts);
+    const anyFile = extList.indexOf("*") >= 0;
+    const extLabel = anyFile ? "any" : extList.join(" or ");
     ensureRootCss();
     const stale = document.querySelector(".dv-rootmodal");
     if (stale) stale.remove();
@@ -143,7 +177,7 @@
           const dirs = Array.isArray(data.dirs) ? data.dirs : [];
           const files = extList.length
             ? (Array.isArray(data.files) ? data.files : [])
-              .filter((n) => extList.some((e) => n.toLowerCase().endsWith(e)))
+              .filter((n) => anyFile || extList.some((e) => n.toLowerCase().endsWith(e)))
             : [];
           if (!dirs.length && !files.length) {
             listBox.appendChild(scopeLine(extList.length ? "nothing here" : "no subfolders"));
@@ -179,5 +213,5 @@
 
     loadDirs(browsePath);
     ov.classList.add("show");
-  };
+  }
 })();

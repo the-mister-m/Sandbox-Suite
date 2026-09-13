@@ -4,6 +4,8 @@
   "modal_mode_ade": "inherit",
   "gate_keyboard": true,
   "approve_hold": false,
+  "picker": "native",
+  "library_archives": true,
   "confirm": {
     "editor_save": "ask",
     "file_delete": "ask",
@@ -38,5 +40,26 @@
   "models": {
     "order": [],
     "hidden": []
+  },
+  "widget_defaults": {
+    "chat": {},
+    "mini_queue": {},
+    "queue": {},
+    "editor": {
+      "active": "",
+      "showPreview": false,
+      "tabs": []
+    },
+    "terminal": {
+      "active": "",
+      "region": "",
+      "tabs": []
+    },
+    "browser": {},
+    "viewer": {
+      "path": "",
+      "tabs": []
+    },
+    "mount": {}
   }
 }

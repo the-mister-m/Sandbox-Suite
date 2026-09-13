@@ -1,8 +1,9 @@
 // target option — current targets, graph shelf list, new-target flow
 //
-// MX.targetsFor(sid): target values held by any widget on a session.
+// MX.targetsFor(sid, types): target values held on a session, only by
+// widgets of those types when types is given.
 // MX.targetControl(listFn, onNew): optionControls entry for a select.
-// MX.graphTargets(): shelf names merged with the grid's current targets.
+// MX.graphTargets(): shelf names merged with targets held by graph widgets.
 // MX.graphTargetNew(frame): pick a codebase folder, scan it, set the target.
 // Routes are section 2.5 of SPEC-session-agent-phases1-3.md, 1A's to
 // build. 1A's receipt was not in when this was written; response shapes
@@ -13,12 +14,17 @@
 
   const MX = window.MX = window.MX || {};
 
-  MX.targetsFor = function (sid) {
+  // state: widget types of the wayfinder family.
+  const GRAPH_TYPES = ["graph_cards", "graph_files", "graph_force", "graph_stack"];
+
+  MX.targetsFor = function (sid, types) {
     if (!sid) return Promise.resolve([]);
     return fetch(`/api/targets/${sid}`)
       .then((r) => r.json())
-      .then((data) => (data && Array.isArray(data.targets)
-        ? data.targets.map((t) => t.value) : []))
+      .then((data) => (data && Array.isArray(data.targets) ? data.targets : []))
+      .then((rows) => rows
+        .filter((t) => !types || (t.types || []).some((ty) => types.indexOf(ty) >= 0))
+        .map((t) => t.value))
       .catch(() => []);
   };
 
@@ -32,7 +38,7 @@
       .then((data) => (data && Array.isArray(data.list)
         ? data.list.map((g) => g.name) : []))
       .catch(() => []);
-    const current = MX.targetsFor(MX.grid && MX.grid.sid);
+    const current = MX.targetsFor(MX.grid && MX.grid.sid, GRAPH_TYPES);
     return Promise.all([shelf, current]).then(([names, held]) => {
       const merged = names.slice();
       for (const name of held) {
@@ -44,9 +50,8 @@
 
   MX.graphTargetNew = function (frame) {
     return new Promise((resolve) => {
-      // native macOS folder picker; cancel returns path null
-      fetch("/api/fs/pick?kind=folder").then((r) => r.json()).then((picked) => {
-        const path = picked && picked.path;
+      // shared root browser, native or suite per global.json
+      MX.openRootBrowser("/", (path) => {
         if (!path) { resolve(); return; }
         fetch("/api/library/graphs/scan", {
           method: "POST",
@@ -71,10 +76,7 @@
             console.warn("graphTargetNew failed:", e);
             resolve();
           });
-      }).catch((e) => {
-        console.warn("graphTargetNew pick failed:", e);
-        resolve();
-      });
+      }, {});
     });
   };
 })();
