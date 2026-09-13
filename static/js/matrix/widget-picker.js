@@ -5,7 +5,7 @@
 
   const MX = window.MX = window.MX || {};
 
-  const GROUP_ORDER = ["chat", "queue", "usertools", "agent", "adetools"];
+  const GROUP_ORDER = ["chat", "queue", "usertools", "agent", "adetools", "wayfinder", "codecanvas"];
 
   MX.widgetPicker = {
     open(pos) {

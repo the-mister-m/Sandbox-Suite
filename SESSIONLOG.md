@@ -5,6 +5,7 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ## SESSION INDEX
 (one line per session, newest first: date · name · 5–10 word summary)
+- 2026-09-13 · widget-folder-rename · graph/ → wayfinder/, canvas/ → codecanvas/, groups matched, both families now in the picker
 - 2026-09-12 · code-canvas-port-phases1-3-build · session agent ran phases 1 to 3 end to end, 29 jobs, all three headed gates green, nine seams — [review](Docs/Reports/SESSION-REVIEW-2026-09-12-phases1-3-build.md) · [sticky](Docs/stickies/STICKY-2026-09-12-session-agent.md)
 - 2026-09-12 · closer-phases1-3-build · session closed: no stray files moved (scratchpad fixtures are by-design harness output), MEMORY.md warm start rewritten, CLAUDE.md map updated, TODO.md and worklog updated — [receipt](Docs/Reports/RECEIPT-closer-2026-09-12-phases1-3-build.md)
 - 2026-09-12 · phase3-3E-sonnet-annotate · Annotate draw layer on Canvas, three snapshot methods, no headed proof — [receipt](Docs/Reports/RECEIPT-phase3-3E.md)
@@ -418,3 +419,13 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ### 2026-09-12 — Phase 3-3H fix 2, Opus 5, line 9 scroll-to-header
 - DONE: Line 9's `decor=0` traced with a headed bus trace to the canvas itself, not to Code: a plain mousedown on a widget **already in the selection** takes no branch at [canvas.js:544](static/js/widgets/canvas/canvas/canvas.js) and `setSelection` is the only caller of `mirrors.select.emit`, so the click announced nothing and Code never heard it — the harness marquees two widgets at line 7, mounts Code after, then clicks one of them. Fixed at [canvas.js:542-551](static/js/widgets/canvas/canvas/canvas.js): the already-selected case re-announces on the select mirror with the clicked id first and the rest of the selection behind it, selection unchanged and never narrowed. One harness run, session `9883b6bec3df`, surface `phase3-3H-fix2` removed: **18 of 18 PASS**, zero pageerrors, 6 live user turns on region `0c2be647998d`. The same run covers the two corrections that had no headed proof — `target_node_replaced=True` for [render.js:135-148](static/js/widgets/canvas/shared/render.js) and `who='pinned …'` for [tools.js:938-942](static/js/widgets/canvas/tools/tools.js) — and lines 8 and 15 pass against the session agent's corrected assertions. Receipt: [Docs/Reports/RECEIPT-phase3-3H-fix2.md](Docs/Reports/RECEIPT-phase3-3H-fix2.md).
+
+### 2026-09-13 — widget folder rename, Opus 5, graph and canvas into the picker
+- FOUND: the phases 2-3 widgets loaded and were registered but never showed in the picker. [widget-picker.js:8](static/js/matrix/widget-picker.js#L8) `GROUP_ORDER` left out `graph` and `canvas`.
+- DONE (Brandon): renamed the folders `static/js/widgets/graph/` → [wayfinder/](static/js/widgets/wayfinder/) and `canvas/` → [codecanvas/](static/js/widgets/codecanvas/), subfolders intact.
+- DONE: 18 script tags repointed in [matrix.html:50-67](static/matrix.html#L50-L67); 7 `path` fields in [widgets.json:22-28](library/registry/widgets.json#L22-L28). Checked: no old paths left in static/, the registry, server.py or engine/, and all 18 new paths exist on disk.
+- DONE: groups matched to folders (`wayfinder`, `codecanvas`) in [widgets.json:22-28](library/registry/widgets.json#L22-L28) and added to `GROUP_ORDER`. The registry is still valid JSON. Brandon confirmed it looks right in the UI.
+- NOT CHANGED: type strings (`graph_cards` … `canvas_code`). They are in the widget sources, the registry, three harnesses and saved grid state, so renaming them costs far more. Grid `ae83cfb77344` is Brandon's throwaway state.
+- NOT CHANGED: group `test` (Pipes) is still missing from `GROUP_ORDER`. It was already like that.
+- No server restart needed: [settings.py:519](engine/settings.py#L519) reads the registry from disk on every request. Hard reload only.
+- Old paths stay as history in specs, receipts and the entries above. INDEX links updated.
