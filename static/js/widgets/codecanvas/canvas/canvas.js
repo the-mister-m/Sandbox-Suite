@@ -369,7 +369,10 @@
     viewport(cv);
     drawGrid(cv, !!cv.gesture);
     cv.render.setMode(renderMode(cv));
-    cv.render.page(pid, { play: cv.mode === "preview", only: changedIds(cv, s, pid) });
+    cv.render.page(pid, {
+      play: cv.mode === "preview", only: changedIds(cv, s, pid),
+      links: cv.mode === "preview" || !!cv.linksLive
+    });
     pruneSelection(cv);
     paintSelection(cv);
     applyZoom(cv);
@@ -470,10 +473,25 @@
     cv.menu = menu;
   }
 
-  // function: context menu at a point for one widget.
-  function openMenu(cv, x, y, id) {
-    const w = widgetOf(cv, id);
-    const items = [
+  // function: [label, fn] rows for the current selection and docMode. Shared
+  // by the canvas's own menus and the Layers panel's right-click.
+  function menuItems(cv) {
+    if (cv.docMode === "file") {
+      return [
+        ["Group", () => fileGroup(cv, cv.selection.slice())],
+        ["Ungroup", () => fileUngroup(cv, cv.selection[0])],
+        ["Bring forward", () => fileOrder(cv, cv.selection.slice(), "forward")],
+        ["Send backward", () => fileOrder(cv, cv.selection.slice(), "back")],
+        ["Bring to front", () => fileOrder(cv, cv.selection.slice(), "front")],
+        ["Send to back", () => fileOrder(cv, cv.selection.slice(), "toBack")],
+        ["Duplicate", () => fileDuplicate(cv, cv.selection.slice())],
+        ["Delete", () => fileRemove(cv, cv.selection.slice())]
+      ];
+    }
+    // state: the doc list's Lock label reads the first selected widget.
+    const id = cv.selection[0];
+    const w = id ? widgetOf(cv, id) : null;
+    return [
       ["Duplicate", function () {
         for (let i = 0; i < cv.selection.length; i++) duplicate(cv, cv.selection[i]);
       }],
@@ -485,7 +503,7 @@
         });
       }],
       ["Notes", function () {
-        if (cv.mirrors) cv.mirrors.select.emit({ ids: [id], notes: true });
+        if (cv.mirrors && id) cv.mirrors.select.emit({ ids: [id], notes: true });
       }],
       ["Bring forward", function () {
         cv.state.batch(function () {
@@ -498,10 +516,14 @@
         });
       }],
       [w && w.locked ? "Unlock position" : "Lock position", function () {
-        cv.state.setLocked(id, !(w && w.locked));
+        if (id) cv.state.setLocked(id, !(w && w.locked));
       }]
     ];
-    openMenuItems(cv, x, y, items);
+  }
+
+  // function: context menu at a point for the current selection.
+  function openMenu(cv, x, y) {
+    openMenuItems(cv, x, y, menuItems(cv));
   }
 
   // function: box for a resize direction, from the start box and deltas.
@@ -1605,16 +1627,7 @@
     e.preventDefault();
     const id = cv.patch.stableId(el);
     if (cv.selection.indexOf(id) === -1) setSelection(cv, [id]);
-    openMenuItems(cv, e.clientX, e.clientY, [
-      ["Group", () => fileGroup(cv, cv.selection.slice())],
-      ["Ungroup", () => fileUngroup(cv, cv.selection[0])],
-      ["Bring forward", () => fileOrder(cv, cv.selection.slice(), "forward")],
-      ["Send backward", () => fileOrder(cv, cv.selection.slice(), "back")],
-      ["Bring to front", () => fileOrder(cv, cv.selection.slice(), "front")],
-      ["Send to back", () => fileOrder(cv, cv.selection.slice(), "toBack")],
-      ["Duplicate", () => fileDuplicate(cv, cv.selection.slice())],
-      ["Delete", () => fileRemove(cv, cv.selection.slice())]
-    ]);
+    openMenuItems(cv, e.clientX, e.clientY, menuItems(cv));
   }
 
   function onFileKeyDown(cv, e) {
@@ -2032,6 +2045,10 @@
       cv.schemBtn.hidden = cv.docMode !== "doc";
       cv.schemBtn.classList.toggle("mxcv-btn-on", !!cv.schematic);
     }
+    if (cv.linksBtn) {
+      cv.linksBtn.hidden = cv.docMode !== "doc";
+      cv.linksBtn.classList.toggle("mxcv-btn-on", !!cv.linksLive);
+    }
     if (cv.zoomBar) cv.zoomBar.hidden = cv.docMode !== "doc";
     updateReadout(cv);
     renderTargetTabs(cv);
@@ -2057,6 +2074,14 @@
       markDirty(cv);
     });
     bar.appendChild(cv.schemBtn);
+
+    cv.linksBtn = mkBtn("links", () => {
+      cv.linksLive = !cv.linksLive;
+      cv.linksBtn.classList.toggle("mxcv-btn-on", cv.linksLive);
+      redraw(cv);
+      markDirty(cv);
+    });
+    bar.appendChild(cv.linksBtn);
 
     const zoom = document.createElement("span");
     zoom.className = "mxcv-zoom";
@@ -2106,7 +2131,7 @@
   const MOD = {
     defaults: {
       target: "", targets: [], mode: "preview", zoom: 100, selection: [],
-      schematic: false, page: "", assetMode: "data", backLink: true,
+      schematic: false, linksLive: false, page: "", assetMode: "data", backLink: true,
       annotate: false, snapshot: "raster", annotateTrack: ""
     },
 
@@ -2132,6 +2157,7 @@
         zoomPct: clampZoom(Number(frame.options.zoom) || 100),
         selection: Array.isArray(frame.options.selection) ? frame.options.selection.slice() : [],
         schematic: !!frame.options.schematic,
+        linksLive: !!frame.options.linksLive,
         pageId: frame.options.page || "",
         assetMode: ASSET_MODES.indexOf(frame.options.assetMode) >= 0 ? frame.options.assetMode : "data",
         backLink: frame.options.backLink !== false,
@@ -2149,7 +2175,7 @@
         pending: Object.create(null), drawSig: null,
         modeBtns: {}, statusEl: null, statusTimer: null, pathEl: null,
         tabBar: null, targetsEl: null,
-        readoutEl: null, zoomBar: null, schemBtn: null,
+        readoutEl: null, zoomBar: null, schemBtn: null, linksBtn: null,
         exportBtn: null, fromEl: null, fromBtn: null
       };
 
@@ -2216,7 +2242,8 @@
         front: (ids) => fileOrder(cv, ids || cv.selection.slice(), "front"),
         toBack: (ids) => fileOrder(cv, ids || cv.selection.slice(), "toBack"),
         remove: (ids) => fileRemove(cv, ids || cv.selection.slice()),
-        duplicate: (ids) => fileDuplicate(cv, ids || cv.selection.slice())
+        duplicate: (ids) => fileDuplicate(cv, ids || cv.selection.slice()),
+        menuItems: () => menuItems(cv)
       };
 
       MX.canvasCore().then((core) => {
@@ -2270,6 +2297,7 @@
       if (msg.type === "ade_init" || msg.type === "track_list") {
         cv.trackNames = (Array.isArray(msg.tracks) ? msg.tracks : [])
           .filter((r) => r && r.id).map((r) => r.id);
+        if (cv.ann && cv.ann.refreshTracks) cv.ann.refreshTracks();
         return;
       }
 
@@ -2342,6 +2370,12 @@
         redraw(cv);
         return;
       }
+      if (key === "linksLive") {
+        cv.linksLive = !!value;
+        if (cv.linksBtn) cv.linksBtn.classList.toggle("mxcv-btn-on", cv.linksLive);
+        redraw(cv);
+        return;
+      }
       if (key === "page") {
         if (value && value !== cv.pageId) setPage(cv, value);
         return;
@@ -2371,6 +2405,7 @@
         zoom: cv.zoomPct,
         selection: cv.selection.slice(),
         schematic: !!cv.schematic,
+        linksLive: !!cv.linksLive,
         page: cv.pageId || "",
         assetMode: cv.assetMode,
         backLink: !!cv.backLink,

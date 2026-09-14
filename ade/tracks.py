@@ -175,6 +175,9 @@ class MirrorView:
     def event(self, evt):
         self._tag("event", {"evt": evt})
 
+    def tool(self, row):
+        self._tag("tool", {"row": row})
+
     def transcript(self, messages):
         self._tag("transcript", {"messages": messages})
 
@@ -260,6 +263,9 @@ class TrackHub:
 
     def event(self, evt):
         self._fanout("event", evt)
+
+    def tool(self, row):
+        self._fanout("tool", row)
 
     def speak(self, text, *, engine="browser", voice=""):
         self._fanout("speak", text, engine=engine, voice=voice)

@@ -1,0 +1,72 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "Empty surface",
+  "widgets": [
+    {
+      "id": "canvas-mu0mev56-3",
+      "type": "canvas",
+      "slot": {
+        "col": 9,
+        "row": 1,
+        "w": 20,
+        "h": 18
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/Six Elements of Sound/six-elements.html",
+        "targets": [
+          "/Users/moth3rship/Desktop/Six Elements of Sound/six-elements.html",
+          "/Users/moth3rship/Desktop/Six Elements of Sound/test-engine.html"
+        ],
+        "mode": "preview",
+        "zoom": 100,
+        "selection": [
+          "path-1-0-7-1"
+        ],
+        "schematic": false,
+        "linksLive": true,
+        "page": "",
+        "assetMode": "data",
+        "backLink": true,
+        "annotate": false,
+        "snapshot": "raster",
+        "annotateTrack": "dc81b2ab2a4e"
+      }
+    },
+    {
+      "id": "canvas_code-mu0mguo9-7",
+      "type": "canvas_code",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/Six Elements of Sound/six-elements.html",
+        "canvas": "focused",
+        "view": "blocks",
+        "codeMode": "resolved",
+        "docEditable": false,
+        "locked": false,
+        "followTarget": ""
+      }
+    },
+    {
+      "id": "canvas_tools-mu0nv3k8-1",
+      "type": "canvas_tools",
+      "slot": {
+        "col": 1,
+        "row": 6,
+        "w": 8,
+        "h": 6
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/Six Elements of Sound/six-elements.html",
+        "canvas": "focused",
+        "section": "tools",
+        "followTarget": ""
+      }
+    }
+  ]
+}

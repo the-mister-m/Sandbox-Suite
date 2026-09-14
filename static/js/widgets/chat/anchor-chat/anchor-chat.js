@@ -515,6 +515,19 @@ details.cot.thinking .hmm-l:nth-child(4){ animation-delay:.6s; }
 details.cot.thinking .hmm-d1{ animation:hmm-d 2s ease-in-out infinite .8s; }
 details.cot.thinking .hmm-d2{ animation:hmm-d 2s ease-in-out infinite 1.2s; }
 details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
+details.cot.tool summary{ display:flex; align-items:center; gap:7px; min-width:0; }
+details.cot.tool.red{ background:var(--fill-red); border-radius:4px; padding:0 4px; }
+.tool-edge{ flex-shrink:0; padding:0 5px; border-radius:3px; border:1px solid currentColor; }
+.tool-edge.white { color:var(--gate-white); background:transparent; }
+.tool-edge.green { color:var(--gate-green); background:var(--fill-green); }
+.tool-edge.blue  { color:var(--gate-blue);  background:var(--fill-blue); }
+.tool-edge.yellow{ color:var(--gate-yellow); background:var(--fill-yellow); }
+.tool-edge.red   { color:var(--gate-red);   background:var(--fill-red); }
+.tool-tgt{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-3); }
+.tool-t{ flex-shrink:0; color:var(--text-4); font-variant-numeric:tabular-nums; }
+details.cot.tool .tool-io{ padding-left:14px; margin-top:3px; }
+.tool-io-l{ font:calc(9.5px * var(--cp-zoom, 1))/1.4 var(--mono); color:var(--text-4); text-transform:uppercase; letter-spacing:.06em; }
+.tool-io-box{ max-height:calc(4 * 1.4em + 8px); overflow-y:auto; background:var(--well); border:1px solid var(--gridline); border-radius:3px; padding:4px 6px; font:calc(11px * var(--cp-zoom, 1))/1.4 var(--mono); color:var(--text-3); white-space:pre-wrap; overflow-wrap:anywhere; }
 .cp-script .bub.dim{ align-self:stretch; background:none; border:none; color:var(--text-3); font:calc(11px * var(--cp-zoom, 1))/1.4 var(--mono); padding:1px 2px; }
 .cp-script .msg-mark{ align-self:flex-start; background:none; border:none; color:var(--text-4); font:calc(10.5px * var(--cp-zoom, 1))/1.4 var(--mono); padding:1px 2px; letter-spacing:.03em; opacity:.9; }
 .code-fence{ display:block; background:var(--deep); border:1px solid var(--border); border-radius:4px; margin:4px 0; overflow:hidden; }
@@ -760,13 +773,28 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
             return;
           }
           turns.forEach((t, idx) => {
-            const { blk } = MX.turns._buildTurnBlock(trackName, t, idx, false, null);
+            const { blk } = MX.turns._buildTurnBlock(trackName, t, idx, false, null, { tools: true });
             scriptEl.appendChild(blk);
           });
           pin.scrollToBottom();
         },
         appendOut(text, o) {
           _streamOut(scriptEl, trackName, _stream, busyMeters, text, o || {}, pin);
+        },
+        appendTool(row) {
+          const emp = scriptEl.querySelector('.empty');
+          if (emp) emp.remove();
+          if (_stream.liveBub) {
+            MX.turns.renderMarkdown(_stream.liveBub, _stripSendBlocks(_stream.liveText));
+            _stream.liveBub = null; _stream.liveText = '';
+          }
+          if (_stream.thinkingEl) {
+            _stream.thinkingEl.parentElement.classList.remove('thinking');
+            _stream.thinkingEl = null;
+            busyMeters.hmmFreeze();
+          }
+          scriptEl.appendChild(MX.turns.makeToolBlock(row, row.result));
+          pin.scrollIfPinned();
         },
         renderMail(evt) {
           const blk = _buildMailBlock(evt);
@@ -890,6 +918,7 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
         else if (msg.kind === 'status') c.pane.setStatus(msg.phase);
         else if (msg.kind === 'meters') c.pane.setMeters(msg.d);
         else if (msg.kind === 'event') c.pane.renderMail(msg.evt);
+        else if (msg.kind === 'tool') c.pane.appendTool(msg.row || {});
         else if (msg.kind === 'speak') _speak(frame, msg.text, msg.voice);
         else if (msg.kind === 'audio') _playAudio(frame, msg.data, msg.mime);
         return;

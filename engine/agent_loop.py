@@ -379,6 +379,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                            driver, hook="open", outcome="fired", meta=meta)
         evt = log_event(sess, "gate", action=action, target=target, answer=True, hook="open")
         _stamp_gate_for_execution(sess, evt, target, "open")
+        sess._gate_color = "green"
         return True
 
     if hook == "locked":
@@ -386,6 +387,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                            driver, hook="locked", outcome="locked", meta=meta)
         log_event(sess, "gate", action=action, target=target, answer=False, hook="locked")
         sess.io.out(f"[locked: {action} → {target} refused by policy]", dim=True)
+        sess._gate_color = "red"
         return False
 
     if hook == "queue":
@@ -397,6 +399,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                   hook="queue", queue_id=entry["id"] if entry else None,
                   command=(entry.get("payload") or {}).get("command") if entry else None)
         sess.gate_parked = True
+        sess._gate_color = "white"
         return False
 
     if not dq.has_notifier():
@@ -405,6 +408,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
         evt = log_event(sess, "gate", action=action, target=target, answer=ans, hook="ask")
         if ans:
             _stamp_gate_for_execution(sess, evt, target, "ask")
+        sess._gate_color = "blue" if ans else "red"
         dq.notify("gate_answered")
         return ans
 
@@ -420,6 +424,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                   hook="ask", answered_by="timeout", queue_id=entry["id"],
                   command=(entry.get("payload") or {}).get("command"))
         sess.gate_parked = True
+        sess._gate_color = "white"
         return False
     if ans == "parked":
         sess.io.out("[no human attached — parked]", dim=True)
@@ -427,10 +432,12 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                   hook="ask", answered_by="disconnect", queue_id=entry["id"],
                   command=(entry.get("payload") or {}).get("command"))
         sess.gate_parked = True
+        sess._gate_color = "white"
         return False
     if ans == "deferred":
         sess.io.out("[queued — approve later from the Ledger]", dim=True)
         sess.gate_parked = True
+        sess._gate_color = "white"
         return False
     ans = bool(ans)
     evt = log_event(sess, "gate", action=action, target=target, answer=ans,
@@ -438,6 +445,7 @@ def _resolve_gate(sess, edge, driver, ctx, prompt, *, action, target,
                     command=(entry.get("payload") or {}).get("command"))
     if ans:
         _stamp_gate_for_execution(sess, evt, target, "ask")
+    sess._gate_color = "blue" if ans else "red"
     dq.notify("gate_answered")
     return ans
 
@@ -491,6 +499,7 @@ def _denied_or_parked(sess, tool, args):
 
 
 def execute_tool(sess, name, args):
+    sess._gate_color = "red"
     tool = tools.TOOL_INDEX.get(name)
     if tool is None:
         return f"[unknown tool: {name}]"
@@ -572,6 +581,7 @@ def _agent_loop_body(sess, client, used):
         limit = s["max_tools"]
         if limit is not None and used >= limit:
             result = f"[refused: tool budget of {limit} used. Answer now.]"
+            sess._gate_color = "red"
         else:
             sess.io.status("working")
             result = execute_tool(sess, name, args)
@@ -585,5 +595,11 @@ def _agent_loop_body(sess, client, used):
             rt.result_native(sess.messages, name, text_result, media=media_result)
         else:
             rt.result_text(sess.messages, name, text_result, media=media_result)
+        # tool row: name, target, args, gate color, time; rides on the result message
+        tool_row = {"name": name, "target": _target(args),
+                    "args": args if isinstance(args, dict) else {},
+                    "gate": getattr(sess, "_gate_color", "red"), "ts": time.time()}
+        sess.messages[-1]["_tool"] = tool_row
+        getattr(sess.io, "tool", lambda row: None)({**tool_row, "result": str(text_result)})
 
     sess.io.out(f"[safety cap hit after {SAFETY_TURNS} turns — stopping]", dim=True)

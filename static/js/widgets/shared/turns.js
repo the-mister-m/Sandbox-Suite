@@ -94,12 +94,66 @@
     return { el: details, body, timeEl: ht };
   }
 
+  function _clock(ts) {
+    if (!ts) return '';
+    const d = new Date(ts * 1000);
+    const p = (n) => (n < 10 ? '0' : '') + n;
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  function _toolIo(label, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'tool-io';
+    const l = document.createElement('div');
+    l.className = 'tool-io-l';
+    l.textContent = label;
+    const box = document.createElement('div');
+    box.className = 'tool-io-box';
+    box.textContent = text || '—';
+    wrap.appendChild(l);
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  // tool block — collapsed row: gate-colored name, target, time; open: in/out boxes
+  function makeToolBlock(row, resultText) {
+    row = row || {};
+    const gate = row.gate || 'white';
+    const details = document.createElement('details');
+    details.className = 'cot tool ' + gate;
+    const summary = document.createElement('summary');
+    const edge = document.createElement('span');
+    edge.className = 'tool-edge ' + gate;
+    edge.textContent = row.name || 'tool';
+    const tgt = document.createElement('span');
+    tgt.className = 'tool-tgt';
+    tgt.textContent = row.target || '';
+    tgt.title = row.target || '';
+    const t = document.createElement('span');
+    t.className = 'tool-t';
+    t.textContent = _clock(row.ts);
+    summary.appendChild(edge);
+    summary.appendChild(tgt);
+    summary.appendChild(t);
+    details.appendChild(summary);
+    const args = row.args && Object.keys(row.args).length ? JSON.stringify(row.args, null, 2) : '';
+    details.appendChild(_toolIo('in', args));
+    details.appendChild(_toolIo('out', resultText));
+    return details;
+  }
+
   function _groupTurns(messages) {
     const turns = [];
     let current = null;
     for (const msg of (messages || [])) {
-      if (!msg || msg.role === 'system' || msg._seat_context || msg.role === 'tool') continue;
+      if (!msg || msg.role === 'system' || msg._seat_context) continue;
       const text = _text(msg.content);
+      if (msg._tool) {
+        if (!current) { current = { user: '', media: null, agent: [], thinking: [] }; turns.push(current); }
+        (current.tools = current.tools || []).push({ row: msg._tool, result: text.replace(_TOOL_RESULT_ECHO_RE, '') });
+        continue;
+      }
+      if (msg.role === 'tool') continue;
       if (msg.role === 'user') {
         if (_TOOL_RESULT_ECHO_RE.test(text)) continue;
         const inbound = _classifyInbound(text);
@@ -118,7 +172,7 @@
     return turns;
   }
 
-  function _buildTurnBlock(rowName, turn, idx, live, onTurnHover) {
+  function _buildTurnBlock(rowName, turn, idx, live, onTurnHover, opts) {
     const blk = document.createElement('div');
     blk.className = 'turnblock';
     blk.dataset.turn = String(idx);
@@ -151,6 +205,10 @@
       tb.el.classList.remove('thinking');
       tb.body.textContent = thinkingText;
       blk.appendChild(tb.el);
+    }
+
+    if (opts && opts.tools) {
+      for (const tl of (turn.tools || [])) blk.appendChild(makeToolBlock(tl.row, tl.result));
     }
 
     let liveBub = null;
@@ -186,5 +244,5 @@
     return { blk, liveBub };
   }
 
-  MX.turns = { _groupTurns, _buildTurnBlock, renderMarkdown };
+  MX.turns = { _groupTurns, _buildTurnBlock, renderMarkdown, makeToolBlock };
 })();

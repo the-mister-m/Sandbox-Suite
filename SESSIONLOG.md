@@ -479,3 +479,18 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ### 2026-09-13 23:38Z-2026-09-14 00:12Z — Editor Save As follows the picker setting, Opus session agent
 - Editor Save As on an untitled tab used a typed-path prompt; it now opens the shared root browser in save mode, native or suite per the `picker` setting on the Suite page. The root browser gained `opts.save`, `opts.name` and `opts.cancel`; `/api/fs/pick` gained `kind=save`. Cancel resolves the save as not done, so the close prompt cannot hang. Syntax checks clean; not run in the browser, server not restarted. Anchor Chat code blocks and cache reading raised, then dropped. Review: [SESSION-REVIEW-2026-09-13-editor-save-picker.md](Docs/Reports/SESSION-REVIEW-2026-09-13-editor-save-picker.md).
+
+### 2026-09-14 00:48-01:57Z — Anchor Chat tool blocks, Opus session agent
+- Anchor Chat now shows each tool call as a collapsed block, like thinking: gate-colored name badge (changes widget colors), target, time; opened, in/out boxes 4 lines max with scrollbar. Refused tools red, parked white. The engine records the gate color per call, sends mirror kind `tool`, and saves `_tool` on the result message so colors survive a reload. Dim lines unchanged. Syntax checks clean; not run in the browser, server not restarted. Review: [SESSION-REVIEW-2026-09-14-anchor-chat-tool-blocks.md](Docs/Reports/SESSION-REVIEW-2026-09-14-anchor-chat-tool-blocks.md).
+
+### 2026-09-14 — codecanvas fixes (spec from fable.2), sonnet subagent
+- Both halves of [SPEC-codecanvas-fixes.md](Docs/Specs/SPEC-codecanvas-fixes.md) done in one pass, four files only: file-mode inspector gets color/select/number+unit controls in tools.js, Layers header goes sticky, the annotate bar gets a track picker with "none" first and a `refreshTracks()` hook off track_list, canvas.js gains a `linksLive` toggle so canvas-mode link clicks only jump when it's on (preview always jumps), and Layers right-click now opens the same menu items as the canvas itself in both doc and file mode. `node --check` clean on all four; no headed browser run this session.
+- Receipt: [RECEIPT-codecanvas-fixes.md](Docs/Reports/RECEIPT-codecanvas-fixes.md).
+- Addendum A1b: `parseNumUnit` treats a `normal` computed value as `{num:"",unit:""}` instead of null, and `styleControlFor` gives `lineHeight`/`letterSpacing` `numberUnitControl` unconditionally so they stop falling to the text field; `border`/`transform` untouched. `node --check` clean.
+
+### 2026-09-14 — Code Canvas skills and fixes spec, fable.2 (ADE region)
+- Read all eleven codecanvas widget files (~68k tokens). Brandon answered sixteen preference questions; the decode set the order (doc mode before file mode), the default patch size (small), and the tone (announce, don't restore, don't tidy).
+- Wrote two skills: [codecanvas-howto.md](injections/skills/codecanvas-howto.md) — the agent as guide, the one Brandon said matters — and [codecanvas-agent.md](injections/skills/codecanvas-agent.md) — both pathways for an agent. Neither restates the other.
+- Wrote [SPEC-codecanvas-fixes.md](Docs/Specs/SPEC-codecanvas-fixes.md) from Brandon's list; sonnet.2 built it, sonnet.3 took addendum A1b (lineHeight and letterSpacing always number+unit) and the missing INDEX line. Group geometry held; Brandon plays first.
+- Skills updated after the build: inspector control table, links button, annotate track select, Layers right-click, `linksLive` and `menuItems()` in the agent skill.
+- Review: [SESSION-REVIEW-2026-09-14-codecanvas-skills.md](Docs/Reports/SESSION-REVIEW-2026-09-14-codecanvas-skills.md). sonnet.3 closes.

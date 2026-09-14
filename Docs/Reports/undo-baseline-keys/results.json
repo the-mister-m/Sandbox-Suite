@@ -1,0 +1,109 @@
+{
+  "results": [
+    {
+      "n": 0,
+      "name": "Setup. Canvas plus Targets plus Tools, keys fixture, canvas mode.",
+      "pass": true,
+      "shot": "00-setup.png",
+      "note": "add_clicked=True file_ready=True mode='canvas' docMode='file' iframe_viewport=776x909 stage_live=['h1', 'p', 'div', 'div', 'div', 'div', 'span'] stage_src=['h1', 'p', 'div', 'div', 'div', 'div', 'span'] live_eq_src=True not_hit_testable=[] ids={'h1': 'path-0-0', 'p': 'path-0-1', 'red': 'path-0-2', 'blue': 'path-0-3', 'green': 'path-0-4', 'gold': 'path-0-5', 'span': 'path-0-6'}",
+      "console_at": 5
+    },
+    {
+      "n": 1,
+      "name": "Non-contiguous group. Cmd-G, shift-Cmd-G, Cmd-Z, Cmd-Z.",
+      "pass": true,
+      "shot": "01-group-ungroup-undo.png",
+      "note": "selection_before_G=['path-0-2', 'path-0-4'] (want red+green) group_id='grp_0r4307' after_G live=['path-0-0', 'path-0-1', 'grp_0r4307', 'path-0-3', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'grp_0r4307', 'path-0-3', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'grp_0r4307', 'path-0-3', 'path-0-5', 'path-0-6']; layers_group_row_at=[3] rows_under_it=['path-0-2', 'path-0-4'] blue_outside_group=True; after_shift_G live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-3', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-3', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-3', 'path-0-5', 'path-0-6']; after_undo_1 live=['path-0-0', 'path-0-1', 'grp_0r4307', 'path-0-3', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'grp_0r4307', 'path-0-3', 'path-0-5', 'path-0-6']; after_undo_2 live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6']",
+      "console_at": 5
+    },
+    {
+      "n": 2,
+      "name": "Order keys. Cmd-[, shift-Cmd-[, shift-Cmd-], Cmd-]. Each Cmd-Z restores.",
+      "pass": true,
+      "shot": "02-order-undo.png",
+      "note": "gold Cmd-[: selected=['path-0-5'] keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'[' code=BracketLeft meta=True shift=False prevented=True; bubble:'[' code=BracketLeft meta=True shift=False prevented=True] live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-5', 'path-0-4', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-5', 'path-0-4', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-5', 'path-0-4', 'path-0-6'] moved=True undo_back=True; gold shift-Cmd-[: selected=['path-0-5'] keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'Shift' code=ShiftLeft meta=True shift=True prevented=False; bubble:'Shift' code=ShiftLeft meta=True shift=True prevented=False; capture:'{' code=BracketLeft meta=True shift=True prevented=True; bubble:'{' code=BracketLeft meta=True shift=True prevented=True] live=['path-0-5', 'path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-6'] src=['path-0-5', 'path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-6'] want=['path-0-5', 'path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-6'] moved=True undo_back=True; blue shift-Cmd-]: selected=['path-0-3'] keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'Shift' code=ShiftLeft meta=True shift=True prevented=False; bubble:'Shift' code=ShiftLeft meta=True shift=True prevented=False; capture:'}' code=BracketRight meta=True shift=True prevented=True; bubble:'}' code=BracketRight meta=True shift=True prevented=True] live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6', 'path-0-3'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6', 'path-0-3'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6', 'path-0-3'] moved=True undo_back=True; red Cmd-]: selected=['path-0-2'] keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:']' code=BracketRight meta=True shift=False prevented=True; bubble:']' code=BracketRight meta=True shift=False prevented=True] live=['path-0-0', 'path-0-1', 'path-0-3', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-3', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-3', 'path-0-2', 'path-0-4', 'path-0-5', 'path-0-6'] moved=True undo_back=True; baseline=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6']",
+      "console_at": 5
+    },
+    {
+      "n": 3,
+      "name": "Marquee on empty ground. Two ids. Shift-drag extends to three. Escape clears.",
+      "pass": true,
+      "shot": "03-marquee.png",
+      "note": "iframe_viewport=776x909 green_right_edge=500 iframe_narrower_than_stage=False; drag1 doc (8,150) to (350,250) = page (21,272) over 'body'.'' to (363,372) over 'div'; selection_before_mouseup=[] selection_after_mouseup=['path-0-2', 'path-0-3'] want=['path-0-2', 'path-0-3'] canvas.select events during drag=[{'target': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-keys.html', 'inst': 'canvas-mu0pbmi5-1', 'ids': []}] events at and after mouseup=[{'target': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-keys.html', 'inst': 'canvas-mu0pbmi5-1', 'ids': ['path-0-2', 'path-0-3']}]; shift_drag doc (8,150) to (510,250) = page (21,272) over 'body' to (523,372) over 'div': selection_before_mouseup=['path-0-2', 'path-0-3'] selection_after_mouseup=['path-0-2', 'path-0-3', 'path-0-4'] want 3 events=[{'target': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-keys.html', 'inst': 'canvas-mu0pbmi5-1', 'ids': ['path-0-2', 'path-0-3', 'path-0-4']}]; after Escape=[] keydown[capture:'Escape' code=Escape meta=False shift=False prevented=True; bubble:'Escape' code=Escape meta=False shift=False prevented=True]; stage div.stage after the drags: live style left='' top='' src left='' top=''; red box rect now=[60, 160, 180, 240] (was left 60 top 160 at setup)",
+      "console_at": 5
+    },
+    {
+      "n": 4,
+      "name": "Delete key removes gold. Cmd-Z restores it at the same slot.",
+      "pass": true,
+      "shot": "04-delete-undo.png",
+      "note": "hit_test_after_marquee={'h1': ('h1', True, [40, 40, 371, 72]), 'p': ('p', True, [40, 90, 440, 108]), 'red': ('div', True, [60, 160, 180, 240]), 'blue': ('div', True, [220, 160, 340, 240]), 'green': ('div', True, [380, 160, 500, 240]), 'gold': ('div', True, [540, 160, 660, 240]), 'span': ('span', True, [60, 280, 158, 298])} iframe_vw_vh_hostW_hostH_after_marquee=(776, 909, 776, 924) hit_test_after_reset={'h1': True, 'p': True, 'red': True, 'blue': True, 'green': True, 'gold': True, 'span': True} click_retries=0; selected_before_key=['path-0-5'] selected_via_layers_row=False key_used='Delete' keydown[capture:'Delete' code=Delete meta=False shift=False prevented=True; bubble:'Delete' code=Delete meta=False shift=False prevented=True] backspace_keydown[(none)] after_delete live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-6'] gone_from_both=True; after_undo live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6']; gold slot before=5 after=5 (same=True) outerHTML_identical=True; src_outer_after='<div class=\"box gold\" style=\"left: 520px; top: 140px;\" data-od-id=\"path-0-5\">gold box</div>'",
+      "console_at": 5
+    },
+    {
+      "n": 5,
+      "name": "Arrows nudge red. Right 1px, shift-Down 10px. Cmd-Z twice restores.",
+      "pass": true,
+      "shot": "05-arrows.png",
+      "note": "selected=['path-0-2'] start transform live=None src=None left/top live=('40px', '140px'); ArrowRight keydown[capture:'ArrowRight' code=ArrowRight meta=False shift=False prevented=True; bubble:'ArrowRight' code=ArrowRight meta=False shift=False prevented=True] -> transform live=(1.0, 0.0) src=(1.0, 0.0) want (1.0,0.0) left/top live=('40px', '140px'); Shift+ArrowDown keydown[capture:'Shift' code=ShiftLeft meta=False shift=True prevented=False; bubble:'Shift' code=ShiftLeft meta=False shift=True prevented=False; capture:'ArrowDown' code=ArrowDown meta=False shift=True prevented=True; bubble:'ArrowDown' code=ArrowDown meta=False shift=True prevented=True] -> transform live=(1.0, 10.0) src=(1.0, 10.0) want (1.0,10.0) left/top live=('40px', '140px'); after undo 1 transform live=(1.0, 0.0) src=(1.0, 0.0); after undo 2 transform live=None src=None want None (empty); left stayed 40px everywhere=True; raw inline transform after ArrowRight='translate(1px, 0px)' computed='matrix(1, 0, 0, 1, 1, 0)'",
+      "console_at": 5
+    },
+    {
+      "n": 6,
+      "name": "Cmd-D duplicates blue right after it with a fresh id. Cmd-Z removes it.",
+      "pass": true,
+      "shot": "06-duplicate.png",
+      "note": "selected=['path-0-3'] keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'d' code=KeyD meta=True shift=False prevented=True; bubble:'d' code=KeyD meta=True shift=False prevented=True] after_dup live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'el_b8pxiu', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'el_b8pxiu', 'path-0-4', 'path-0-5', 'path-0-6']; new_id='el_b8pxiu' fresh=True id_blind_outerHTML_matches src=True live=True; dup_src='<div class=\"box blue\" style=\"left: 200px; top: 140px;\" data-od-id=\"el_b8pxiu\">blue box</div>'; after_undo live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6']",
+      "console_at": 5
+    },
+    {
+      "n": 7,
+      "name": "Right-click red. A menu appears. Escape closes it. Right-click, pick duplicate. Cmd-Z.",
+      "pass": true,
+      "shot": "07-context-menu.png",
+      "note": "menu_root=[{'where': 'iframe', 'tag': 'div', 'cls': 'cc-canvas-menu', 'items': ['Group', 'Ungroup', 'Bring forward', 'Send backward', 'Bring to front', 'Send to back', 'Duplicate', 'Delete'], 'w': 127, 'h': 194, 'vis': True}] opened=True; other_new_nodes=['mxtg-list', 'mxtg-add', 'cc-panel-order-head', 'cc-panel-row', 'cc-panel-row', 'cc-panel-row', 'cc-panel-row cc-panel-row-active', 'cc-panel-row', 'cc-panel-row', 'cc-panel-row', 'cc-panel-row', 'od-edit-guide-box od-edit-guide-box-selected', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle', 'od-edit-guide-handle']; Escape keydown[capture:'Escape' code=Escape meta=False shift=False prevented=True; bubble:'Escape' code=Escape meta=False shift=False prevented=True] closed=True menu_root_after=[{'where': 'iframe', 'tag': 'div', 'cls': 'cc-canvas-menu', 'inDoc': False, 'vis': False}]; second_open_menu_roots=['cc-canvas-menu'] duplicate_item={'text': 'Duplicate', 'where': 'iframe', 'x': 196.6171875, 'y': 477}; after_pick live=['path-0-0', 'path-0-1', 'path-0-2', 'el_n08l5n', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'el_n08l5n', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] new_id='el_n08l5n' fresh=True id_blind_outerHTML_matches=True; after_undo live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6']",
+      "console_at": 5
+    },
+    {
+      "n": 8,
+      "name": "Shift-Cmd-Z redoes the duplicate. Cmd-Z again.",
+      "pass": true,
+      "shot": "08-redo.png",
+      "note": "history_before={'canUndo': False, 'canRedo': True} keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'Shift' code=ShiftLeft meta=True shift=True prevented=False; bubble:'Shift' code=ShiftLeft meta=True shift=True prevented=False; capture:'z' code=KeyZ meta=True shift=True prevented=True; bubble:'z' code=KeyZ meta=True shift=True prevented=True] after_redo live=['path-0-0', 'path-0-1', 'path-0-2', 'el_n08l5n', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'el_n08l5n', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] redone_id='el_n08l5n'; after_undo live=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] src=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] want=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6'] history={'canUndo': False, 'canRedo': True}",
+      "console_at": 5
+    },
+    {
+      "n": 9,
+      "name": "Cmd-S saves. Disk has ids and matches cv.source. Reload comes back in preview with the target set.",
+      "pass": true,
+      "shot": "09-save-reload.png",
+      "note": "keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'s' code=KeyS meta=True shift=False prevented=True; bubble:'s' code=KeyS meta=True shift=False prevented=True] status_reached_saved=True data-od-id_on_disk=8 (at least 8: stage plus seven children)disk_bytes=1359 source_bytes=1359 disk_equals_source=True source_changed_by_save=False; after reload mode='preview' target=phase3F-fixture-keys.html target_set=True targets=['phase3F-fixture-keys.html'] body_children=3 status='' file_ready=True mode_before_reload='canvas'",
+      "console_at": 5
+    },
+    {
+      "n": 10,
+      "name": "Console clean the whole way.",
+      "pass": true,
+      "shot": "10-final.png",
+      "note": "pageerrors=0 error_or_warning_lines=0 total_console_lines=5",
+      "console_at": 5
+    }
+  ],
+  "findings": [],
+  "fixture_restored": {
+    "run_left_bytes": 1359,
+    "wrote_back_bytes": 1186,
+    "matches_before": true,
+    "data_od_id_after": 0
+  },
+  "ids": {
+    "h1": "path-0-0",
+    "p": "path-0-1",
+    "red": "path-0-2",
+    "blue": "path-0-3",
+    "green": "path-0-4",
+    "gold": "path-0-5",
+    "span": "path-0-6"
+  },
+  "surface_left": []
+}

@@ -161,6 +161,10 @@ class WebIO:
         # state: raw member copy removed, mirror carries this stream
         pass
 
+    def tool(self, row):
+        # state: mirror carries this stream
+        pass
+
     # shell is the tab's own PTY key; region is the PTY's region
     def term(self, data, shell="", region=""):
         with self._send_lock:

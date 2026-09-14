@@ -124,4 +124,4 @@ Drawn from `engine/web_io.py` (the `WebIO` class) and `MirrorView` in
 | status | phase | `WebIO.status()`, engine/web_io.py:184 |
 | models | list, rows, current | `WebIO.send_models()`, engine/web_io.py:190 |
 | ledger_detail | detail, inst | `WebIO.send_ledger_detail()`, engine/web_io.py:219 |
-| mirror | track, kind, ...payload | `MirrorView._tag()`, ade/tracks.py:154 |
+| mirror | track, kind, ...payload; kind `tool` carries row {name, target, args, gate, ts, result} | `MirrorView._tag()`, ade/tracks.py:154 |

@@ -124,6 +124,29 @@
     bar.appendChild(mkBtn("Undo", () => undo()));
     bar.appendChild(mkBtn("Redo", () => redo()));
 
+    const trackSel = document.createElement("select");
+    trackSel.className = "mxann-track";
+    function refreshTracks() {
+      trackSel.textContent = "";
+      const noneOpt = document.createElement("option");
+      noneOpt.value = "";
+      noneOpt.textContent = "none";
+      trackSel.appendChild(noneOpt);
+      const names = (frame._canvasState && frame._canvasState.trackNames) || [];
+      for (const n of names) {
+        const o = document.createElement("option");
+        o.value = n;
+        o.textContent = n;
+        trackSel.appendChild(o);
+      }
+      trackSel.value = frame.options.annotateTrack || "";
+    }
+    refreshTracks();
+    trackSel.addEventListener("change", () => {
+      frame.setOption("annotateTrack", trackSel.value);
+    });
+    bar.appendChild(trackSel);
+
     const note = document.createElement("input");
     note.type = "text";
     note.className = "mxann-note";
@@ -288,6 +311,7 @@
         if (st.on) resize();
       },
       send: send,
+      refreshTracks: refreshTracks,
       el: wrap
     };
   };

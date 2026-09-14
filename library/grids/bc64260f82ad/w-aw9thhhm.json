@@ -1,6 +1,7 @@
 {
   "cols": 12,
   "rows": 12,
+  "name": "",
   "widgets": [
     {
       "id": "chat-mtt50s4p-1",
@@ -13,9 +14,9 @@
       },
       "options": {
         "listen_mode": "ptt",
+        "region": "",
         "speech_enabled": false,
-        "tts_engine": "say",
-        "region": ""
+        "tts_engine": "say"
       }
     },
     {
@@ -27,7 +28,10 @@
         "w": 2,
         "h": 4
       },
-      "options": {}
+      "options": {
+        "root": "/Users/moth3rship/Desktop",
+        "expanded": []
+      }
     },
     {
       "id": "viewer-mtt51609-3",
@@ -55,23 +59,23 @@
       "options": {}
     },
     {
-      "id": "ledger-mtt52jb5-5",
-      "type": "ledger",
-      "slot": {
-        "col": 5,
-        "row": 9,
-        "w": 4,
-        "h": 4
-      },
-      "options": {}
-    },
-    {
       "id": "devagent-mtt52ujd-6",
       "type": "devagent",
       "slot": {
         "col": 11,
         "row": 9,
         "w": 2,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "ledger-mu0o3i7a-2",
+      "type": "ledger",
+      "slot": {
+        "col": 5,
+        "row": 9,
+        "w": 4,
         "h": 4
       },
       "options": {}

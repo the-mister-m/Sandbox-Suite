@@ -16,6 +16,26 @@
   const GRID_STYLES = ["lines", "dots", "dynamic"];
   const WIDTH_MODES = ["fixed", "fluid"];
 
+  // state: STYLE_CONTROL — control kind per file-mode style prop.
+  const STYLE_COLOR_PROPS = ["color", "backgroundColor", "borderColor"];
+  const STYLE_SELECT_PROPS = {
+    display: ["block", "flex", "grid", "inline", "inline-block", "none"],
+    textAlign: ["left", "center", "right", "justify"],
+    fontWeight: ["normal", "bold", "100", "200", "300", "400", "500", "600", "700", "800", "900"],
+    flexDirection: ["row", "column", "row-reverse", "column-reverse"],
+    justifyContent: ["flex-start", "center", "flex-end", "space-between", "space-around"],
+    alignItems: ["flex-start", "center", "flex-end", "stretch", "baseline"],
+    borderStyle: ["none", "solid", "dashed", "dotted"]
+  };
+  const STYLE_NUMBER_UNIT_PROPS = [
+    "fontSize", "lineHeight", "letterSpacing", "width", "height", "minHeight", "gap",
+    "padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+    "margin", "marginTop", "marginRight", "marginBottom", "marginLeft",
+    "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
+    "borderRadius", "opacity"
+  ];
+  const STYLE_UNITS = ["px", "%", "em", "rem", ""];
+
   // state: ManualEditStyles, grouped for the file-mode inspector.
   const STYLE_GROUPS = [
     ["Text", ["fontFamily", "fontSize", "fontWeight", "color", "textAlign",
@@ -77,7 +97,8 @@
       .cc-panel-link-widget { padding-left: 12px; }
       .cc-panel-link-active { border-color: #2a6df4; color: var(--text-1, #ddd); }
       .cc-panel-order-head { display: flex; justify-content: space-between;
-        align-items: center; padding: 6px 8px; }
+        align-items: center; padding: 6px 8px; position: sticky; top: 0;
+        background: var(--surface-1, #1b1b1b); z-index: 1; }
       .cc-panel-row { display: flex; gap: 6px; align-items: baseline;
         padding: 2px 8px; cursor: pointer; }
       .cc-panel-row:hover { background: var(--surface-2, #2f2f2f); }
@@ -172,8 +193,136 @@
     return labelWrap(label, n);
   }
 
+  // function: true for a css hex color the <input type=color> can hold.
+  function isHexColor(v) {
+    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(v || "").trim());
+  }
+
+  // function: color picker + text field. Both write the same prop.
+  function colorControl(tl, label, current, key, onWrite) {
+    const wrap = el("label", "cc-panel-label");
+    wrap.appendChild(el("span", null, label));
+    const row = el("div", "cc-panel-swatch-row");
+    const picker = el("input", "cc-panel-picker");
+    picker.type = "color";
+    picker.value = isHexColor(current) ? current : "#000000";
+    const text = el("input", "cc-panel-field");
+    text.type = "text";
+    text.value = current === undefined || current === null ? "" : String(current);
+    picker.addEventListener("change", () => {
+      text.value = picker.value;
+      onWrite(picker.value);
+    });
+    bindTyping(tl, text, key, onWrite);
+    row.appendChild(picker);
+    row.appendChild(text);
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  // function: current value first when it is not already in the list, so a
+  // select never silently changes what it shows.
+  function selectControlOptions(list, current) {
+    const has = current !== undefined && current !== null && String(current) !== "";
+    if (has && list.indexOf(String(current)) < 0) return [String(current)].concat(list);
+    return list;
+  }
+
+  // function: leading number and trailing unit from a css value. null when
+  // the value does not parse (a keyword like normal or auto).
+  function parseNumUnit(value) {
+    const s = value === undefined || value === null ? "" : String(value).trim();
+    if (s === "" || s === "normal") return { num: "", unit: "" };
+    const m = s.match(/^(-?\d*\.?\d+)(px|%|em|rem)?$/);
+    if (!m) return null;
+    return { num: m[1], unit: m[2] || "" };
+  }
+
+  // function: number field plus a small unit select. Both write num+unit.
+  function numberUnitControl(tl, label, current, key, onWrite) {
+    const parsed = parseNumUnit(current);
+    const wrap = el("label", "cc-panel-label");
+    wrap.appendChild(el("span", null, label));
+    const row = el("div", "cc-panel-swatch-row");
+    const num = el("input", "cc-panel-field");
+    num.type = "number";
+    num.value = parsed.num;
+    const unitSel = el("select", "cc-panel-field");
+    for (const u of STYLE_UNITS) {
+      const o = el("option", null, u || "—");
+      o.value = u;
+      if (u === parsed.unit) o.selected = true;
+      unitSel.appendChild(o);
+    }
+    const write = () => onWrite((num.value === "" ? "" : num.value) + unitSel.value);
+    bindTyping(tl, num, key, write);
+    unitSel.addEventListener("change", write);
+    row.appendChild(num);
+    row.appendChild(unitSel);
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  // function: the control for a file-mode style prop. Falls back to text.
+  function styleControlFor(tl, prop, current, key, onWrite) {
+    if (STYLE_COLOR_PROPS.indexOf(prop) >= 0) return colorControl(tl, prop, current, key, onWrite);
+    if (STYLE_SELECT_PROPS[prop]) {
+      return selectField(prop, selectControlOptions(STYLE_SELECT_PROPS[prop], current), current, onWrite);
+    }
+    if (prop === "lineHeight" || prop === "letterSpacing") {
+      return numberUnitControl(tl, prop, current, key, onWrite);
+    }
+    if (STYLE_NUMBER_UNIT_PROPS.indexOf(prop) >= 0) {
+      const parsed = parseNumUnit(current);
+      if (parsed) return numberUnitControl(tl, prop, current, key, onWrite);
+    }
+    return textField(tl, prop, current, key, onWrite);
+  }
+
   function markDirty(tl) {
     if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(tl.frame);
+  }
+
+  // ---------- layers context menu ----------
+
+  // function: close the row-level menu and its listeners, if any are live.
+  function closeLayerMenu(tl) {
+    if (tl.menu && tl.menu.parentNode) tl.menu.parentNode.removeChild(tl.menu);
+    tl.menu = null;
+    if (tl.menuOutside) { document.removeEventListener("mousedown", tl.menuOutside, true); tl.menuOutside = null; }
+    if (tl.menuEsc) { document.removeEventListener("keydown", tl.menuEsc, true); tl.menuEsc = null; }
+  }
+
+  // function: the canvas's own menu items, opened from a Layers row. Inline
+  // rules match the canvas's context menu; the parent document has no
+  // access to the canvas's own stylesheet.
+  function openLayerMenu(tl, a, x, y) {
+    closeLayerMenu(tl);
+    const items = a.menuItems ? a.menuItems() : [];
+    const menu = el("div", null);
+    menu.style.cssText = "position: fixed; z-index: 2147483647; background: #ffffff; "
+      + "border: 1px solid #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); "
+      + "font: 13px system-ui, sans-serif; padding: 4px 0;";
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+    for (const item of items) {
+      const label = item[0], fn = item[1];
+      const row = el("div", null, label);
+      row.style.cssText = "padding: 4px 16px; cursor: default;";
+      row.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeLayerMenu(tl);
+        fn();
+      });
+      menu.appendChild(row);
+    }
+    document.body.appendChild(menu);
+    tl.menu = menu;
+    tl.menuOutside = (e) => { if (!menu.contains(e.target)) closeLayerMenu(tl); };
+    tl.menuEsc = (e) => { if (e.key === "Escape") closeLayerMenu(tl); };
+    document.addEventListener("mousedown", tl.menuOutside, true);
+    document.addEventListener("keydown", tl.menuEsc, true);
   }
 
   // ---------- which canvas ----------
@@ -583,6 +732,13 @@
         if (tl.mirrors) tl.mirrors.select.emit({ ids: [w.id] });
         render(tl);
       });
+      row.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (a.selected().indexOf(w.id) < 0 && tl.mirrors) {
+          tl.mirrors.select.emit({ ids: [w.id] });
+        }
+        openLayerMenu(tl, a, e.clientX, e.clientY);
+      });
       row.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", w.id);
       });
@@ -729,6 +885,12 @@
 
       row.addEventListener("click", (e) => {
         if (id) fileSelect(tl, a, id, e.shiftKey);
+      });
+      row.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!id) return;
+        if (a.selected().indexOf(id) < 0) fileSelect(tl, a, id, false);
+        openLayerMenu(tl, a, e.clientX, e.clientY);
       });
       row.addEventListener("dragstart", (e) => {
         if (id) e.dataTransfer.setData("text/plain", id);
@@ -914,7 +1076,7 @@
       box.appendChild(el("div", "cc-panel-tool-title", group[0]));
       for (const prop of group[1]) {
         const current = node.style[prop] || (computed ? computed[prop] : "") || "";
-        box.appendChild(textField(tl, prop, current, "fm-" + prop, (v) => {
+        box.appendChild(styleControlFor(tl, prop, current, "fm-" + prop, (v) => {
           const styles = {};
           styles[prop] = v;
           a.patchSource({ id: id, kind: "set-style", styles: styles });
@@ -1024,6 +1186,7 @@
         timers: Object.create(null),
         mirrors: null, followMirror: null, offLayout: null, drop: null,
         resolve: null, resolveOf: null,
+        menu: null, menuOutside: null, menuEsc: null,
         tabs: {}, bodyEl: null, whoEl: null
       };
 
@@ -1085,6 +1248,7 @@
       if (!tl) return;
       tl.live = false;
       for (const key of Object.keys(tl.timers)) clearTimeout(tl.timers[key]);
+      closeLayerMenu(tl);
       unbindDrop(tl);
       if (tl.mirrors) tl.mirrors.off();
       if (tl.followMirror) tl.followMirror.off();

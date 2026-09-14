@@ -79,8 +79,9 @@
     }
 
     // function: link wrap. An <a> around the element, never around an a.
-    function anchor(w, el) {
-      if (!w.link || !w.link.target) return el;
+    // links: only wraps when the caller's links flag is true.
+    function anchor(w, el, links) {
+      if (!links || !w.link || !w.link.target) return el;
       if (el.tagName && el.tagName.toLowerCase() === "a") return el;
       var a = d.createElement("a");
       a.setAttribute("href", "#" + w.link.target);
@@ -115,7 +116,7 @@
 
     // function: redraw named widgets in their existing wrappers.
     // false when any id or its wrapper is missing, or the page nests.
-    function redrawOnly(matrix, s, pg, ids) {
+    function redrawOnly(matrix, s, pg, ids, links) {
       var byId = {};
       for (var i = 0; i < pg.widgets.length; i++) {
         if (pg.widgets[i].parent) return false;
@@ -143,7 +144,7 @@
         if (def && def.children && wi.props && wi.props.layout === "flow") {
           el.style.minHeight = wi.box.h + "px";
         }
-        node.appendChild(anchor(wi, el));
+        node.appendChild(anchor(wi, el, links));
         matrix.replaceChild(node, old);
       }
       flush();
@@ -156,12 +157,13 @@
     // parent-relative; position reads it straight through.
     function page(pageId, opts) {
       var play = !!(opts && opts.play);
+      var links = !!(opts && opts.links);
       var matrix = d.getElementById("matrix");
       if (!matrix) return;
       var s = state.get();
       var pg = pageOf(s, pageId);
       var only = opts && opts.only;
-      if (pg && only && only.length && redrawOnly(matrix, s, pg, only)) return;
+      if (pg && only && only.length && redrawOnly(matrix, s, pg, only, links)) return;
       matrix.innerHTML = "";
       rules = {};
       if (!pg) { flush(); return; }
@@ -186,7 +188,7 @@
         if (def && def.children && w.props && w.props.layout === "flow") {
           el.style.minHeight = w.box.h + "px";
         }
-        wrap.appendChild(anchor(w, el));
+        wrap.appendChild(anchor(w, el, links));
         hosts[w.id] = (def && def.children) ? el : wrap;
         var host = (w.parent && hosts[w.parent]) ? hosts[w.parent] : matrix;
         host.appendChild(wrap);

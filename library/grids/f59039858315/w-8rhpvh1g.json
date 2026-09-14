@@ -1,0 +1,55 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "",
+  "widgets": [
+    {
+      "id": "anchor_chat-mu0nckf1-1",
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 14,
+        "h": 18
+      },
+      "options": {
+        "region": "dc81b2ab2a4e",
+        "speech_enabled": false,
+        "zoom": 1.4
+      }
+    },
+    {
+      "id": "ledger-mu0nhdoy-2",
+      "type": "ledger",
+      "slot": {
+        "col": 15,
+        "row": 1,
+        "w": 14,
+        "h": 10
+      },
+      "options": {}
+    },
+    {
+      "id": "changes-mu0odo55-10",
+      "type": "changes",
+      "slot": {
+        "col": 15,
+        "row": 11,
+        "w": 7,
+        "h": 8
+      },
+      "options": {}
+    },
+    {
+      "id": "queue_log-mu0p4tlq-1",
+      "type": "queue_log",
+      "slot": {
+        "col": 22,
+        "row": 11,
+        "w": 7,
+        "h": 8
+      },
+      "options": {}
+    }
+  ]
+}
