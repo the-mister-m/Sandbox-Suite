@@ -56,8 +56,8 @@ below.
 | setroot | path | out (status lines) | reload, suite-wide | no | no |
 | input | track, shell, data | none (writes to the pty) | none | no | no |
 | close_shell | track, shell | none | none | no | no |
-| focus / follow | track | out on unknown region; on success, transcript + gatelog via the follower's MirrorView (not a webio.send_* frame) | none | no | no |
-| unfollow | track | none | none | no | no |
+| focus / follow | track, inst | out on unknown region; on success, transcript + gatelog via a MirrorView (not a webio.send_* frame), sent on every follow; inst added to the region's follower set | none | no | no |
+| unfollow | track, inst | none; inst removed from the follower set, mirror dropped only when the set is empty | none | no | no |
 | edit_track | track, fields{name, root, seat, overlay, provider, loop_class, mechanism, ...settings} | out + track_list if track unknown; out if root invalid | change_prompt (F1 edit — now environment-wide) if the edit prompts_on_change; otherwise track_list (roster) | yes, only on the non-prompting path | yes, when `track.prompts_on_change(items)` |
 | change_answer | token, choice | out (preset warnings/results); track_list only on cancel or unknown token/choice | track_list (roster) on every resolved choice except cancel | yes, except cancel/unknown-token/unknown-choice | no (resolves a park) |
 | load_preset | track, name, mode (F1 edit) | out (bad name; preset warnings on the reset/in_place path) | change_prompt (F1 edit) when mode is not reset/in_place; track_list (roster) when mode is reset/in_place | yes, only on the reset/in_place path | yes, unless mode is "reset" or "in_place" (F1 edit) |
@@ -93,7 +93,7 @@ stops — that is fine as-is.
 | wp_feed | lines, counts | wp_feed frame, frames.py:783 |
 | file | path, inst, content | open frame, frames.py:832 |
 | tree | data, inst | tree frame, frames.py:815 |
-| saved | path, inst, ok, result | save frame, frames.py:840 |
+| saved | path, inst, ok, result, content | save frame, frames.py:840 |
 | deleted | path, result | delete frame:851, rmdir frame:955 |
 | moved | src, dst, result | move frame, frames.py:882 |
 | renamed | src, dst, result | rename frame, frames.py:908 |

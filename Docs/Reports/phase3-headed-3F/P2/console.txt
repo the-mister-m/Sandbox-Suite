@@ -1,0 +1,28 @@
+[harness] session open: {'sid': '410ef20f1a9d'}
+[p1:console:log] [trace] Canceled: Canceled
+    at i.cancel (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:122:13889)
+    at i.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:122:14018)
+    at t (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22161)
+    at g.clear (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22775)
+    at g.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22685)
+    at P.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:722:24461)
+    at c.value (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:722:24961)
+    at u._deliver (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:910)
+    at u._deliverQueue (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:1001)
+    at u.fire (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:1336)
+[p1:pageerror] Canceled
+[p1:pageerror:name] Canceled
+[p1:pageerror:stack] Canceled: Canceled
+    at i.cancel (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:122:13889)
+    at i.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:122:14018)
+    at t (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22161)
+    at g.clear (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22775)
+    at g.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:11:22685)
+    at P.dispose (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:722:24461)
+    at c.value (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:722:24961)
+    at u._deliver (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:910)
+    at u._deliverQueue (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:1001)
+    at u.fire (http://127.0.0.1:5000/static/vendor/monaco/vs/editor/editor.main.js:71:1336)
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3-headed.json
+[harness] annotate PNGs written: ['annotate-1789345566763.png', 'annotate-1789345571665.png', 'annotate-1789345577067.png']

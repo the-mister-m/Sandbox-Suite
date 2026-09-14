@@ -1,0 +1,128 @@
+[
+  {
+    "n": 1,
+    "name": "Canvas on the fixture draws inside the iframe",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/01-canvas-draws.png",
+    "note": "docMode=doc drawn=3 widgets=3 pages=2"
+  },
+  {
+    "n": 2,
+    "name": "Tools beside the canvas, canvas focused: a click shows fields",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/02-tools-fields.png",
+    "note": "canvasOpt='focused' titles=[] fields=[] who='following canvas-mu0dr8ta-1'"
+  },
+  {
+    "n": 3,
+    "name": "drag 40px right: Tools box x moves, dirty, cmd-s saves, file changed",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/03-drag-save.png",
+    "note": "box {'x': 40, 'y': 40, 'w': 320, 'h': 80} -> {'x': 40, 'y': 40, 'w': 320, 'h': 80} disk={'x': 40, 'y': 40, 'w': 320, 'h': 80} status after drag='' cv.dirty=False after_save='saved' tools_box_fields_before={} after={} x_field_present=False"
+  },
+  {
+    "n": 4,
+    "name": "typing in Tools shows on the canvas after the debounce",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/04-tools-typed.png",
+    "note": "iframe_text='\\nPhase 3 headed headingA paragraph of headed proof text.badge\\n\\n'"
+  },
+  {
+    "n": 5,
+    "name": "Layers: dragging the last widget to the top reorders the canvas DOM",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/05-layers-reorder.png",
+    "note": "before=['wg_ab5wj4', 'wg_z8igew', 'wg_wnw9f3'] after=['wg_wnw9f3', 'wg_ab5wj4', 'wg_z8igew'] payload='wg_wnw9f3'"
+  },
+  {
+    "n": 6,
+    "name": "Library: dragging a card into the canvas adds a widget",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/06-library-drop.png",
+    "note": "widgets 3 -> 4 drawn=4 payload='status.badge'"
+  },
+  {
+    "n": 7,
+    "name": "marquee two, arrow right moves both, cmd-z returns both",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/07-marquee-nudge-undo.png",
+    "note": "selection=[] moved=[] returned=[]"
+  },
+  {
+    "n": 8,
+    "name": "Tools follows each canvas, then pins to the first and stays",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/08-two-canvases.png",
+    "note": "a=canvas-mu0dr8ta-1 b=canvas-mu0drfyu-3 clicked_a_focused='canvas-mu0dr8ta-1' clicked_b_focused='canvas-mu0drfyu-3' pinned canvasOpt='canvas-mu0dr8ta-1' who='pinned canvas-mu0dr8ta-1' who_a='following canvas-mu0dr8ta-1' who_b='following canvas-mu0drfyu-3'"
+  },
+  {
+    "n": 9,
+    "name": "Code scrolls to the header; a css edit re-renders one widget only",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/09-code-apply.png",
+    "note": "scrolled=False want_line=17 visible=[1, 24] decor=0 lock='Unlocked' edited=True apply_clicked=True target_node_replaced=True untouched_nodes=['wg_wnw9f3', 'wg_ab5wj4'] notice=''"
+  },
+  {
+    "n": 10,
+    "name": "Code doc view with docEditable: an edited box moves the canvas",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/10-code-doc-view.png",
+    "note": "parsed=True apply_clicked=True box {'x': 40, 'y': 300, 'w': 160, 'h': 32} -> {'x': 40, 'y': 420, 'w': 160, 'h': 32} notice=''"
+  },
+  {
+    "n": 11,
+    "name": "Export writes the HTML next to the doc with the back-link meta",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/11-export.png",
+    "note": "path=/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.html exists=True meta=['<meta name=\"code-canvas-source\" content=\"/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.json\">']"
+  },
+  {
+    "n": 12,
+    "name": "export opens in file mode, bar reads from <doc>, drag saves and reopens",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/12-file-mode.png",
+    "note": "docMode='file' bar='from /Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.json' from='/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.json' transform_after_drag=False transform_after_reopen=False code_source_has_transform=False code_len=1659"
+  },
+  {
+    "n": 13,
+    "name": "double-click a paragraph, type, Enter: the source changed",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/13-file-text-edit.png",
+    "note": "leaf_found=True textEdit=None in_source=False dirty=False"
+  },
+  {
+    "n": 14,
+    "name": "Annotate: a box sent with none, raster, playwright; PNGs and user turns",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/14-annotate.png",
+    "note": "tracks=['14630e1fa491'] annotate_on=True frozen=True sends={'none': {'status': '', 'new_png': ['annotate-1789338219564.png']}, 'raster': {'status': '', 'new_png': ['annotate-1789338224381.png']}, 'playwright': {'status': '', 'new_png': ['annotate-1789338228778.png']}} user_turns_in_archive=6"
+  },
+  {
+    "n": 15,
+    "name": "preview mode: chrome hidden, nothing moves, no new errors",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/15-preview.png",
+    "note": "handles=0 grid='none' moved=False new_pageerrors=0"
+  },
+  {
+    "n": 16,
+    "name": "reload returns every widget with its options",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/16-after-reload.png",
+    "note": "returned=5/5 diffs={\"canvas-mu0dr8ta-1\": {\"mode\": [\"canvas\", \"preview\"]}, \"canvas_tools-mu0dr9fd-2\": {\"target\": [\"/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.json\", \"/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.html\"]}}"
+  },
+  {
+    "n": 17,
+    "name": "closing an unrelated widget leaves both canvases as they were",
+    "pass": true,
+    "shot": "Docs/Reports/phase3-headed-3F/17-unrelated-close.png",
+    "note": "a drawn 3 -> 3 sel [] -> []; b drawn 3 -> 3 sel [] -> []"
+  },
+  {
+    "n": 18,
+    "name": "zero pageerrors across the pass",
+    "pass": false,
+    "shot": "Docs/Reports/phase3-headed-3F/18-final.png",
+    "note": "[p1:pageerror] Canceled"
+  }
+]

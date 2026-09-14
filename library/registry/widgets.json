@@ -25,5 +25,6 @@
   { "type": "graph_files", "label": "Files Graph", "path": "/static/js/widgets/wayfinder/files/files.js", "group": "wayfinder" },
   { "type": "canvas",      "label": "Canvas",      "path": "/static/js/widgets/codecanvas/canvas/canvas.js", "group": "codecanvas" },
   { "type": "canvas_tools", "label": "Tools",      "path": "/static/js/widgets/codecanvas/tools/tools.js", "group": "codecanvas" },
-  { "type": "canvas_code", "label": "Code",        "path": "/static/js/widgets/codecanvas/code/code.js", "group": "codecanvas" }
+  { "type": "canvas_code", "label": "Code",        "path": "/static/js/widgets/codecanvas/code/code.js", "group": "codecanvas" },
+  { "type": "canvas_targets", "label": "Targets",  "path": "/static/js/widgets/codecanvas/targets/targets.js", "group": "codecanvas" }
 ]

@@ -1,0 +1,24 @@
+[harness] copy held before the run: phase3F-fixture-tools.html, 1186 bytes
+[harness] copy held before the run: phase3F-fixture-tools-2.html, 673 bytes
+[harness] session open: {'sid': '410ef20f1a9d'}
+[harness] socket right after load: ['live', '410ef20f1a9d']
+[harness] ade socket live: True (state='live')
+[harness] widgets on the surface at start: []; after clearing: []
+[harness] setup: A=canvas-mu0f9xgg-1 B=canvas-mu0f9zcw-3 tools=canvas_tools-mu0fa05k-4 targets=canvas_targets-mu0f9xgs-2; add_clicked=True A_ready=True B_ready=True; tools_binding={'canvasOpt': 'canvas-mu0f9xgg-1', 'focusedInst': '', 'optTarget': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-tools.html', 'who': 'pinned canvas-mu0f9xgg-1'}; targets_rows=[{'name': 'phase3F-fixture-tools.html', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-tools.html', 'on': True}]; A mode='canvas' path=phase3F-fixture-tools.html; B mode='preview' path=phase3F-fixture-tools.html targets=2
+[harness] layer rows at start: [('div.stage', [], 8), ('h1', ['Phase 3F fixture heading'], 20), ('p', ['A paragraph of fixture'], 20), ('div.box', ['red box'], 20), ('div.box', ['blue box'], 20), ('div.box', ['green box'], 20), ('div.box', ['gold box'], 20), ('span', ['a span sibling'], 20)]
+[harness] stage order at start: {'live': ['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'], 'source': ['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling']}
+[harness] tools copy before the boots: 1331 bytes
+[harness] boot1: {'n': 1, 'rebound': False, 'secs': 0.03, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot2: {'n': 2, 'rebound': False, 'secs': 0.04, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot3: {'n': 3, 'rebound': False, 'secs': 0.04, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot4: {'n': 4, 'rebound': False, 'secs': 0.03, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot5: {'n': 5, 'rebound': False, 'secs': 0.04, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot6: {'n': 6, 'rebound': False, 'secs': 0.04, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot7: {'n': 7, 'rebound': False, 'secs': 0.03, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot8: {'n': 8, 'rebound': False, 'secs': 0.03, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot9: {'n': 9, 'rebound': False, 'secs': 0.04, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] boot10: {'n': 10, 'rebound': False, 'secs': 0.03, 'ready': True, 'state_at_mount': 'live', 'state_end': 'live'}
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3F-headed-tools.json
+[harness] restored phase3F-fixture-tools.html: run left 1331 bytes, wrote back 1186, matches_before=True
+[harness] restored phase3F-fixture-tools-2.html: run left 673 bytes, wrote back 673, matches_before=True

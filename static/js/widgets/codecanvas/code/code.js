@@ -87,6 +87,21 @@
     return null;
   }
 
+  // function: follow mode adopts any focused canvas and takes its target.
+  function onAnyFocus(cs, payload) {
+    if (cs.canvasOpt !== "focused" || !payload || !payload.inst) return;
+    const want = payload.target || "";
+    // state: the target option clears focusedInst, so it is set after.
+    if (want !== (cs.frame.options.target || "")) {
+      cs.frame.setOption("target", want);
+      cs.focusedInst = payload.inst;
+      renderCurrent(cs);
+      return;
+    }
+    cs.focusedInst = payload.inst;
+    renderCurrent(cs);
+  }
+
   function api(cs) {
     const f = boundFrame(cs);
     return f ? f._canvas : null;
@@ -204,10 +219,18 @@
     MX.monacoReady().then((monaco) => {
       if (!cs.live || cs.editor) return;
       cs.monaco = monaco;
+      // occurrencesHighlight off: its delayer rejects with "Canceled" when a
+      // view switch calls setModel while a highlight request is in flight
       cs.editor = monaco.editor.create(cs.editorHost, {
         value: "", language: "html", theme: "vs-dark", readOnly: true,
         automaticLayout: true, minimap: { enabled: false },
-        scrollBeyondLastLine: false
+        scrollBeyondLastLine: false, occurrencesHighlight: "off"
+      });
+      // cmd/ctrl-s while unlocked: apply then relock
+      cs.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        if (cs.locked) return;
+        applyEdits(cs);
+        relock(cs);
       });
       renderCurrent(cs);
     }).catch(() => { cs.editorHost.textContent = "[code: monaco failed]"; });
@@ -245,9 +268,9 @@
     let editable = false;
     if (a && !cs.locked) {
       const mode = modeOf(a);
-      if (cs.view === "blocks" && mode === "doc") editable = true;
-      else if (cs.view === "source" && mode === "file") editable = true;
-      else if (cs.view === "doc" && mode === "doc" && cs.docEditable) editable = true;
+      if (cs.effectiveView === "blocks" && mode === "doc") editable = true;
+      else if (cs.effectiveView === "source" && mode === "file") editable = true;
+      else if (cs.effectiveView === "doc" && mode === "doc" && cs.docEditable) editable = true;
     }
     cs.editor.updateOptions({ readOnly: !editable });
     if (cs.editorHost) cs.editorHost.classList.toggle("mxcd-unlocked", editable);
@@ -258,6 +281,21 @@
     cs.lockBtn.textContent = cs.locked ? "Locked" : "Unlocked";
     cs.lockBtn.classList.toggle("mxcd-on", !cs.locked);
     cs.lockBtn.disabled = !a;
+    const mode = modeOf(a);
+    for (const v of VIEWS) {
+      const btn = cs.viewBtns ? cs.viewBtns[v] : null;
+      if (!btn) continue;
+      const disabled = !a || (mode === "file" && v !== "source") || (mode !== "file" && v === "source");
+      btn.disabled = disabled;
+      btn.classList.toggle("mxcd-on", v === cs.effectiveView);
+    }
+  }
+
+  // function: bar view button click, sets the saved view option.
+  function onViewClick(cs, view) {
+    const btn = cs.viewBtns ? cs.viewBtns[view] : null;
+    if (btn && btn.disabled) return;
+    cs.frame.setOption("view", view);
   }
 
   function setNotice(cs, msg) {
@@ -286,20 +324,22 @@
   function renderCurrent(cs) {
     if (!cs.live || !cs.editor) return;
     const a = api(cs);
+    const mode = modeOf(a);
+    // file mode always shows source; the saved view returns in doc mode
+    cs.effectiveView = (mode === "file" && cs.view !== "source") ? "source" : cs.view;
     updateBar(cs, a);
     if (!a) { showGuide(cs, "No canvas on this target."); updateReadOnly(cs, a); return; }
-    const mode = modeOf(a);
-    if (cs.view === "source" && mode !== "file") {
+    if (cs.effectiveView === "source" && mode !== "file") {
       showGuide(cs, "Source view: file mode only.");
       updateReadOnly(cs, a);
       return;
     }
-    if (cs.view !== "source" && mode !== "doc") {
+    if (cs.effectiveView !== "source" && mode !== "doc") {
       showGuide(cs, "Blocks and doc need a document canvas.");
       updateReadOnly(cs, a);
       return;
     }
-    if (cs.view === "blocks") {
+    if (cs.effectiveView === "blocks") {
       const built = buildCodeText(cs, a.state, cs.codeMode);
       cs.blocksIndex = built.index;
       cs.baseline = {};
@@ -310,7 +350,7 @@
         cs.pendingSelect = null;
         scrollToWidget(cs, queued);
       }
-    } else if (cs.view === "doc") {
+    } else if (cs.effectiveView === "doc") {
       setViewModel(cs, "doc", JSON.stringify(a.state.get(), null, 2), "json");
     } else {
       setViewModel(cs, "source", a.source(), "html");
@@ -340,7 +380,7 @@
     const a = api(cs);
     if (!a || !cs.editor) return;
     const text = cs.editor.getValue();
-    if (cs.view === "blocks") {
+    if (cs.effectiveView === "blocks") {
       const parsed = parseBlocks(text);
       const widgets = pageWidgets(a.state);
       let missing = 0;
@@ -353,13 +393,13 @@
         }
       }
       setNotice(cs, missing > 0 ? (missing + (missing === 1 ? " block" : " blocks") + " skipped: missing header") : "");
-    } else if (cs.view === "doc") {
+    } else if (cs.effectiveView === "doc") {
       if (!cs.docEditable) return;
       let parsed;
       try { parsed = JSON.parse(text); } catch (e) { setNotice(cs, "parse failed: " + e.message); return; }
       a.state.replace(parsed);
       setNotice(cs, "");
-    } else if (cs.view === "source") {
+    } else if (cs.effectiveView === "source") {
       a.patchSource({ kind: "set-full-source", source: text });
       setNotice(cs, "");
     }
@@ -391,7 +431,7 @@
   // ---------- module ----------
 
   const MOD = {
-    defaults: { target: "", canvas: "focused", view: "blocks", codeMode: "resolved", docEditable: false, locked: false },
+    defaults: { target: "", canvas: "focused", view: "blocks", codeMode: "resolved", docEditable: false, locked: false, followTarget: "" },
 
     optionControls: {
       target: MX.canvasTargetControl(false),
@@ -403,24 +443,31 @@
     mount(frame) {
       ensureStyles();
 
+      const initView = VIEWS.indexOf(frame.options.view) >= 0 ? frame.options.view : "blocks";
       const cs = frame._codeState = {
         frame: frame, live: true, core: null,
         canvasOpt: frame.options.canvas || "focused",
-        view: VIEWS.indexOf(frame.options.view) >= 0 ? frame.options.view : "blocks",
+        view: initView, effectiveView: initView,
         codeMode: CODE_MODES.indexOf(frame.options.codeMode) >= 0 ? frame.options.codeMode : "resolved",
         docEditable: !!frame.options.docEditable,
         locked: true, focusedInst: "",
-        mirrors: null, monaco: null, editor: null, editorHost: null,
+        mirrors: null, followMirror: null, monaco: null, editor: null, editorHost: null,
         models: {}, guideModel: null, decor: [],
         baseline: null, baselineText: "", blocksIndex: null, pendingSelect: null,
         resolve: null, resolveOf: null,
-        noticeEl: null, lockBtn: null
+        noticeEl: null, lockBtn: null, viewBtns: null
       };
 
       const wrap = el("div", "mxcd-wrap");
       const bar = el("div", "mxcd-bar");
       cs.lockBtn = mkBtn("Locked", "mxcd-btn", () => onLockClick(cs));
       bar.appendChild(cs.lockBtn);
+      cs.viewBtns = {};
+      for (const v of VIEWS) {
+        const b = mkBtn(v, "mxcd-btn", () => onViewClick(cs, v));
+        cs.viewBtns[v] = b;
+        bar.appendChild(b);
+      }
       cs.noticeEl = el("span", "mxcd-notice mxcd-empty");
       bar.appendChild(cs.noticeEl);
       bar.appendChild(el("div", "mxcd-spacer"));
@@ -439,12 +486,15 @@
         cs.mirrors = core.mirrors(frame, {
           select: (payload) => scrollToWidget(cs, payload.ids && payload.ids[0]),
           change: () => { if (!cs.locked) return; renderCurrent(cs); },
-          doc: () => { resetModels(cs); renderCurrent(cs); },
+          doc: () => { renderCurrent(cs); },
           focus: (payload) => {
             cs.focusedInst = payload.inst || "";
             if (cs.canvasOpt === "focused") renderCurrent(cs);
           }
         });
+        // empty followTarget option: hears canvas.focus on every target
+        cs.followMirror = MX.mirror(frame, "canvas.focus",
+          (payload) => onAnyFocus(cs, payload), "followTarget");
         renderCurrent(cs);
       });
     },
@@ -454,10 +504,9 @@
       if (!cs) return;
       cs.live = false;
       if (cs.mirrors) cs.mirrors.off();
+      if (cs.followMirror) cs.followMirror.off();
       if (cs.editor) { try { cs.editor.dispose(); } catch (e) { /* dispose best effort */ } }
-      for (const key of Object.keys(cs.models)) {
-        try { cs.models[key].dispose(); } catch (e) { /* dispose best effort */ }
-      }
+      resetModels(cs);
       if (cs.guideModel) { try { cs.guideModel.dispose(); } catch (e) { /* dispose best effort */ } }
       frame._codeState = null;
     },
@@ -465,8 +514,8 @@
     onOption(frame, key, value) {
       const cs = frame._codeState;
       if (!cs) return;
-      if (key === "target") { resetModels(cs); cs.focusedInst = ""; renderCurrent(cs); return; }
-      if (key === "canvas") { cs.canvasOpt = value || "focused"; resetModels(cs); renderCurrent(cs); return; }
+      if (key === "target") { cs.focusedInst = ""; renderCurrent(cs); return; }
+      if (key === "canvas") { cs.canvasOpt = value || "focused"; renderCurrent(cs); return; }
       if (key === "view") {
         if (VIEWS.indexOf(value) < 0) return;
         cs.view = value; markDirty(cs); renderCurrent(cs);
@@ -489,7 +538,8 @@
         view: cs.view,
         codeMode: cs.codeMode,
         docEditable: cs.docEditable,
-        locked: false
+        locked: false,
+        followTarget: frame.options.followTarget || ""
       };
     }
   };

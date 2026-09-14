@@ -30,6 +30,8 @@
         border-bottom: 1px solid var(--border, #333); flex: 0 0 auto; flex-wrap: wrap; }
       .mxcv-tabs { display: flex; gap: 2px; padding: 2px 6px; flex: 0 0 auto;
         overflow-x: auto; border-bottom: 1px solid var(--border, #333); }
+      .mxcv-targets { display: flex; gap: 2px; padding: 2px 6px; flex: 0 0 auto;
+        overflow-x: auto; border-bottom: 1px solid var(--border, #333); }
       .mxcv-tab { padding: 2px 6px; font-size: 11px; cursor: pointer;
         border: 1px solid var(--border, #333); color: var(--text-2, #aaa);
         background: none; white-space: nowrap; }
@@ -317,7 +319,8 @@
   // function: set the selection and announce it on the mirror.
   function setSelection(cv, ids) {
     cv.selection = ids.slice();
-    paintSelection(cv);
+    if (cv.docMode === "file") paintFileSelection(cv);
+    else paintSelection(cv);
     if (cv.mirrors) cv.mirrors.select.emit({ ids: cv.selection.slice() });
     markDirty(cv);
   }
@@ -438,9 +441,37 @@
     cv.menu = null;
   }
 
+  // function: the context menu element. [label, fn] rows at a point. The
+  // inline rules carry the look into file mode, which has no chrome sheet.
+  function openMenuItems(cv, x, y, items) {
+    closeMenu(cv);
+    const menu = cv.idoc.createElement("div");
+    menu.className = "cc-canvas-menu";
+    menu.setAttribute("data-od-edit-bridge", "menu");
+    menu.style.cssText = "position: fixed; z-index: 2147483647; background: #ffffff; "
+      + "border: 1px solid #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); "
+      + "font: 13px system-ui, sans-serif; padding: 4px 0;";
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+    for (let i = 0; i < items.length; i++) {
+      const fn = items[i][1];
+      const row = cv.idoc.createElement("div");
+      row.textContent = items[i][0];
+      row.style.cssText = "padding: 4px 16px; cursor: default;";
+      row.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu(cv);
+        fn();
+      });
+      menu.appendChild(row);
+    }
+    cv.idoc.body.appendChild(menu);
+    cv.menu = menu;
+  }
+
   // function: context menu at a point for one widget.
   function openMenu(cv, x, y, id) {
-    closeMenu(cv);
     const w = widgetOf(cv, id);
     const items = [
       ["Duplicate", function () {
@@ -470,24 +501,7 @@
         cv.state.setLocked(id, !(w && w.locked));
       }]
     ];
-    const menu = cv.idoc.createElement("div");
-    menu.className = "cc-canvas-menu";
-    menu.style.left = x + "px";
-    menu.style.top = y + "px";
-    for (let i = 0; i < items.length; i++) {
-      const fn = items[i][1];
-      const row = cv.idoc.createElement("div");
-      row.textContent = items[i][0];
-      row.addEventListener("mousedown", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        closeMenu(cv);
-        fn();
-      });
-      menu.appendChild(row);
-    }
-    cv.idoc.body.appendChild(menu);
-    cv.menu = menu;
+    openMenuItems(cv, x, y, items);
   }
 
   // function: box for a resize direction, from the start box and deltas.
@@ -800,6 +814,12 @@
     return !!(el && el.matches && el.matches(sel));
   }
 
+  // function: true for the port's own chrome inside the iframe.
+  function inChrome(target) {
+    return !!(target && target.closest
+      && target.closest(".cc-canvas-menu, [data-od-edit-guides-layer]"));
+  }
+
   function closestTarget(cv, e) {
     let el = e.target;
     while (el && el.nodeType === 1) {
@@ -879,6 +899,8 @@
     if (layer) return layer;
     layer = cv.idoc.createElement("div");
     layer.setAttribute("data-od-edit-guides-layer", "true");
+    // state: a host node, so patch.js skips it when it counts children.
+    layer.setAttribute("data-od-edit-bridge", "guides");
     layer.setAttribute("aria-hidden", "true");
     cv.idoc.body.appendChild(layer);
     return layer;
@@ -949,16 +971,17 @@
     }
   }
 
+  // function: chrome for every selected id.
   function paintFileSelection(cv) {
-    if (!cv.idoc || cv.docMode !== "file") return;
+    if (!cv.idoc || cv.docMode !== "file" || !cv.patch) return;
     if (cv.mode === "preview") { clearGuides(cv); return; }
-    const id = cv.selection[0];
-    if (!id) { clearGuides(cv); return; }
-    const el = cv.patch.find(cv.idoc, id);
-    if (!el) { clearGuides(cv); return; }
+    if (!cv.selection.length) { clearGuides(cv); return; }
     const layer = ensureGuidesLayer(cv);
     layer.replaceChildren();
-    renderSelectedChrome(cv, layer, rectFor(el));
+    for (let i = 0; i < cv.selection.length; i++) {
+      const el = cv.patch.find(cv.idoc, cv.selection[i]);
+      if (el) renderSelectedChrome(cv, layer, rectFor(el));
+    }
   }
 
   // function: split an inline transform into the prefix we keep and the
@@ -996,9 +1019,13 @@
     el.removeAttribute("contenteditable");
     el.removeAttribute("data-od-editing");
     el.removeEventListener("keydown", session.onKey);
+    if (session.onBlur) el.removeEventListener("blur", session.onBlur);
     const value = (el.textContent || "").trim();
     const changed = value !== session.originalText.trim();
     if (commit && changed) {
+      // state: rewound to the text the edit started from, so the patch's
+      // inverse reads that value.
+      el.textContent = session.originalText;
       patchSource(cv, { id: session.id, kind: "set-text", value: value });
     } else if (!commit) {
       el.textContent = session.originalText;
@@ -1021,84 +1048,357 @@
       }
       if (ev.key === "Escape") {
         ev.preventDefault();
+        ev.stopPropagation();
         finishTextEdit(cv, false);
       }
     };
-    cv.textEdit = { el: el, id: cv.patch.stableId(el), originalText: originalText, onKey: onKey };
+    // state: losing focus commits, the same as Enter.
+    const onBlur = () => { finishTextEdit(cv, true); };
+    cv.textEdit = {
+      el: el, id: cv.patch.stableId(el), originalText: originalText,
+      onKey: onKey, onBlur: onBlur
+    };
     el.addEventListener("keydown", onKey);
+    el.addEventListener("blur", onBlur);
   }
 
-  // function: apply a patch to the held source, mark dirty, announce it.
-  function patchSource(cv, patch) {
-    if (cv.docMode !== "file" || !patch) return cv.source;
-    const next = cv.patch.apply(cv.source, patch);
-    if (next === cv.source) {
-      setStatus(cv, "patch refused", true);
-      return cv.source;
-    }
-    cv.source = next;
+  // function: dirty, status, the change mirror, the chrome.
+  function afterChange(cv) {
     cv.dirty = true;
     setStatus(cv, "dirty", true);
     if (cv.mirrors) cv.mirrors.change.emit({});
     markDirty(cv);
+    paintFileSelection(cv);
+  }
+
+  // function: undo applied live patches, last first.
+  function rollbackLive(cv, inverses) {
+    for (let i = inverses.length - 1; i >= 0; i--) {
+      cv.patch.applyToDoc(cv.idoc, inverses[i]);
+    }
+  }
+
+  // function: one list against the live document and a working copy of the
+  // source. {text, inverses} on success, null on a refusal, the live
+  // document rolled back.
+  function runPatches(cv, patches) {
+    const inverses = [];
+    let text = cv.source;
+    let reload = false;
+    for (let i = 0; i < patches.length; i++) {
+      // state: set-full-source skips the live document; the iframe reloads.
+      if (patches[i].kind === "set-full-source") {
+        const full = cv.patch.apply(text, patches[i]);
+        if (!full.inverse) { rollbackLive(cv, inverses); return null; }
+        inverses.push(full.inverse);
+        text = full.text;
+        reload = true;
+        continue;
+      }
+      const live = cv.patch.applyToDoc(cv.idoc, patches[i]);
+      if (!live.ok) { rollbackLive(cv, inverses); return null; }
+      const next = cv.patch.apply(text, patches[i]);
+      if (!next.inverse) {
+        cv.patch.applyToDoc(cv.idoc, live.inverse);
+        rollbackLive(cv, inverses);
+        return null;
+      }
+      inverses.push(live.inverse);
+      text = next.text;
+    }
+    return { text: text, inverses: inverses, reload: reload };
+  }
+
+  function ensureHistory(cv) {
+    if (!cv.history && cv.patch) cv.history = cv.patch.history();
+    return cv.history;
+  }
+
+  // function: the one file-mode apply path. Live document and source move
+  // together, one history entry per call.
+  function applyPatches(cv, patches) {
+    if (cv.docMode !== "file" || !cv.idoc || !patches || !patches.length) return false;
+    const run = runPatches(cv, patches);
+    if (!run) { setStatus(cv, "patch refused", true); return false; }
+    cv.source = run.text;
+    const h = ensureHistory(cv);
+    if (h) h.push({ patches: patches.slice(), inverses: run.inverses.slice() });
+    afterChange(cv);
+    return true;
+  }
+
+  // function: one history entry back. Inverses run in reverse, no push.
+  function fileUndo(cv) {
+    if (cv.docMode !== "file" || !cv.history) return false;
+    const entry = cv.history.undo();
+    if (!entry) { setStatus(cv, "nothing to undo"); return false; }
+    const run = runPatches(cv, entry.inverses.slice().reverse());
+    if (!run) { setStatus(cv, "patch refused", true); return false; }
+    cv.source = run.text;
+    afterChange(cv);
+    if (run.reload) { stash(cv); loadFileMode(cv, cv.source); }
+    return true;
+  }
+
+  // function: one history entry forward. Patches replay, no push.
+  function fileRedo(cv) {
+    if (cv.docMode !== "file" || !cv.history) return false;
+    const entry = cv.history.redo();
+    if (!entry) { setStatus(cv, "nothing to redo"); return false; }
+    const run = runPatches(cv, entry.patches);
+    if (!run) { setStatus(cv, "patch refused", true); return false; }
+    cv.source = run.text;
+    afterChange(cv);
+    if (run.reload) { stash(cv); loadFileMode(cv, cv.source); }
+    return true;
+  }
+
+  // function: set-full-source rewrites the source and reloads the iframe.
+  // The record carries the dirty flag and the history across the reload.
+  function setFullSource(cv, patch) {
+    const next = cv.patch.apply(cv.source, patch);
+    if (!next.inverse) { setStatus(cv, "patch refused", true); return cv.source; }
+    cv.source = next.text;
+    const h = ensureHistory(cv);
+    if (h) h.push({ patches: [patch], inverses: [next.inverse] });
+    cv.dirty = true;
+    setStatus(cv, "dirty", true);
+    if (cv.mirrors) cv.mirrors.change.emit({});
+    markDirty(cv);
+    stash(cv);
+    loadFileMode(cv, cv.source);
     return cv.source;
+  }
+
+  // function: one patch from a sibling widget. Routes into applyPatches.
+  function patchSource(cv, patch) {
+    if (cv.docMode !== "file" || !patch) return cv.source;
+    const kind = patch.kind === "set-outer-html" ? "replace-outer-html" : patch.kind;
+    if (kind === "set-full-source") return setFullSource(cv, patch);
+    applyPatches(cv, [patch]);
+    return cv.source;
+  }
+
+  // function: the marquee node in the guides layer.
+  function drawFileMarquee(cv, mq, x1, y1) {
+    const layer = ensureGuidesLayer(cv);
+    if (!mq.node || mq.node.parentNode !== layer) {
+      mq.node = cv.idoc.createElement("div");
+      mq.node.className = "od-edit-guide-box od-edit-guide-box-hover";
+      layer.appendChild(mq.node);
+    }
+    mq.node.style.left = Math.min(mq.x0, x1) + "px";
+    mq.node.style.top = Math.min(mq.y0, y1) + "px";
+    mq.node.style.width = Math.abs(x1 - mq.x0) + "px";
+    mq.node.style.height = Math.abs(y1 - mq.y0) + "px";
+  }
+
+  // function: ids fully inside the box whose parent is not fully inside.
+  function marqueeHits(cv, lo, hi) {
+    const all = cv.idoc.body ? cv.idoc.body.querySelectorAll("*") : [];
+    const inside = [];
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      if (isHostNode(cv, el)) continue;
+      if (el.closest && el.closest("[data-od-edit-guides-layer]")) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      if (r.left >= lo.x && r.right <= hi.x && r.top >= lo.y && r.bottom <= hi.y) inside.push(el);
+    }
+    const ids = [];
+    for (let j = 0; j < inside.length; j++) {
+      if (inside.indexOf(inside[j].parentElement) !== -1) continue;
+      ids.push(cv.patch.stableId(inside[j]));
+    }
+    return ids;
+  }
+
+  function endFileMarquee(cv, e) {
+    const mq = cv.fileMarquee;
+    cv.fileMarquee = null;
+    if (mq.node && mq.node.parentNode) mq.node.parentNode.removeChild(mq.node);
+    if (!mq.moved) return;
+    // state: the click after this pointerup is swallowed.
+    cv.justDragged = true;
+    const lo = { x: Math.min(mq.x0, e.clientX), y: Math.min(mq.y0, e.clientY) };
+    const hi = { x: Math.max(mq.x0, e.clientX), y: Math.max(mq.y0, e.clientY) };
+    const hits = mq.base.slice();
+    const found = marqueeHits(cv, lo, hi);
+    for (let i = 0; i < found.length; i++) {
+      if (hits.indexOf(found[i]) === -1) hits.push(found[i]);
+    }
+    setSelection(cv, hits);
+  }
+
+  // function: press state for one selected element. The inline transform
+  // and display are held so the drag can be rewound before it is patched.
+  function dragItem(cv, el) {
+    const base = readTranslateBase(el);
+    return {
+      el: el, id: cv.patch.stableId(el),
+      prefix: base.prefix, baseTx: base.tx, baseTy: base.ty,
+      startTransform: (el.style && el.style.transform) || "",
+      startDisplay: (el.style && el.style.display) || "",
+      bumpedDisplay: false
+    };
+  }
+
+  // function: rewind a live drag to the state it was pressed in. The live
+  // document only; no patch, no history.
+  function cancelDrag(cv) {
+    const drag = cv.drag;
+    cv.drag = null;
+    if (!drag) return false;
+    for (let i = 0; i < drag.items.length; i++) {
+      const item = drag.items[i];
+      if (!item.el || !item.el.style) continue;
+      item.el.style.transform = item.startTransform;
+      item.el.style.display = item.startDisplay;
+    }
+    if (drag.started) { clearGuides(cv); paintFileSelection(cv); }
+    return true;
+  }
+
+  // function: drop a live marquee. The selection is left as it was.
+  function cancelFileMarquee(cv) {
+    const mq = cv.fileMarquee;
+    cv.fileMarquee = null;
+    if (mq && mq.node && mq.node.parentNode) mq.node.parentNode.removeChild(mq.node);
+  }
+
+  // function: close every live gesture. commit sends an open text edit into
+  // the source; false rewinds it.
+  function endGestures(cv, commit) {
+    cancelDrag(cv);
+    cancelFileMarquee(cv);
+    if (cv.textEdit) finishTextEdit(cv, !!commit);
   }
 
   function onFilePointerDown(cv, e) {
     if (cv.mirrors) cv.mirrors.focus.emit({});
-    if (cv.frozen || cv.mode === "preview" || cv.textEdit) return;
-    if (e.button !== undefined && e.button !== 0) return;
     if (e.target && e.target.closest && e.target.closest('[data-od-editing="true"]')) return;
+    // state: a press outside the edited element commits it.
+    if (cv.textEdit) finishTextEdit(cv, true);
+    if (cv.frozen || cv.mode === "preview") { cancelDrag(cv); cancelFileMarquee(cv); return; }
+    if (e.button !== undefined && e.button !== 0) return;
+    if (inChrome(e.target)) return;
+    // state: no gesture outlives the press that starts the next one.
+    cancelDrag(cv);
+    cancelFileMarquee(cv);
+    closeMenu(cv);
     const el = closestTarget(cv, e);
-    if (!el) { cv.drag = null; return; }
-    const base = readTranslateBase(el);
+    if (!el) {
+      if (cv.mode !== "canvas") return;
+      cv.fileMarquee = {
+        x0: e.clientX, y0: e.clientY, moved: false, node: null,
+        base: e.shiftKey ? cv.selection.slice() : []
+      };
+      if (!e.shiftKey && cv.selection.length) setSelection(cv, []);
+      return;
+    }
+    const id = cv.patch.stableId(el);
+    // state: a press on an already-selected element keeps the whole set.
+    const ids = cv.selection.indexOf(id) === -1 ? [id] : cv.selection.slice();
+    const items = [];
+    for (let i = 0; i < ids.length; i++) {
+      const target = cv.patch.find(cv.idoc, ids[i]);
+      if (target) items.push(dragItem(cv, target));
+    }
+    // state: an id that no longer resolves never leaves the press empty.
+    if (!items.length) items.push(dragItem(cv, el));
     cv.drag = {
-      el: el, id: cv.patch.stableId(el),
-      startX: e.clientX, startY: e.clientY,
-      prefix: base.prefix, baseTx: base.tx, baseTy: base.ty,
-      started: false, bumpedDisplay: false
+      id: id, items: items, ids: items.map((it) => it.id),
+      startX: e.clientX, startY: e.clientY, started: false
     };
   }
 
   function onFilePointerMove(cv, e) {
+    // state: the primary button is up, so the press ended off-document and
+    // whatever it left behind is stale.
+    const down = e.buttons === undefined || (e.buttons & 1) === 1;
+    if (!down || cv.frozen || cv.mode === "preview") {
+      if (cv.drag || cv.fileMarquee) { cancelDrag(cv); cancelFileMarquee(cv); }
+      return;
+    }
+    if (cv.fileMarquee) {
+      cv.fileMarquee.moved = true;
+      drawFileMarquee(cv, cv.fileMarquee, e.clientX, e.clientY);
+      e.preventDefault();
+      return;
+    }
     const drag = cv.drag;
-    if (!drag || cv.frozen) return;
+    if (!drag) return;
     const dx = e.clientX - drag.startX;
     const dy = e.clientY - drag.startY;
     if (!drag.started && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
       drag.started = true;
-      // transform does not move a non-replaced inline element; bump it once.
-      try {
-        const disp = cv.iwin.getComputedStyle(drag.el).display;
-        if (disp === "inline") {
-          drag.el.style.display = "inline-block";
-          drag.bumpedDisplay = true;
-        }
-      } catch (err) { /* computed style best effort */ }
-      if (cv.selection[0] !== drag.id) setSelection(cv, [drag.id]);
+      for (let i = 0; i < drag.items.length; i++) {
+        const item = drag.items[i];
+        // transform does not move a non-replaced inline element; bump it once.
+        try {
+          if (cv.iwin.getComputedStyle(item.el).display === "inline") {
+            item.el.style.display = "inline-block";
+            item.bumpedDisplay = true;
+          }
+        } catch (err) { /* computed style best effort */ }
+      }
+      if (cv.selection.indexOf(drag.id) === -1) setSelection(cv, drag.ids.slice());
     }
     if (!drag.started) return;
-    drag.el.style.transform = composeTransform(drag.prefix, drag.baseTx + dx, drag.baseTy + dy);
+    for (let j = 0; j < drag.items.length; j++) {
+      const moved = drag.items[j];
+      moved.el.style.transform = composeTransform(moved.prefix, moved.baseTx + dx, moved.baseTy + dy);
+    }
     const layer = ensureGuidesLayer(cv);
     layer.replaceChildren();
-    renderReferenceGuides(cv, layer, drag.el);
-    renderSelectedChrome(cv, layer, rectFor(drag.el));
+    const lead = drag.items[0];
+    if (lead) {
+      renderReferenceGuides(cv, layer, lead.el);
+      for (let k = 0; k < drag.items.length; k++) {
+        renderSelectedChrome(cv, layer, rectFor(drag.items[k].el));
+      }
+    }
     e.preventDefault();
   }
 
   function onFilePointerUp(cv, e) {
+    if (cv.fileMarquee) endFileMarquee(cv, e);
     const drag = cv.drag;
     if (!drag) return;
+    if (!drag.started) { cv.drag = null; return; }
+    if (cv.frozen || cv.mode === "preview") { cancelDrag(cv); return; }
     cv.drag = null;
-    if (!drag.started) return;
     cv.justDragged = true;
     e.preventDefault();
     e.stopPropagation();
-    const styles = { transform: drag.el.style.transform || "" };
-    if (drag.bumpedDisplay) styles.display = "inline-block";
-    patchSource(cv, { id: drag.id, kind: "set-style", styles: styles });
+    const patches = [];
+    for (let i = 0; i < drag.items.length; i++) {
+      const item = drag.items[i];
+      const styles = { transform: item.el.style.transform || "" };
+      if (item.bumpedDisplay) styles.display = "inline-block";
+      // state: rewound to the pressed state, so the patch's inverse reads
+      // the value the drag started from.
+      item.el.style.transform = item.startTransform;
+      item.el.style.display = item.startDisplay;
+      patches.push({ id: item.id, kind: "set-style", styles: styles });
+    }
+    if (patches.length) applyPatches(cv, patches);
     clearGuides(cv);
     paintFileSelection(cv);
+  }
+
+  // function: the browser took the pointer. Rewind, patch nothing.
+  function onFilePointerCancel(cv) {
+    cancelDrag(cv);
+    cancelFileMarquee(cv);
+  }
+
+  // function: the browser's own drag of a text selection cancels the pointer
+  // stream, so an element drag over selected text dies before it starts.
+  // state: refused in file canvas mode; an open text edit keeps its own drag.
+  function onFileDragStart(cv, e) {
+    if (cv.frozen || cv.mode === "preview" || cv.textEdit) return;
+    e.preventDefault();
   }
 
   function onFileClick(cv, e) {
@@ -1110,11 +1410,16 @@
     }
     if (cv.frozen || cv.mode === "preview") return;
     if (e.target && e.target.closest && e.target.closest('[data-od-editing="true"]')) return;
+    if (inChrome(e.target)) return;
     const el = closestTarget(cv, e);
-    if (!el) { setSelection(cv, []); clearGuides(cv); return; }
+    if (!el) { setSelection(cv, []); return; }
     e.preventDefault();
-    setSelection(cv, [cv.patch.stableId(el)]);
-    paintFileSelection(cv);
+    const id = cv.patch.stableId(el);
+    if (!e.shiftKey) { setSelection(cv, [id]); return; }
+    const at = cv.selection.indexOf(id);
+    setSelection(cv, at === -1
+      ? cv.selection.concat([id])
+      : cv.selection.filter((x) => x !== id));
   }
 
   function onFileDblClick(cv, e) {
@@ -1125,8 +1430,254 @@
     makeEditable(cv, el);
   }
 
+  // ---------- file mode elements ----------
+
+  // function: element children, host nodes skipped. Matches patch.js.
+  function fileChildren(cv, parent) {
+    if (!parent) return [];
+    return Array.prototype.slice.call(parent.children)
+      .filter((child) => !isHostNode(cv, child));
+  }
+
+  // function: the id a patch uses for a parent.
+  function parentKeyOf(cv, parent) {
+    if (!parent || parent === cv.idoc.body) return "__body__";
+    return parent.getAttribute("data-od-id") || cv.patch.stableId(parent);
+  }
+
+  function fileDepth(el) {
+    let n = 0;
+    let node = el;
+    while (node && node.parentElement) { n++; node = node.parentElement; }
+    return n;
+  }
+
+  // function: wrap a set of siblings in a group div.
+  function fileGroup(cv, ids) {
+    if (cv.docMode !== "file" || !ids || !ids.length) return false;
+    const gid = cv.patch.newId("grp");
+    if (!applyPatches(cv, [{ kind: "wrap", ids: ids.slice(), id: gid }])) {
+      setStatus(cv, "group needs siblings", true);
+      return false;
+    }
+    setSelection(cv, [gid]);
+    return true;
+  }
+
+  // function: unwrap a group div. The freed children become the selection.
+  function fileUngroup(cv, id) {
+    if (cv.docMode !== "file" || !id) return false;
+    const el = cv.patch.find(cv.idoc, id);
+    const kids = fileChildren(cv, el)
+      .map((kid) => kid.getAttribute("data-od-id") || cv.patch.stableId(kid));
+    if (!applyPatches(cv, [{ kind: "unwrap", id: id }])) {
+      setStatus(cv, "not a group", true);
+      return false;
+    }
+    setSelection(cv, kids);
+    return true;
+  }
+
+  // function: move one element under a parent at a slot index. A move to a
+  // later slot in the same parent counts the element itself.
+  function fileMove(cv, id, parent, index) {
+    if (cv.docMode !== "file" || !id) return false;
+    const el = cv.patch.find(cv.idoc, id);
+    const target = cv.patch.find(cv.idoc, parent);
+    if (!el || !target) return false;
+    // state: index is the final slot among siblings, the element out.
+    const idx = Math.max(0, Number(index) || 0);
+    return applyPatches(cv, [{ kind: "move", id: id, parent: parent, index: idx }]);
+  }
+
+  // function: one move per id among its siblings. Slots read before any
+  // patch applies.
+  function fileOrder(cv, ids, how) {
+    if (cv.docMode !== "file" || !ids || !ids.length) return false;
+    const patches = [];
+    for (let i = 0; i < ids.length; i++) {
+      const el = cv.patch.find(cv.idoc, ids[i]);
+      if (!el || !el.parentElement) continue;
+      const sibs = fileChildren(cv, el.parentElement);
+      const at = sibs.indexOf(el);
+      if (at === -1) continue;
+      let k = at;
+      if (how === "forward") k = Math.min(at + 1, sibs.length - 1);
+      else if (how === "back") k = Math.max(at - 1, 0);
+      else if (how === "front") k = sibs.length - 1;
+      else k = 0;
+      if (k === at) continue;
+      patches.push({
+        kind: "move", id: ids[i],
+        parent: parentKeyOf(cv, el.parentElement),
+        index: k
+      });
+    }
+    if (!patches.length) return false;
+    return applyPatches(cv, patches);
+  }
+
+  // function: one remove per id, deepest first.
+  function fileRemove(cv, ids) {
+    if (cv.docMode !== "file" || !ids || !ids.length) return false;
+    const rows = [];
+    for (let i = 0; i < ids.length; i++) {
+      const el = cv.patch.find(cv.idoc, ids[i]);
+      if (el) rows.push({ id: ids[i], depth: fileDepth(el) });
+    }
+    rows.sort((a, b) => b.depth - a.depth);
+    const patches = rows.map((r) => ({ kind: "remove", id: r.id }));
+    if (!patches.length) return false;
+    if (!applyPatches(cv, patches)) return false;
+    setSelection(cv, []);
+    return true;
+  }
+
+  // function: an outerHTML copy carrying a new id on every node.
+  function freshCopy(cv, el) {
+    const clone = el.cloneNode(true);
+    const nodes = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll("*")));
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].removeAttribute("data-od-runtime-id");
+      nodes[i].removeAttribute("data-od-editing");
+      nodes[i].removeAttribute("contenteditable");
+      nodes[i].setAttribute("data-od-id", cv.patch.newId("el"));
+    }
+    return { id: clone.getAttribute("data-od-id"), html: clone.outerHTML };
+  }
+
+  // function: one insert per id, each copy in the slot after its original.
+  function fileDuplicate(cv, ids) {
+    if (cv.docMode !== "file" || !ids || !ids.length) return false;
+    const rows = [];
+    for (let i = 0; i < ids.length; i++) {
+      const el = cv.patch.find(cv.idoc, ids[i]);
+      if (!el || !el.parentElement) continue;
+      const at = fileChildren(cv, el.parentElement).indexOf(el);
+      if (at === -1) continue;
+      rows.push({ el: el, parent: parentKeyOf(cv, el.parentElement), index: at });
+    }
+    // later slots first, so an earlier insert never shifts a later one
+    rows.sort((a, b) => b.index - a.index);
+    const patches = [];
+    const roots = [];
+    for (let j = 0; j < rows.length; j++) {
+      const copy = freshCopy(cv, rows[j].el);
+      patches.push({
+        kind: "insert", parent: rows[j].parent,
+        index: rows[j].index + 1, html: copy.html
+      });
+      roots.unshift(copy.id);
+    }
+    if (!patches.length) return false;
+    if (!applyPatches(cv, patches)) return false;
+    setSelection(cv, roots);
+    return true;
+  }
+
+  // function: shift the selection by a pixel offset. One patch per id, one
+  // history entry.
+  function fileNudge(cv, dx, dy) {
+    if (cv.docMode !== "file" || !cv.selection.length) return false;
+    const patches = [];
+    for (let i = 0; i < cv.selection.length; i++) {
+      const el = cv.patch.find(cv.idoc, cv.selection[i]);
+      if (!el) continue;
+      const base = readTranslateBase(el);
+      patches.push({
+        kind: "set-style", id: cv.selection[i],
+        styles: { transform: composeTransform(base.prefix, base.tx + dx, base.ty + dy) }
+      });
+    }
+    if (!patches.length) return false;
+    return applyPatches(cv, patches);
+  }
+
+  // function: true while file-mode edit gestures are allowed.
+  function fileEditable(cv) {
+    return cv.docMode === "file" && cv.mode === "canvas" && !cv.frozen && !cv.textEdit;
+  }
+
+  function onFileContextMenu(cv, e) {
+    if (!fileEditable(cv) || inChrome(e.target)) return;
+    const el = closestTarget(cv, e);
+    if (!el) { closeMenu(cv); return; }
+    e.preventDefault();
+    const id = cv.patch.stableId(el);
+    if (cv.selection.indexOf(id) === -1) setSelection(cv, [id]);
+    openMenuItems(cv, e.clientX, e.clientY, [
+      ["Group", () => fileGroup(cv, cv.selection.slice())],
+      ["Ungroup", () => fileUngroup(cv, cv.selection[0])],
+      ["Bring forward", () => fileOrder(cv, cv.selection.slice(), "forward")],
+      ["Send backward", () => fileOrder(cv, cv.selection.slice(), "back")],
+      ["Bring to front", () => fileOrder(cv, cv.selection.slice(), "front")],
+      ["Send to back", () => fileOrder(cv, cv.selection.slice(), "toBack")],
+      ["Duplicate", () => fileDuplicate(cv, cv.selection.slice())],
+      ["Delete", () => fileRemove(cv, cv.selection.slice())]
+    ]);
+  }
+
+  function onFileKeyDown(cv, e) {
+    if (!fileEditable(cv) || editingTarget(e.target)) return;
+    const mod = e.metaKey || e.ctrlKey;
+    const key = (e.key || "").toLowerCase();
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeMenu(cv);
+      setSelection(cv, []);
+      return;
+    }
+    if (mod && key === "s") { e.preventDefault(); doSave(cv); return; }
+    if (mod && key === "z") {
+      e.preventDefault();
+      if (e.shiftKey) fileRedo(cv); else fileUndo(cv);
+      return;
+    }
+    if (mod && key === "g") {
+      e.preventDefault();
+      if (e.shiftKey) fileUngroup(cv, cv.selection[0]);
+      else fileGroup(cv, cv.selection.slice());
+      return;
+    }
+    if (mod && key === "d") {
+      e.preventDefault();
+      fileDuplicate(cv, cv.selection.slice());
+      return;
+    }
+    if (mod && (e.code === "BracketRight" || e.key === "]" || e.key === "}")) {
+      e.preventDefault();
+      fileOrder(cv, cv.selection.slice(), e.shiftKey ? "front" : "forward");
+      return;
+    }
+    if (mod && (e.code === "BracketLeft" || e.key === "[" || e.key === "{")) {
+      e.preventDefault();
+      fileOrder(cv, cv.selection.slice(), e.shiftKey ? "toBack" : "back");
+      return;
+    }
+    if (!cv.selection.length) return;
+    if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      fileRemove(cv, cv.selection.slice());
+      return;
+    }
+    let dx = 0, dy = 0;
+    if (e.key === "ArrowLeft") dx = -1;
+    else if (e.key === "ArrowRight") dx = 1;
+    else if (e.key === "ArrowUp") dy = -1;
+    else if (e.key === "ArrowDown") dy = 1;
+    else return;
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    fileNudge(cv, dx * step, dy * step);
+  }
+
+  function onFileKeyUp(cv, e) {
+    if (e.key === "Escape" && cv.menu) closeMenu(cv);
+  }
+
   function bindFileListeners(cv) {
-    const d = cv.idoc;
+    const d = cv.idoc, w = cv.iwin;
     const on = (el, type, fn, opts) => {
       el.addEventListener(type, fn, opts);
       cv.listeners.push([el, type, fn, opts]);
@@ -1134,22 +1685,67 @@
     on(d, "pointerdown", (e) => onFilePointerDown(cv, e), true);
     on(d, "pointermove", (e) => onFilePointerMove(cv, e), true);
     on(d, "pointerup", (e) => onFilePointerUp(cv, e), true);
+    on(d, "pointercancel", () => onFilePointerCancel(cv), true);
+    on(d, "dragstart", (e) => onFileDragStart(cv, e), true);
     on(d, "click", (e) => onFileClick(cv, e), true);
     on(d, "dblclick", (e) => onFileDblClick(cv, e), true);
+    on(d, "contextmenu", (e) => onFileContextMenu(cv, e), true);
+    on(w, "keydown", (e) => onFileKeyDown(cv, e), true);
+    on(w, "keyup", (e) => onFileKeyUp(cv, e), true);
   }
 
   // ---------- load, save, export ----------
 
+  // function: the element that scrolls. The doc-mode viewport, else the
+  // iframe document.
+  function scrollerFor(cv) {
+    if (!cv.idoc) return null;
+    const vp = cv.docMode === "doc" ? viewport(cv) : null;
+    return vp || cv.idoc.scrollingElement;
+  }
+
+  // function: hold the active tab's text, dirty flag, selection, scroll and
+  // history in cv.tabs.
+  function stash(cv) {
+    if (!cv.path) return;
+    const sc = scrollerFor(cv);
+    cv.tabs[cv.path] = {
+      text: docText(cv),
+      dirty: !!cv.dirty,
+      selection: cv.selection.slice(),
+      scroll: { left: sc ? sc.scrollLeft : 0, top: sc ? sc.scrollTop : 0 },
+      history: cv.history || null
+    };
+  }
+
+  // function: put a tab's record back after its load. History is kept only
+  // when the loaded text matches the record's.
+  function restoreTab(cv, rec) {
+    if (!rec) return;
+    applySelection(cv, rec.selection || []);
+    const sc = scrollerFor(cv);
+    if (sc && rec.scroll) {
+      sc.scrollLeft = rec.scroll.left || 0;
+      sc.scrollTop = rec.scroll.top || 0;
+    }
+    cv.history = (rec.history && docText(cv) === rec.text) ? rec.history : null;
+    cv.dirty = !!rec.dirty;
+  }
+
   function loadTarget(cv) {
     const frame = cv.frame;
     const target = frame.options.target || "";
+    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
+    if (cv.path && cv.path !== target) stash(cv);
     detachListeners(cv);
     closeMenu(cv);
     cv.path = target;
     cv.docMode = modeForTarget(target);
     cv.dirty = false;
+    cv.history = null;
     cv.gesture = null;
     cv.drag = null;
+    cv.fileMarquee = null;
     cv.textEdit = null;
     cv.state = null;
     cv.render = null;
@@ -1170,6 +1766,12 @@
     }
     setStatus(cv, "loading…", true);
     renderBar(cv);
+    const rec = cv.tabs[target];
+    if (rec && rec.dirty) {
+      if (cv.docMode === "doc") loadDocMode(cv, rec.text);
+      else loadFileMode(cv, rec.text);
+      return;
+    }
     frame.send({ type: "open", path: target, inst: frame.id });
   }
 
@@ -1203,16 +1805,26 @@
       redraw(cv);
       cv.loading = false;
       cv.dirty = false;
+      restoreTab(cv, cv.tabs[cv.path]);
       renderBar(cv);
-      setStatus(cv, "loaded");
-      if (cv.mirrors) cv.mirrors.doc.emit({ mode: "doc", path: cv.path });
+      setStatus(cv, cv.dirty ? "dirty" : "loaded", cv.dirty);
+      // state: focus first, so a sibling on the old tab re-targets before the
+      // doc frame it filters by target arrives.
+      if (cv.mirrors) {
+        cv.mirrors.focus.emit({});
+        cv.mirrors.doc.emit({ mode: "doc", path: cv.path });
+      }
     });
   }
 
   function loadFileMode(cv, text) {
     const core = cv.core;
-    cv.source = String(text || "");
-    loadIframe(cv, core.baseDocument("file", cv.source)).then((idoc) => {
+    // state: ids stamped before the srcdoc, so iframe and source agree.
+    cv.source = cv.patch.normalize(String(text || "")).text;
+    // state: relative assets resolve through /raw/ at the file's folder.
+    const dir = String(cv.path || "").replace(/\/[^/]*$/, "");
+    const baseHref = dir ? "/raw" + encodeURI(dir) + "/" : "";
+    loadIframe(cv, core.baseDocument("file", cv.source, baseHref)).then((idoc) => {
       if (!cv.live) return;
       cv.idoc = idoc;
       cv.iwin = cv.iframe.contentWindow;
@@ -1220,10 +1832,15 @@
       const meta = idoc.querySelector('meta[name="' + BACK_LINK + '"]');
       cv.fromDoc = meta ? (meta.getAttribute("content") || "") : "";
       cv.dirty = false;
+      restoreTab(cv, cv.tabs[cv.path]);
+      ensureHistory(cv);
       renderBar(cv);
       paintFileSelection(cv);
-      setStatus(cv, "loaded");
-      if (cv.mirrors) cv.mirrors.doc.emit({ mode: "file", path: cv.path });
+      setStatus(cv, cv.dirty ? "dirty" : "loaded", cv.dirty);
+      if (cv.mirrors) {
+        cv.mirrors.focus.emit({});
+        cv.mirrors.doc.emit({ mode: "file", path: cv.path });
+      }
     });
   }
 
@@ -1252,6 +1869,37 @@
       setStatus(cv, "saving…", true);
       cv.frame.send({ type: "save", path: cv.path, content: content, inst: cv.frame.id });
     });
+  }
+
+  // function: one save frame for a cached tab's held text.
+  function saveRecord(cv, path, rec) {
+    return new Promise((resolve) => {
+      cv.pending[path] = { content: rec.text, resolve: resolve };
+      cv.frame.send({ type: "save", path: path, content: rec.text, inst: cv.frame.id });
+    });
+  }
+
+  // function: the active tab, then every dirty cached tab.
+  function doSaveAll(cv) {
+    const jobs = [doSave(cv)];
+    for (const path of Object.keys(cv.tabs)) {
+      const rec = cv.tabs[path];
+      if (!rec || !rec.dirty || path === cv.path) continue;
+      jobs.push(saveRecord(cv, path, rec));
+    }
+    return Promise.all(jobs).then((all) => all.every(Boolean));
+  }
+
+  // function: basenames of every dirty tab, active one first.
+  function dirtyNames(cv) {
+    const out = [];
+    if (cv.dirty) out.push(basename(cv.path) || "This canvas");
+    for (const path of Object.keys(cv.tabs)) {
+      const rec = cv.tabs[path];
+      if (!rec || !rec.dirty || path === cv.path) continue;
+      out.push(basename(path));
+    }
+    return out;
   }
 
   function exportPath(cv) {
@@ -1323,6 +1971,32 @@
     }
   }
 
+  // function: one button per open target. Hidden while the list is empty.
+  function renderTargetTabs(cv) {
+    const host = cv.targetsEl;
+    if (!host) return;
+    host.textContent = "";
+    if (!cv.targets.length) { host.hidden = true; return; }
+    host.hidden = false;
+    const active = cv.frame.options.target || "";
+    for (const path of cv.targets) {
+      const t = document.createElement("button");
+      t.type = "button";
+      t.className = "mxcv-tab" + (path === active ? " mxcv-on" : "");
+      t.textContent = basename(path);
+      t.title = path;
+      t.addEventListener("click", () => switchTab(cv, path));
+      host.appendChild(t);
+    }
+  }
+
+  // function: leave the active tab for another. The record is kept.
+  function switchTab(cv, path) {
+    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
+    stash(cv);
+    cv.frame.setOption("target", path);
+  }
+
   function setPage(cv, pid) {
     if (cv.docMode !== "doc" || !cv.state) return;
     cv.pageId = pid;
@@ -1334,6 +2008,7 @@
 
   function setMode(cv, mode) {
     if (MODES.indexOf(mode) < 0) return;
+    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
     cv.mode = mode;
     for (const key of Object.keys(cv.modeBtns)) {
       cv.modeBtns[key].classList.toggle("mxcv-btn-on", key === mode);
@@ -1359,6 +2034,7 @@
     }
     if (cv.zoomBar) cv.zoomBar.hidden = cv.docMode !== "doc";
     updateReadout(cv);
+    renderTargetTabs(cv);
     renderTabs(cv);
   }
 
@@ -1429,7 +2105,7 @@
 
   const MOD = {
     defaults: {
-      target: "", mode: "canvas", zoom: 100, selection: [],
+      target: "", targets: [], mode: "preview", zoom: 100, selection: [],
       schematic: false, page: "", assetMode: "data", backLink: true,
       annotate: false, snapshot: "raster", annotateTrack: ""
     },
@@ -1449,7 +2125,10 @@
         frame: frame, live: true, core: null,
         state: null, resolve: null, render: null, patch: null,
         iframe: null, idoc: null, iwin: null,
-        mode: MODES.indexOf(frame.options.mode) >= 0 ? frame.options.mode : "canvas",
+        mode: "preview",
+        targets: Array.isArray(frame.options.targets) ? frame.options.targets.slice() : [],
+        tabs: Object.create(null),
+        history: null,
         zoomPct: clampZoom(Number(frame.options.zoom) || 100),
         selection: Array.isArray(frame.options.selection) ? frame.options.selection.slice() : [],
         schematic: !!frame.options.schematic,
@@ -1464,10 +2143,12 @@
         path: "", docMode: "", source: "", fromDoc: "",
         dirty: false, loading: false, frozen: false,
         gesture: null, marquee: null, menu: null, spaceDown: false,
-        drag: null, textEdit: null, justDragged: false, selfSavedAt: 0,
+        drag: null, fileMarquee: null, textEdit: null,
+        justDragged: false, selfSavedAt: 0,
         listeners: [], mirrors: null, ro: null,
         pending: Object.create(null), drawSig: null,
-        modeBtns: {}, statusEl: null, statusTimer: null, pathEl: null, tabBar: null,
+        modeBtns: {}, statusEl: null, statusTimer: null, pathEl: null,
+        tabBar: null, targetsEl: null,
         readoutEl: null, zoomBar: null, schemBtn: null,
         exportBtn: null, fromEl: null, fromBtn: null
       };
@@ -1475,6 +2156,11 @@
       const wrap = document.createElement("div");
       wrap.className = "mxcv-wrap";
       wrap.appendChild(buildBar(cv, frame));
+
+      cv.targetsEl = document.createElement("div");
+      cv.targetsEl.className = "mxcv-targets";
+      cv.targetsEl.hidden = true;
+      wrap.appendChild(cv.targetsEl);
 
       cv.tabBar = document.createElement("div");
       cv.tabBar.className = "mxcv-tabs";
@@ -1490,6 +2176,13 @@
       body.appendChild(cv.ann.el);
       wrap.appendChild(body);
       frame.host.appendChild(wrap);
+
+      // state: the active target always has a tab.
+      if (frame.options.target && cv.targets.indexOf(frame.options.target) < 0) {
+        cv.targets.push(frame.options.target);
+        frame.setOption("targets", cv.targets.slice());
+      }
+      renderTargetTabs(cv);
 
       frame.subscribe(["file", "saved", "tree_dirty", "ade_init", "track_list"]);
       frame.send({ type: "roster", inst: frame.id });
@@ -1512,7 +2205,18 @@
         source: () => docText(cv),
         patchSource: (patch) => patchSource(cv, patch),
         mode: () => cv.mode,
-        doc: () => cv.idoc
+        doc: () => cv.idoc,
+        undo: () => fileUndo(cv),
+        redo: () => fileRedo(cv),
+        group: (ids) => fileGroup(cv, ids || cv.selection.slice()),
+        ungroup: (id) => fileUngroup(cv, id),
+        move: (id, parent, index) => fileMove(cv, id, parent, index),
+        forward: (ids) => fileOrder(cv, ids || cv.selection.slice(), "forward"),
+        back: (ids) => fileOrder(cv, ids || cv.selection.slice(), "back"),
+        front: (ids) => fileOrder(cv, ids || cv.selection.slice(), "front"),
+        toBack: (ids) => fileOrder(cv, ids || cv.selection.slice(), "toBack"),
+        remove: (ids) => fileRemove(cv, ids || cv.selection.slice()),
+        duplicate: (ids) => fileDuplicate(cv, ids || cv.selection.slice())
       };
 
       MX.canvasCore().then((core) => {
@@ -1529,22 +2233,25 @@
 
     canClose(frame) {
       const cv = frame._canvasState;
-      if (!cv || !cv.dirty) return true;
+      if (!cv) return true;
+      const names = dirtyNames(cv);
+      if (!names.length) return true;
       return MX.ui.choose("Unsaved changes",
-        (cv.path || "This canvas") + " has unsaved changes.", [
+        names.join(", ") + (names.length > 1 ? " have" : " has") + " unsaved changes.", [
           { label: "Save", value: "save", cls: "mx-go" },
           { label: "Discard", value: "discard" },
           { label: "Cancel", value: "cancel" }
         ]).then((choice) => {
           if (choice === "cancel") return false;
           if (choice === "discard") return true;
-          return doSave(cv).then((ok) => !!ok);
+          return doSaveAll(cv).then((ok) => !!ok);
         });
     },
 
     unmount(frame) {
       const cv = frame._canvasState;
       if (!cv) return;
+      if (cv.docMode === "file" && cv.idoc) endGestures(cv, false);
       cv.live = false;
       if (cv.statusTimer) { clearTimeout(cv.statusTimer); cv.statusTimer = null; }
       detachListeners(cv);
@@ -1582,16 +2289,23 @@
           && (msg.result.startsWith("[save denied")
             || msg.result.startsWith("[WRITE refused")
             || msg.result.startsWith("[WRITE failed")));
+        const held = cv.tabs[msg.path];
         if (rec && msg.inst === frame.id) {
           delete cv.pending[msg.path];
           cv.selfSavedAt = Date.now();
           if (!denied && msg.path === cv.path) cv.dirty = false;
+          if (!denied && held && held.text === rec.content) held.dirty = false;
           setStatus(cv, denied ? (msg.result || "refused") : "saved", denied);
           rec.resolve(!denied);
           return;
         }
         // another instance wrote this path: take its copy when we hold none
         if (msg.inst !== frame.id && msg.path === cv.path && !denied) reopenIfClean(cv);
+        // a cached tab goes clean only when the write matches what it holds
+        if (msg.inst !== frame.id && !denied && held
+          && typeof msg.content === "string" && held.text === msg.content) {
+          held.dirty = false;
+        }
         return;
       }
 
@@ -1602,7 +2316,17 @@
       const cv = frame._canvasState;
       if (!cv) return;
       if (key === "target") {
+        renderTargetTabs(cv);
         if (cv.core) loadTarget(cv);
+        return;
+      }
+      if (key === "targets") {
+        cv.targets = Array.isArray(value) ? value.slice() : [];
+        const active = frame.options.target || "";
+        if (active && cv.targets.indexOf(active) < 0) {
+          frame.setOption("target", cv.targets[0] || "");
+        }
+        renderTargetTabs(cv);
         return;
       }
       if (key === "mode") { setMode(cv, value); return; }
@@ -1642,6 +2366,7 @@
       if (!cv) return JSON.parse(JSON.stringify(frame.options));
       return {
         target: frame.options.target || "",
+        targets: cv.targets.slice(),
         mode: cv.mode,
         zoom: cv.zoomPct,
         selection: cv.selection.slice(),

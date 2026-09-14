@@ -220,9 +220,31 @@
     return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   }
 
+  // provider id to kind, fetched once
+  let _providerKinds = null;
+  function loadProviderKinds() {
+    if (_providerKinds) return Promise.resolve(_providerKinds);
+    return fetch('/api/library/providers')
+      .then((r) => r.json())
+      .then((d) => {
+        const rows = Array.isArray(d) ? d : (d && d.list) || [];
+        _providerKinds = Object.create(null);
+        for (const row of rows) {
+          if (row && row.id) _providerKinds[row.id] = row.kind || '';
+        }
+        return _providerKinds;
+      })
+      .catch(() => (_providerKinds = Object.create(null)));
+  }
+
+  function isCloud(provider) {
+    return !!(_providerKinds && _providerKinds[provider] === 'cloud');
+  }
+
   function makeBusyMeters(els) {
     const e = els || {};
     let phase = 'idle', phaseStart = 0;
+    let cachePeak = 0;
     let waitMs = 0, thinkMs = 0, workMs = 0;
     let timerTick = null;
     let hmmTimeEl = null, hmmStartT = 0;
@@ -260,7 +282,7 @@
       else if (phase === 'working')  workMs  += now - phaseStart;
       const wasBusy = phase && phase !== 'idle';
       const nowBusy = next !== 'idle';
-      if (!wasBusy && nowBusy) { waitMs = 0; thinkMs = 0; workMs = 0; }
+      if (!wasBusy && nowBusy) { waitMs = 0; thinkMs = 0; workMs = 0; cachePeak = 0; }
       phase = next;
       phaseStart = now;
       if (nowBusy && !timerTick) timerTick = setInterval(renderTimers, 250);
@@ -279,8 +301,17 @@
     function setMeters(d) {
       if (!d) return;
       const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
-      if (e.metCtx)   e.metCtx.textContent   = `ctx ${fmtK(d.ctx_used)}/${fmtK(d.ctx_max)}`;
-      if (e.metCache) e.metCache.textContent = `cache ${fmtK(d.cached || 0)}`;
+      // cloud: cache only, peak of the turn; local: ctx only
+      const cloud = typeof e.cloud === 'function' && e.cloud();
+      cachePeak = Math.max(cachePeak, d.cached || 0);
+      if (e.metCtx) {
+        e.metCtx.hidden = cloud;
+        e.metCtx.textContent = `ctx ${fmtK(d.ctx_used || 0)}/${fmtK(d.ctx_max || 0)}`;
+      }
+      if (e.metCache) {
+        e.metCache.hidden = !cloud;
+        e.metCache.textContent = `cache ${fmtK(cachePeak)}`;
+      }
       if (e.metNow)   e.metNow.textContent   = `t/s ${(d.ts_now || 0).toFixed(1)}`;
       if (e.metAvg)   e.metAvg.textContent   = `avg ${(d.ts_avg || 0).toFixed(1)}`;
     }
@@ -291,6 +322,7 @@
     }
 
     function reset() {
+      cachePeak = 0;
       if (timerTick) { clearInterval(timerTick); timerTick = null; }
       phase = 'idle'; phaseStart = performance.now();
       waitMs = 0; thinkMs = 0; workMs = 0; hmmTimeEl = null;
@@ -423,7 +455,11 @@
 .cp-jump-bottom{ position:absolute; right:14px; bottom:10px; z-index:6; background:var(--accent-mid); color:var(--accent-dim); border:1px solid var(--accent-bdr); border-radius:14px; padding:3px 11px; font-size:10.5px; cursor:pointer; box-shadow:0 2px 8px var(--shadow-1); }
 .cp-jump-bottom:hover{ background:var(--accent-dark); color:var(--text-1); }
 .cp-jump-bottom.hidden{ display:none; }
-.turnblock{ display:flex; flex-direction:column; gap:8px; padding:7px 8px; margin:2px -4px; border-radius:8px; cursor:pointer; border:1px solid transparent; }
+.cp-zoom{ display:flex; align-items:center; gap:2px; font:10px/1.4 var(--mono); color:var(--text-4); }
+.cp-zoom button{ background:var(--surface-1); border:1px solid var(--border); color:var(--text-3); border-radius:3px; font:10px/1 var(--mono); padding:2px 5px; cursor:pointer; }
+.cp-zoom button:hover{ color:var(--text-1); }
+.cp-zoom-val{ min-width:32px; text-align:center; cursor:pointer; }
+.turnblock{ display:flex; flex-direction:column; gap:3px; padding:4px 6px; margin:1px -4px; border-radius:8px; cursor:pointer; border:1px solid transparent; }
 .turnblock.flash{ animation:tbFlash 1.8s ease-out 1; }
 @keyframes tbFlash{ 0%,45%{ background:rgba(57,135,229,.24); border-color:var(--gate-blue); } 100%{ background:transparent; border-color:transparent; } }
 .tb-foot{ display:flex; align-items:center; gap:6px; font-size:9.5px; color:var(--text-4); font-family:var(--mono); padding-left:2px; }
@@ -442,8 +478,8 @@
 .cp-stop:disabled{ opacity:.38; cursor:default; }
 .cp-stop.cp-stop-fired{ animation:cpStopFired .6s ease-out 1; }
 @keyframes cpStopFired{ 0%{ background:var(--fill-red); border-color:var(--gate-red); color:var(--gate-red); } 100%{ background:var(--surface-2); border-color:var(--border); color:var(--text-3); } }
-.msg{ max-width:94%; line-height:1.45; }
-.msg .who{ font-size:calc(9.5px * var(--cp-zoom, 1)); color:var(--text-4); margin-bottom:3px; text-transform:uppercase; letter-spacing:.06em; }
+.msg{ max-width:94%; line-height:1.3; }
+.msg .who{ font-size:calc(9.5px * var(--cp-zoom, 1)); color:var(--text-4); margin-bottom:1px; text-transform:uppercase; letter-spacing:.06em; }
 .msg.user{ align-self:flex-end; }
 .msg.user .bub{ background:rgba(57,135,229,0.13); border:1px solid rgba(57,135,229,.30); color:#dbe8fa; }
 .msg.agent .bub{ background:var(--surface-2); border:1px solid var(--border); }
@@ -451,23 +487,25 @@
 .msg.mail .who{ color:var(--text-2); }
 .msg.notice .bub{ background:var(--fill-white); border:1px dashed var(--border-2); color:var(--text-3); font-style:italic; }
 .msg.notice .who{ color:var(--text-4); }
-.bub{ padding:8px 10px; border-radius:9px; white-space:pre-wrap; font-size:calc(12.5px * var(--cp-zoom, 1)); overflow-wrap:anywhere; }
-.bub p{ margin:0 0 6px; }
-.bub ul, .bub ol{ margin:0 0 6px; padding-left:18px; }
-.bub h1, .bub h2, .bub h3, .bub h4{ margin:6px 0 4px; font-size:12px; }
+.bub{ padding:5px 8px; border-radius:7px; font-size:calc(12px * var(--cp-zoom, 1)); overflow-wrap:anywhere; }
+.bub > :last-child{ margin-bottom:0; }
+.bub p{ margin:0 0 4px; }
+.bub ul, .bub ol{ margin:0 0 4px; padding-left:18px; }
+.bub li > p{ margin:0; }
+.bub h1, .bub h2, .bub h3, .bub h4{ margin:4px 0 2px; font-size:calc(12px * var(--cp-zoom, 1)); }
 .bub blockquote{ margin:0 0 6px; padding-left:8px; border-left:2px solid var(--gridline); color:var(--text-2); }
 .bub table{ border-collapse:collapse; margin-bottom:6px; }
 .bub th, .bub td{ border:1px solid var(--gridline); padding:2px 5px; }
-.bub pre, .bub .cq-plain{ background:var(--well); border:1px solid var(--gridline); border-radius:3px; padding:6px; overflow-x:auto; font-family:var(--mono); font-size:11px; white-space:pre-wrap; margin:0 0 6px; }
-.bub code{ font-family:var(--mono); font-size:11px; }
+.bub pre, .bub .cq-plain{ background:var(--well); border:1px solid var(--gridline); border-radius:3px; padding:6px; overflow-x:auto; font-family:var(--mono); font-size:calc(11px * var(--cp-zoom, 1)); white-space:pre-wrap; margin:0 0 4px; }
+.bub code{ font-family:var(--mono); font-size:calc(11px * var(--cp-zoom, 1)); }
 .bub pre code{ background:transparent; padding:0; }
 details.cot{ margin:2px 0 4px; }
-details.cot summary{ color:var(--text-4); font:11px/1.5 var(--mono); cursor:pointer; user-select:none; list-style:none; padding:1px 0; }
+details.cot summary{ color:var(--text-4); font:calc(11px * var(--cp-zoom, 1))/1.4 var(--mono); cursor:pointer; user-select:none; list-style:none; padding:1px 0; }
 details.cot summary::-webkit-details-marker{ display:none; }
 details.cot summary::before{ content:"▶ "; }
 details.cot[open] summary::before{ content:"▼ "; }
 .hmm-time{ margin-left:8px; color:var(--text-2); font-variant-numeric:tabular-nums; opacity:.8; }
-details.cot .cot-body{ color:var(--text-3); padding-left:14px; margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere; }
+details.cot .cot-body{ color:var(--text-3); font-size:calc(11.5px * var(--cp-zoom, 1)); padding-left:14px; margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere; }
 @keyframes hmm-h{ 0%,100%{ opacity:.25 } 50%{ opacity:1 } }
 @keyframes hmm-d{ 0%,100%{ opacity:.15 } 50%{ opacity:.85 } }
 details.cot.thinking .hmm-l{ animation:hmm-h 2s ease-in-out infinite; }
@@ -477,14 +515,14 @@ details.cot.thinking .hmm-l:nth-child(4){ animation-delay:.6s; }
 details.cot.thinking .hmm-d1{ animation:hmm-d 2s ease-in-out infinite .8s; }
 details.cot.thinking .hmm-d2{ animation:hmm-d 2s ease-in-out infinite 1.2s; }
 details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
-.cp-script .bub.dim{ align-self:stretch; background:none; border:none; color:var(--text-3); font:11px/1.5 var(--mono); padding:2px 2px; }
-.cp-script .msg-mark{ align-self:flex-start; background:none; border:none; color:var(--text-4); font:10.5px/1.5 var(--mono); padding:1px 2px; letter-spacing:.03em; opacity:.9; }
+.cp-script .bub.dim{ align-self:stretch; background:none; border:none; color:var(--text-3); font:calc(11px * var(--cp-zoom, 1))/1.4 var(--mono); padding:1px 2px; }
+.cp-script .msg-mark{ align-self:flex-start; background:none; border:none; color:var(--text-4); font:calc(10.5px * var(--cp-zoom, 1))/1.4 var(--mono); padding:1px 2px; letter-spacing:.03em; opacity:.9; }
 .code-fence{ display:block; background:var(--deep); border:1px solid var(--border); border-radius:4px; margin:4px 0; overflow:hidden; }
 .code-fence-header{ display:flex; align-items:center; justify-content:space-between; padding:3px 8px; background:var(--surface-2); border-bottom:1px solid var(--gridline); min-height:26px; }
 .code-fence-lang{ font:11px/1.5 var(--mono); color:var(--text-4); text-transform:lowercase; }
 .code-fence-copy{ background:var(--surface-3); color:var(--text-4); border:1px solid var(--border); border-radius:3px; padding:1px 8px; font:11px/1.5 var(--mono); cursor:pointer; }
 .code-fence-copy:hover{ background:var(--well); color:var(--text-1); }
-.code-fence-body{ margin:0; padding:6px 12px; overflow-x:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.5 var(--mono); color:var(--text-3); }
+.code-fence-body{ margin:0; padding:6px 12px; overflow-x:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:calc(12px * var(--cp-zoom, 1))/1.4 var(--mono); color:var(--text-3); }
 .code-fence-body code{ font:inherit; background:none; }
 .cp-busy{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:4px 10px; background:var(--surface-3); border-top:1px solid var(--gridline); font:12px/1.5 var(--mono); color:var(--text-2); letter-spacing:.18em; flex-shrink:0; }
 .cp-busy.busy-hidden{ display:none; }
@@ -555,7 +593,7 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
   }
 
   MX.registerWidget('anchor_chat', {
-    defaults: { region: '', speech_enabled: false },
+    defaults: { region: '', speech_enabled: false, zoom: 1 },
 
     mount(frame) {
       const c = frame._anchorChat = { region: '', regions: [], following: null, voice: '' };
@@ -574,9 +612,43 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
       c.livePill.textContent = 'not live';
       c.speechNote = document.createElement('span');
       c.speechNote.className = 'cp-speech';
+      // zoom bar: text size for this instance, saved in options
+      const zoomBox = document.createElement('span');
+      zoomBox.className = 'cp-zoom';
+      const zoomOut = document.createElement('button');
+      zoomOut.type = 'button';
+      zoomOut.textContent = '−';
+      zoomOut.title = 'smaller text';
+      const zoomVal = document.createElement('span');
+      zoomVal.className = 'cp-zoom-val';
+      zoomVal.title = 'reset text size';
+      const zoomIn = document.createElement('button');
+      zoomIn.type = 'button';
+      zoomIn.textContent = '+';
+      zoomIn.title = 'larger text';
+      zoomBox.appendChild(zoomOut);
+      zoomBox.appendChild(zoomVal);
+      zoomBox.appendChild(zoomIn);
+      const applyZoom = (z) => {
+        const v = Math.min(2, Math.max(0.6, Math.round((Number(z) || 1) * 10) / 10));
+        frame.options.zoom = v;
+        wrap.style.setProperty('--cp-zoom', String(v));
+        zoomVal.textContent = Math.round(v * 100) + '%';
+      };
+      const stepZoom = (z) => {
+        applyZoom(z);
+        if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
+      };
+      zoomOut.onclick = () => stepZoom((frame.options.zoom || 1) - 0.1);
+      zoomIn.onclick = () => stepZoom((frame.options.zoom || 1) + 0.1);
+      zoomVal.onclick = () => stepZoom(1);
+      c.applyZoom = applyZoom;
+      applyZoom(frame.options.zoom);
+
       head.appendChild(c.picker);
       head.appendChild(c.livePill);
       head.appendChild(c.speechNote);
+      head.appendChild(zoomBox);
 
       const scriptWrap = document.createElement('div');
       scriptWrap.className = 'cp-scriptwrap';
@@ -661,7 +733,12 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
       const busyMeters = makeBusyMeters({
         busyEl, busyWord, tWaitEl: tWait, tThinkEl: tThink, tWorkEl: tWork,
         metStatus, metCtx, metCache, metNow, metAvg,
+        cloud: () => {
+          const row = c.regions.find((r) => r.id === c.region);
+          return !!(row && isCloud(row.provider));
+        },
       });
+      loadProviderKinds();
       const pin = makeScrollPin(scriptEl, jumpBtn);
       const _stream = { liveBub: null, liveText: '', thinkingEl: null };
       let trackName = '';
@@ -776,6 +853,7 @@ details.cot.thinking .hmm-d3{ animation:hmm-d 2s ease-in-out infinite 1.6s; }
 
     onOption(frame, key, value) {
       if (key === 'region') { _bind(frame, value || ''); return; }
+      if (key === 'zoom' && frame._anchorChat) { frame._anchorChat.applyZoom(value); return; }
       if (key === 'speech_enabled' && !frame.options.speech_enabled) {
         _releaseSpeechLock(frame.id);
         if (window.speechSynthesis) window.speechSynthesis.cancel();

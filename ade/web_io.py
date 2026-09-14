@@ -160,11 +160,11 @@ class AdeSenders:
             self.ws.send(json.dumps({"type": "tree", "data": data, "inst": inst}))
 
     # ok is the gate outcome: false when the write was refused or failed
-    def send_saved(self, path, result, inst="", ok=True):
+    def send_saved(self, path, result, inst="", ok=True, content=""):
         with self._send_lock:
             self.ws.send(json.dumps({"type": "saved", "path": path,
                                      "inst": inst, "ok": bool(ok),
-                                     "result": result}))
+                                     "result": result, "content": content}))
 
     def send_deleted(self, path, result):
         with self._send_lock:

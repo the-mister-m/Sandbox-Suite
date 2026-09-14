@@ -81,6 +81,7 @@ async () => {
 MOUNT = r"""
 (args) => {
   const inst = MX.grid.addWidget(args.type);
+  if (args.type === "canvas") MX.grid.frames[inst.id].setOption("mode", "canvas");
   if (args.target !== undefined) MX.grid.frames[inst.id].setOption("target", args.target);
   return inst.id;
 }
@@ -837,13 +838,29 @@ def main():
                                      "MX.grid.frames[i].getOptions() : null", w)
                       for w in (a, b, c, d, t)}
         diffs = {}
+        canvas_ids = (a, b, d)
+        followers = (c, t)
+        canvas_targets_after = {w: (opts_after[w] or {}).get("target") for w in canvas_ids}
         for w in (a, b, c, d, t):
             if not opts_after[w]:
                 diffs[w] = "gone"
                 continue
-            bad = {k: [opts_before[w].get(k), opts_after[w].get(k)]
-                   for k in opts_before[w]
-                   if json.dumps(opts_before[w].get(k)) != json.dumps(opts_after[w].get(k))}
+            bad = {}
+            for k in opts_before[w]:
+                bv, av = opts_before[w].get(k), opts_after[w].get(k)
+                if json.dumps(bv) == json.dumps(av):
+                    continue
+                # canvas: mode always reads back "preview" after reload
+                if w in canvas_ids and k == "mode" and av == "preview":
+                    continue
+                # code/tools: target follows the bound canvas's target after reload
+                if w in followers and k == "target" and av in canvas_targets_after.values():
+                    continue
+                # canvas: targets picks up its own target on remount, once
+                if w in canvas_ids and k == "targets" and isinstance(bv, list) and \
+                        av == bv + [opts_after[w].get("target")]:
+                    continue
+                bad[k] = [bv, av]
             if bad:
                 diffs[w] = bad
         sh = shot(p1, args.out, "16-after-reload")

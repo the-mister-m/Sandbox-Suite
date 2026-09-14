@@ -1,0 +1,46 @@
+[1] PASS — Canvas on the fixture draws inside the iframe — docMode=doc drawn=3 widgets=3 pages=2
+[2] PASS — Tools beside the canvas, canvas focused: a click shows fields — canvasOpt='focused' titles=['Text', 'Box', 'Color', 'Link', 'Notes'] fields=['Content', 'Mode', 'Tag', 'Size', 'Weight', 'Align', 'Font', 'X', 'Y', 'Width', 'Height', 'Padding', 'Margin', 'Corner', 'Shadow'] who='following canvas-mu0i3ash-1'
+[3] PASS — drag 40px right: Tools box x moves, dirty, cmd-s saves, file changed — box {'x': 40, 'y': 40, 'w': 320, 'h': 80} -> {'x': 80, 'y': 40, 'w': 320, 'h': 80} disk={'x': 80, 'y': 40, 'w': 320, 'h': 80} status after drag='dirty' cv.dirty=True after_save='saved' tools_box_fields_before={'Content': 'Phase 3 headed heading', 'Mode': 'literal', 'Tag': 'p', 'Size': 'md', 'Weight': 'normal', 'Align': 'left', 'Font': 'sans', 'X': '40', 'Y': '40', 'Width': '320', 'Height': '80', 'Padding': '8', 'Margin': '0', 'Corner': '0', 'Shadow': 'none'} after={'Content': 'Phase 3 headed heading', 'Mode': 'literal', 'Tag': 'p', 'Size': 'md', 'Weight': 'normal', 'Align': 'left', 'Font': 'sans', 'X': '80', 'Y': '40', 'Width': '320', 'Height': '80', 'Padding': '8', 'Margin': '0', 'Corner': '0', 'Shadow': 'none'} x_field_present=True
+[4] PASS — typing in Tools shows on the canvas after the debounce — iframe_text='\n3H TYPED TEXTA paragraph of headed proof text.badge\n\n'
+[5] PASS — Layers: dragging the last widget to the top reorders the canvas DOM — before=['wg_ww9v46', 'wg_rj53s8', 'wg_kaj804'] after=['wg_kaj804', 'wg_ww9v46', 'wg_rj53s8'] payload='wg_kaj804'
+[6] FAIL — Library: dragging a card into the canvas adds a widget — widgets 3 -> 5 drawn=5 payload='status.badge'
+[7] FAIL — marquee two, arrow right moves both, cmd-z returns both — selection=['wg_ww9v46'] moved=['wg_ww9v46'] returned=['wg_ww9v46']
+[8] PASS — Tools follows each canvas, then pins to the first and stays — a=canvas-mu0i3ash-1 b=canvas-mu0i3i39-3 clicked_a_focused='canvas-mu0i3ash-1' clicked_b_focused='canvas-mu0i3i39-3' pinned canvasOpt='canvas-mu0i3ash-1' who='pinned canvas-mu0i3ash-1' who_a='following canvas-mu0i3ash-1' who_b='following canvas-mu0i3i39-3'
+[9] FAIL — Code scrolls to the header; a css edit re-renders one widget only — scrolled=False want_line=17 visible=[1, 25] decor=0 lock='Unlocked' edited=True apply_clicked=True target_node_replaced=True untouched_nodes=['wg_kaj804', 'wg_ww9v46', 'wg_n21arh', 'wg_dihwcm'] notice=''
+[10] PASS — Code doc view with docEditable: an edited box moves the canvas — parsed=True apply_clicked=True box {'x': 40, 'y': 300, 'w': 160, 'h': 32} -> {'x': 40, 'y': 420, 'w': 160, 'h': 32} notice=''
+[11] PASS — Export writes the HTML next to the doc with the back-link meta — path=/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.html exists=True meta=['<meta name="code-canvas-source" content="/Users/moth3rship/Desktop/AI Design/Sandbox Suite/docs/scratchpad/fixture.json">']
+Traceback (most recent call last):
+  File "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/tests/phase3_headed_trace.py", line 940, in <module>
+    main()
+    ~~~~^^
+  File "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/tests/phase3_headed_trace.py", line 706, in main
+    st = p1.evaluate(STATE, d)
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 9122, in evaluate
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.evaluate(expression=expression, arg=mapping.to_impl(arg))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_page.py", line 469, in evaluate
+    return await self._main_frame.evaluate(expression, arg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 323, in evaluate
+    await self._channel.send(
+    ...<6 lines>...
+    )
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of undefined (reading '_canvasState')
+    at eval (eval at evaluate (:302:30), <anonymous>:2:33)
+    at UtilityScript.evaluate (<anonymous>:309:18)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

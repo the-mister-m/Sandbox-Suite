@@ -1,18 +1,27 @@
 // canvas patch — file-mode patcher, the Open Design source-patches slice
 //
 // MX.canvasPatch(): {parse, serialize, assignIds, find, apply,
-// domPath, stableId, HOST_NODE_SELECTOR, KINDS}.
+// applyToDoc, normalize, newId, history, domPath, stableId,
+// HOST_NODE_SELECTOR, KINDS}.
 // parse(text) returns a Document, serialize(doc) the text back. A body
 // fragment round-trips as a fragment, a full document as a full
 // document; parse marks which on the doc, serialize(doc, original)
 // overrides.
 // assignIds(doc) stamps data-od-id from the dom path on every body
 // element that lacks one. find(doc, id) walks data-od-id,
-// data-od-runtime-id, data-od-source-path, then path-N-N.
-// apply(text, patch) returns the new text: set-style,
-// replace-outer-html, set-css-token, set-text, set-full-source. The
-// Open Design kind names set-outer-html and set-token are accepted as
-// aliases. A patch that cannot land returns the text unchanged.
+// data-od-runtime-id, data-od-source-path, then path-N-N, or resolves
+// "__body__" to the body.
+// applyToDoc(doc, patch) mutates doc for one patch, returns
+// {ok, inverse}. Kinds: set-style, replace-outer-html, set-css-token,
+// set-text, wrap, unwrap, move, remove, insert. set-full-source is
+// refused here; it only applies through apply. The Open Design kind
+// names set-outer-html and set-token are accepted as aliases.
+// apply(text, patch) parses, calls applyToDoc, serializes, returns
+// {text, inverse}. A refused patch returns {text: text, inverse: null}
+// and the input text is unchanged.
+// normalize(text) parses, assignIds, serializes, returns {text, n}.
+// newId(prefix) returns "prefix_" plus six lowercase alphanumerics.
+// history() holds an undo/redo stack of {patches, inverses} entries.
 
 (function () {
   "use strict";
@@ -31,7 +40,8 @@
 
   var KINDS = [
     "set-style", "replace-outer-html", "set-css-token",
-    "set-text", "set-full-source"
+    "set-text", "set-full-source",
+    "wrap", "unwrap", "move", "remove", "insert"
   ];
 
   var ALIAS = {
@@ -161,6 +171,24 @@
       || findElementByPath(doc, id);
   }
 
+  // function: a parent's element children, host nodes skipped.
+  function childrenOf(parent) {
+    if (!parent) return [];
+    return Array.prototype.slice.call(parent.children)
+      .filter(function (child) { return !isHostNode(child); });
+  }
+
+  // function: an element's siblings, host nodes skipped.
+  function siblingsOf(el) {
+    return el ? childrenOf(el.parentElement) : [];
+  }
+
+  // function: the child at a non-host-node index, or null past the end.
+  function childAt(parent, index) {
+    var kids = childrenOf(parent);
+    return (index >= 0 && index < kids.length) ? kids[index] : null;
+  }
+
   function hasElementChildren(el) {
     return Array.prototype.slice.call(el.children)
       .some(function (child) { return child.nodeType === 1; });
@@ -220,72 +248,325 @@
       next.setAttribute("data-od-edit", el.getAttribute("data-od-edit") || "");
     }
     el.replaceWith(next);
-    return { ok: true };
+    return { ok: true, next: next };
   }
 
-  // function: rewrite one declaration inside the first style block holding it.
+  // function: rewrite one declaration inside the first style block holding it,
+  // returns the prior value for the inverse.
   function setCssToken(doc, token, value) {
     var styles = Array.prototype.slice.call(doc.querySelectorAll("style"));
     var pattern = new RegExp("(" + escapeRegExp(token) + "\\s*:\\s*)([^;]+)(;)");
     for (var i = 0; i < styles.length; i++) {
       var text = styles[i].textContent || "";
-      if (!pattern.test(text)) continue;
+      var match = text.match(pattern);
+      if (!match) continue;
       styles[i].textContent = text.replace(pattern, "$1" + value + "$3");
-      return true;
+      return { ok: true, prev: match[2] };
     }
-    return false;
+    return { ok: false, prev: null };
   }
 
-  function apply(text, patch) {
-    if (!patch) return text;
-    var kind = ALIAS[patch.kind] || patch.kind;
-    if (kind === "set-full-source") return patch.source;
+  // function: the id a parent resolves to for an inverse patch: __body__
+  // for the body, its own data-od-id else a stamped stable id.
+  function parentKeyFor(doc, parent) {
+    if (!parent) return null;
+    if (parent === doc.body) return "__body__";
+    return parent.getAttribute("data-od-id") || stableId(parent);
+  }
 
-    var doc = parse(text);
-    if (!doc) {
-      console.warn("canvasPatch: could not parse source");
-      return text;
-    }
-
-    if (kind === "set-css-token") {
-      if (!setCssToken(doc, patch.token, patch.value)) {
-        console.warn("canvasPatch: token not found:", patch.token);
-        return text;
-      }
-      return serialize(doc, text);
-    }
-
+  // function: set-style. inverse: set-style with the prior values.
+  function doSetStyle(doc, patch) {
     var el = find(doc, patch.id);
     if (!el) {
       console.warn("canvasPatch: target not found:", patch.id);
-      return text;
+      return null;
     }
+    var styles = patch.styles || {};
+    var keys = Object.keys(styles);
+    var prior = {};
+    for (var i = 0; i < keys.length; i++) {
+      var cssName = camelToKebab(keys[i]);
+      prior[keys[i]] = el.style.getPropertyValue(cssName) || "";
+    }
+    setInlineStyles(el, styles);
+    return { ok: true, inverse: { kind: "set-style", id: patch.id, styles: prior } };
+  }
 
-    if (kind === "set-text") {
-      if (hasElementChildren(el)) {
-        var soleText = soleMeaningfulTextNode(el);
-        if (!soleText) {
-          console.warn("canvasPatch: nested markup, set-text refused:", patch.id);
-          return text;
-        }
-        soleText.nodeValue = patch.value;
-      } else {
-        el.textContent = patch.value;
+  // function: set-text. inverse: set-text with the prior text.
+  function doSetText(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: target not found:", patch.id);
+      return null;
+    }
+    var prior;
+    if (hasElementChildren(el)) {
+      var soleText = soleMeaningfulTextNode(el);
+      if (!soleText) {
+        console.warn("canvasPatch: nested markup, set-text refused:", patch.id);
+        return null;
       }
-    } else if (kind === "set-style") {
-      setInlineStyles(el, patch.styles);
-    } else if (kind === "replace-outer-html") {
-      var replaced = replaceOuterHtml(doc, el, patch.html);
-      if (!replaced.ok) {
-        console.warn("canvasPatch:", replaced.error);
-        return text;
+      prior = soleText.nodeValue;
+      soleText.nodeValue = patch.value;
+    } else {
+      prior = el.textContent;
+      el.textContent = patch.value;
+    }
+    return { ok: true, inverse: { kind: "set-text", id: patch.id, value: prior } };
+  }
+
+  // function: replace-outer-html. inverse: replace-outer-html with the
+  // prior outerHTML, targeting the id the replacement now carries.
+  function doReplaceOuterHtml(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: target not found:", patch.id);
+      return null;
+    }
+    var priorHtml = el.outerHTML;
+    var replaced = replaceOuterHtml(doc, el, patch.html);
+    if (!replaced.ok) {
+      console.warn("canvasPatch:", replaced.error);
+      return null;
+    }
+    var targetId = replaced.next.getAttribute("data-od-id") || patch.id;
+    return { ok: true, inverse: { kind: "replace-outer-html", id: targetId, html: priorHtml } };
+  }
+
+  // function: set-css-token. inverse: set-css-token with the prior value.
+  function doSetCssToken(doc, patch) {
+    var result = setCssToken(doc, patch.token, patch.value);
+    if (!result.ok) {
+      console.warn("canvasPatch: token not found:", patch.token);
+      return null;
+    }
+    return { ok: true, inverse: { kind: "set-css-token", token: patch.token, value: result.prev } };
+  }
+
+  // function: wrap. inverse: unwrap the same id.
+  function doWrap(doc, patch) {
+    var ids = patch.ids || [];
+    if (!ids.length) {
+      console.warn("canvasPatch: wrap refused, no ids:", patch.id);
+      return null;
+    }
+    var elements = ids.map(function (id) { return find(doc, id); });
+    for (var i = 0; i < elements.length; i++) {
+      if (!elements[i]) {
+        console.warn("canvasPatch: wrap target not found:", ids[i]);
+        return null;
+      }
+    }
+    var parent = elements[0].parentElement;
+    for (var j = 0; j < elements.length; j++) {
+      if (elements[j].parentElement !== parent) {
+        console.warn("canvasPatch: wrap refused, not siblings:", patch.id);
+        return null;
+      }
+    }
+    var kids = childrenOf(parent);
+    var selected = kids.filter(function (kid) { return elements.indexOf(kid) !== -1; });
+    var slots = selected.map(function (kid) { return kids.indexOf(kid); });
+    var wrapper = doc.createElement("div");
+    wrapper.setAttribute("data-od-id", patch.id);
+    wrapper.setAttribute("data-od-group", "1");
+    parent.insertBefore(wrapper, selected[0]);
+    for (var k = 0; k < selected.length; k++) wrapper.appendChild(selected[k]);
+    return { ok: true, inverse: { kind: "unwrap", id: patch.id, slots: slots } };
+  }
+
+  // function: unwrap. slots: original index per child, restored when present.
+  // inverse: wrap the same children back into the same id.
+  function doUnwrap(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: unwrap target not found:", patch.id);
+      return null;
+    }
+    if (!el.getAttribute("data-od-group")) {
+      console.warn("canvasPatch: unwrap refused, not a group:", patch.id);
+      return null;
+    }
+    var parent = el.parentElement;
+    if (!parent) {
+      console.warn("canvasPatch: unwrap refused, detached:", patch.id);
+      return null;
+    }
+    var kids = childrenOf(el);
+    var childIds = kids.map(function (kid) { return kid.getAttribute("data-od-id") || stableId(kid); });
+    var slots = Array.isArray(patch.slots) && patch.slots.length === kids.length ? patch.slots : null;
+    if (slots) {
+      el.remove();
+      for (var s = 0; s < kids.length; s++) {
+        var siblings = childrenOf(parent);
+        parent.insertBefore(kids[s], siblings[slots[s]] || null);
       }
     } else {
-      console.warn("canvasPatch: unknown patch kind:", patch.kind);
-      return text;
+      for (var i = 0; i < kids.length; i++) parent.insertBefore(kids[i], el);
+      el.remove();
     }
+    return { ok: true, inverse: { kind: "wrap", ids: childIds, id: patch.id } };
+  }
 
-    return serialize(doc, text);
+  // function: move. inverse: move back to the prior parent and index.
+  function doMove(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: move target not found:", patch.id);
+      return null;
+    }
+    var newParent = find(doc, patch.parent);
+    if (!newParent) {
+      console.warn("canvasPatch: move parent not found:", patch.parent);
+      return null;
+    }
+    var oldParent = el.parentElement;
+    if (!oldParent) {
+      console.warn("canvasPatch: move refused, detached:", patch.id);
+      return null;
+    }
+    var oldParentKey = parentKeyFor(doc, oldParent);
+    var oldIndex = siblingsOf(el).indexOf(el);
+    el.remove();
+    var ref = childAt(newParent, patch.index);
+    if (ref) newParent.insertBefore(el, ref);
+    else newParent.appendChild(el);
+    return { ok: true, inverse: { kind: "move", id: patch.id, parent: oldParentKey, index: oldIndex } };
+  }
+
+  // function: remove. inverse: insert the same html back at the same slot.
+  function doRemove(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: remove target not found:", patch.id);
+      return null;
+    }
+    var parent = el.parentElement;
+    if (!parent) {
+      console.warn("canvasPatch: remove refused, detached:", patch.id);
+      return null;
+    }
+    var parentKey = parentKeyFor(doc, parent);
+    var index = siblingsOf(el).indexOf(el);
+    var html = el.outerHTML;
+    el.remove();
+    return { ok: true, inverse: { kind: "insert", parent: parentKey, index: index, html: html } };
+  }
+
+  // function: insert. inverse: remove the inserted root by its id.
+  function doInsert(doc, patch) {
+    var parent = find(doc, patch.parent);
+    if (!parent) {
+      console.warn("canvasPatch: insert parent not found:", patch.parent);
+      return null;
+    }
+    var template = doc.createElement("template");
+    template.innerHTML = String(patch.html || "").trim();
+    var elements = Array.prototype.slice.call(template.content.children);
+    if (elements.length !== 1) {
+      console.warn("canvasPatch: insert html must contain exactly one root element.");
+      return null;
+    }
+    var root = elements[0];
+    if (!root.getAttribute("data-od-id")) root.setAttribute("data-od-id", newId("el"));
+    var descendants = root.querySelectorAll("*");
+    for (var i = 0; i < descendants.length; i++) {
+      if (!descendants[i].getAttribute("data-od-id")) descendants[i].setAttribute("data-od-id", newId("el"));
+    }
+    var ref = childAt(parent, patch.index);
+    if (ref) parent.insertBefore(root, ref);
+    else parent.appendChild(root);
+    return { ok: true, inverse: { kind: "remove", id: root.getAttribute("data-od-id") } };
+  }
+
+  // function: mutate one patch into a live document. {ok, inverse}.
+  // set-full-source is refused here; it only applies through apply().
+  function applyToDoc(doc, patch) {
+    if (!patch) return { ok: false, inverse: null };
+    var kind = ALIAS[patch.kind] || patch.kind;
+    var result;
+    if (kind === "set-full-source") {
+      console.warn("canvasPatch: set-full-source refused on a live document");
+      result = null;
+    } else if (kind === "set-style") result = doSetStyle(doc, patch);
+    else if (kind === "set-text") result = doSetText(doc, patch);
+    else if (kind === "replace-outer-html") result = doReplaceOuterHtml(doc, patch);
+    else if (kind === "set-css-token") result = doSetCssToken(doc, patch);
+    else if (kind === "wrap") result = doWrap(doc, patch);
+    else if (kind === "unwrap") result = doUnwrap(doc, patch);
+    else if (kind === "move") result = doMove(doc, patch);
+    else if (kind === "remove") result = doRemove(doc, patch);
+    else if (kind === "insert") result = doInsert(doc, patch);
+    else {
+      console.warn("canvasPatch: unknown patch kind:", patch.kind);
+      result = null;
+    }
+    return result || { ok: false, inverse: null };
+  }
+
+  // function: parse, applyToDoc, serialize. {text, inverse}. A refused
+  // patch returns the input text and inverse: null.
+  function apply(text, patch) {
+    if (!patch) return { text: text, inverse: null };
+    var kind = ALIAS[patch.kind] || patch.kind;
+    if (kind === "set-full-source") {
+      if (typeof patch.source !== "string") {
+        console.warn("canvasPatch: set-full-source refused, source is not a string");
+        return { text: text, inverse: null };
+      }
+      return { text: patch.source, inverse: { kind: "set-full-source", source: text } };
+    }
+    var doc = parse(text);
+    if (!doc) {
+      console.warn("canvasPatch: could not parse source");
+      return { text: text, inverse: null };
+    }
+    var result = applyToDoc(doc, patch);
+    if (!result.ok) return { text: text, inverse: null };
+    return { text: serialize(doc, text), inverse: result.inverse };
+  }
+
+  // function: parse, assignIds, serialize. {text, n}.
+  function normalize(text) {
+    var doc = parse(text);
+    if (!doc) return { text: text, n: 0 };
+    var n = assignIds(doc);
+    return { text: serialize(doc, text), n: n };
+  }
+
+  // function: a new id, prefix plus six lowercase alphanumerics.
+  function newId(prefix) {
+    var chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    var suffix = "";
+    for (var i = 0; i < 6; i++) suffix += chars[Math.floor(Math.random() * chars.length)];
+    return prefix + "_" + suffix;
+  }
+
+  // function: an undo/redo stack of {patches, inverses} entries.
+  function history() {
+    var stack = [];
+    var pointer = -1;
+    return {
+      push: function (entry) {
+        stack = stack.slice(0, pointer + 1);
+        stack.push(entry);
+        pointer = stack.length - 1;
+      },
+      undo: function () {
+        if (pointer < 0) return null;
+        var entry = stack[pointer];
+        pointer--;
+        return entry;
+      },
+      redo: function () {
+        if (pointer + 1 >= stack.length) return null;
+        pointer++;
+        return stack[pointer];
+      },
+      canUndo: function () { return pointer >= 0; },
+      canRedo: function () { return pointer + 1 < stack.length; },
+      clear: function () { stack = []; pointer = -1; }
+    };
   }
 
   MX.canvasPatch = function () {
@@ -295,6 +576,10 @@
       assignIds: assignIds,
       find: find,
       apply: apply,
+      applyToDoc: applyToDoc,
+      normalize: normalize,
+      newId: newId,
+      history: history,
       domPath: domPath,
       stableId: stableId,
       isFullHtmlDocument: isFullHtmlDocument,

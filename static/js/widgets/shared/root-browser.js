@@ -5,6 +5,8 @@
 // opts.ext is set. opts.ext lists files with that extension and commits on
 // click; without it the picker shows folders only and commits via Select.
 // opts.ext takes a string, an array of strings, or "*" for any file.
+// opts.save: save mode, pick a folder and type a filename; opts.name prefills
+// it. opts.cancel fires when the picker closes without a commit.
 // global.json picker, read on each call: native opens the macOS dialog
 // through /api/fs/pick, suite opens the modal below.
 // Moved from devagent.js as is; CSS id becomes mx-root-browser-css, class
@@ -51,6 +53,9 @@
 .dv-rootmodal .dv-rootitem:hover{ background:var(--surface-3); color:var(--text-1); }
 
 .dv-rootmodal .dv-rootfile{ border-left:2px solid var(--border-2); }
+.dv-rootmodal .dv-rootname{ flex:1 1 auto; min-width:0; font-size:11px; font-family:var(--mono);
+  color:var(--text-1); background:var(--deep); border:1px solid var(--gridline);
+  border-radius:5px; padding:4px 8px; }
 
 .mx-dev-rootfield{ display:inline-flex; align-items:center; gap:4px; min-width:0; }
 .mx-dev-rootfield input{ min-width:0; flex:1 1 auto; }
@@ -73,19 +78,22 @@
       : (Array.isArray(opts.ext) ? opts.ext : [opts.ext]).map((e) => String(e).toLowerCase());
   }
 
-  // native dialog through /api/fs/pick; cancel commits nothing
+  // native dialog through /api/fs/pick; cancel or failure fires opts.cancel
   function openNativePicker(start, commit, opts) {
     const exts = extListOf(opts).map((e) => e.replace(/^\./, ""));
-    let url = "/api/fs/pick?kind=" + (exts.length
-      ? "file&ext=" + encodeURIComponent(exts.join(","))
-      : "folder");
+    let url = "/api/fs/pick?kind=" + (opts.save
+      ? "save" + (opts.name ? "&name=" + encodeURIComponent(opts.name) : "")
+      : exts.length
+        ? "file&ext=" + encodeURIComponent(exts.join(","))
+        : "folder");
     if (start && start !== "/") url += "&start=" + encodeURIComponent(start);
     return fetch(url)
       .then((r) => r.json())
+      .catch((e) => { console.warn("native picker failed:", e); return null; })
       .then((d) => {
         if (d && d.path) commit(d.path.length > 1 ? d.path.replace(/\/+$/, "") : d.path);
-      })
-      .catch((e) => console.warn("native picker failed:", e));
+        else if (opts.cancel) opts.cancel();
+      });
   }
 
   // picker setting from global.json; missing or unreadable reads native
@@ -116,13 +124,17 @@
     const ov = el("div", "dv-rootmodal");
     const box = el("div", "dv-rootbox");
     const head = el("div", "dv-roothead");
-    const h3 = el("h3", null, extList.length ? "Pick a " + extLabel + " file" : "Agent root");
+    const h3 = el("h3", null, opts.save ? "Save as"
+      : extList.length ? "Pick a " + extLabel + " file" : "Agent root");
     head.appendChild(h3);
     const closeBtn = el("button", "dv-rootx", "×");
     closeBtn.type = "button";
     head.appendChild(closeBtn);
     box.appendChild(head);
-    const sub = el("div", "dv-rootsub", extList.length
+    const sub = el("div", "dv-rootsub", opts.save
+      ? "Browse to a folder and type a filename. Save writes there; the server "
+        + "still checks the gate."
+      : extList.length
       ? "Browse the filesystem and click a " + extLabel + " file. The path is "
         + "copied into the field — nothing else changes."
       : "Browse the filesystem and pick a folder. Select copies the path into "
@@ -136,8 +148,14 @@
     const pathLine = el("div", "dv-rootpath");
     const listBox = el("div", "dv-rootlist");
     const selectRow = el("div", "dv-rootbtnrow");
-    const selectBtn = el("button", "dv-rootbtn", "Select");
+    const selectBtn = el("button", "dv-rootbtn", opts.save ? "Save" : "Select");
     selectBtn.type = "button";
+    // save mode: filename field beside the Save button
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "dv-rootname";
+    nameInput.value = opts.name || "";
+    if (opts.save) selectRow.appendChild(nameInput);
     // in file mode the click on a file is the commit, so Select has no job
     if (!extList.length) selectRow.appendChild(selectBtn);
     body.appendChild(pathLine);
@@ -189,7 +207,7 @@
           }
           for (const name of files) {
             const item = el("div", "dv-rootitem dv-rootfile", name);
-            item.addEventListener("click", () => { commit(joinPath(browsePath, name)); close(); });
+            item.addEventListener("click", () => finish(joinPath(browsePath, name)));
             listBox.appendChild(item);
           }
         })
@@ -199,19 +217,39 @@
         });
     }
 
+    // state: committed marks a close that carried a path; closed stops a second close
     let onKey = null;
+    let committed = false;
+    let closed = false;
     function close() {
+      if (closed) return;
+      closed = true;
       ov.classList.remove("show");
       if (onKey) { document.removeEventListener("keydown", onKey); onKey = null; }
       ov.remove();
+      if (!committed && opts.cancel) opts.cancel();
+    }
+    function finish(path) {
+      committed = true;
+      commit(path);
+      close();
+    }
+    // save mode: an empty filename commits nothing
+    function commitSelect() {
+      if (!opts.save) { finish(browsePath); return; }
+      const name = nameInput.value.trim();
+      if (!name) return;
+      finish(joinPath(browsePath, name));
     }
     onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
     document.addEventListener("keydown", onKey);
     ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
     closeBtn.addEventListener("click", close);
-    selectBtn.addEventListener("click", () => { commit(browsePath); close(); });
+    selectBtn.addEventListener("click", commitSelect);
+    nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") commitSelect(); });
 
     loadDirs(browsePath);
     ov.classList.add("show");
+    if (opts.save) nameInput.focus();
   }
 })();

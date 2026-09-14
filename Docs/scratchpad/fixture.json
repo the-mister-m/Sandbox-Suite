@@ -11,15 +11,15 @@
     "palette": "default",
     "palettes": {}
   },
-  "page": "pg_fekse6",
+  "page": "pg_229wwf",
   "pages": [
     {
-      "id": "pg_fekse6",
+      "id": "pg_229wwf",
       "name": "Page 1",
       "notes": "",
       "widgets": [
         {
-          "id": "wg_1at5dx",
+          "id": "wg_3vegdt",
           "type": "text.block",
           "parent": null,
           "box": {
@@ -60,7 +60,7 @@
           }
         },
         {
-          "id": "wg_lnhbp7",
+          "id": "wg_wl2yhl",
           "type": "text.block",
           "parent": null,
           "box": {
@@ -101,7 +101,7 @@
           }
         },
         {
-          "id": "wg_7nsw3s",
+          "id": "wg_ye42oh",
           "type": "status.badge",
           "parent": null,
           "box": {
@@ -143,12 +143,12 @@
       ]
     },
     {
-      "id": "pg_w7bc7v",
+      "id": "pg_4ofxml",
       "name": "Page 2",
       "notes": "",
       "widgets": [
         {
-          "id": "wg_7vcpxo",
+          "id": "wg_185abb",
           "type": "text.block",
           "parent": null,
           "box": {

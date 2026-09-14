@@ -1,0 +1,8 @@
+[harness] held before the run: phase3F-fixture-keys.html, 1186 bytes
+[harness] session open: {'sid': '410ef20f1a9d'}
+[harness] ade socket live: True (state='live')
+[harness] widgets on the surface at start: []
+[harness] iframe keydown tap: installed
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3F-headed-keys.json
+[harness] restored phase3F-fixture-keys.html: run left 1359 bytes, wrote back 1186, matches_before=True

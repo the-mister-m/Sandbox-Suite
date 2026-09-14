@@ -5,6 +5,9 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 
 ## SESSION INDEX
 (one line per session, newest first: date · name · 5–10 word summary)
+- 2026-09-13 · phase3F-file-mode · Targets widget, canvas tabs, patch kinds, file interactions, Tools layers, Code file mode; seven harnesses green (doc mode 18/18, main 10, keys 11, tools 10, drag 11, code 11, trace 18) — [review](Docs/Reports/SESSION-REVIEW-2026-09-13-phase3F-file-mode.md) · [sticky](Docs/stickies/STICKY-2026-09-13-session-agent.md)
+- 2026-09-13 · editor-save-picker · Editor Save As uses the shared root browser, follows `picker` setting — [review](Docs/Reports/SESSION-REVIEW-2026-09-13-editor-save-picker.md)
+- 2026-09-13 · editor-open-browser · Editor Open uses the shared root browser, follows `picker` setting — [review](Docs/Reports/SESSION-REVIEW-2026-09-13-editor-open-browser.md)
 - 2026-09-13 · widget-folder-rename · graph/ → wayfinder/, canvas/ → codecanvas/, groups matched, both families now in the picker
 - 2026-09-12 · code-canvas-port-phases1-3-build · session agent ran phases 1 to 3 end to end, 29 jobs, all three headed gates green, nine seams — [review](Docs/Reports/SESSION-REVIEW-2026-09-12-phases1-3-build.md) · [sticky](Docs/stickies/STICKY-2026-09-12-session-agent.md)
 - 2026-09-12 · closer-phases1-3-build · session closed: no stray files moved (scratchpad fixtures are by-design harness output), MEMORY.md warm start rewritten, CLAUDE.md map updated, TODO.md and worklog updated — [receipt](Docs/Reports/RECEIPT-closer-2026-09-12-phases1-3-build.md)
@@ -449,3 +452,30 @@ Rules: GLOBAL-RULES.md. Append-only. Work done and decisions made.
 - NOT CHANGED: Canvas media Upload ([kit.js:278](static/js/widgets/codecanvas/shared/kit.js#L278)), needs file bytes not a path.
 - CHECKED: node --check and py_compile clean; settings validation run by hand. No browser test; server restart needed.
 - Review: [SESSION-REVIEW-2026-09-13-target-picker.md](Docs/Reports/SESSION-REVIEW-2026-09-13-target-picker.md).
+
+### 2026-09-13 16:56–2026-09-14 00:33 — Phase3F file mode, session agent Fable
+- DONE: Targets widget (job A); Canvas tabs (job B); patch kinds wrap/unwrap/move/remove/insert (job C); file-mode interactions — apply path, multi-select, marquee, group/order/delete/duplicate/undo, menu, keys (job D); Tools file-mode layers tree (job E); Code widget file mode (job K); Monaco "Canceled" pageerror traced to WordHighlighter and killed (jobs L, P). Six headed harnesses built and driven to green across ten runs (jobs H, H2, H3, H4, H5 and their reruns); fixes landed along the way in canvas.js, patch.js, tools.js (jobs F, G) — key/bracket bindings, marquee click-swallow, fileMove/fileOrder index math, doc-mode focus-before-doc ordering, multi-select drag vs the browser's own text-selection drag. `/raw/<path>` route added to server.py so the canvas iframe resolves relative assets by base href; saved frame now carries content (ade/web_io.py, ade/frames.py, HOWTO-frames.md).
+- DECIDED: see MEMORY.md warm start's durable facts list.
+- OPEN: see the sticky's "Brandon's todo, later spec" list and BRANDON'S TODOS in the review; nothing committed, this session's edits share a tree with four other sessions today; server pid 92195 (nohup, log in the session scratchpad) outlives the session.
+- LINKS: seven harnesses green — doc mode 18/18, main walk 10, keys 11, tools 10, drag 11, code 11, trace 18. [SESSION-REVIEW-2026-09-13-phase3F-file-mode.md](Docs/Reports/SESSION-REVIEW-2026-09-13-phase3F-file-mode.md) · [STICKY-2026-09-13-session-agent.md](Docs/stickies/STICKY-2026-09-13-session-agent.md) · receipts RECEIPT-phase3F-A through P, R-A through R-E in [Docs/Reports/](Docs/Reports/).
+
+### 2026-09-13 — claude_tools on/off toggle, Opus 5
+- FOUND: `claude_tools` is a region list ([settings.py:80](engine/settings.py#L80)); all six presets carry the same 12 tools. Full list passes `--tools` and installs gate hooks, empty passes none ([providers.py:619](engine/providers.py#L619), [providers.py:638](engine/providers.py#L638)).
+- FOUND: agent loop / user loop survive as labels only — [rails.py:63-71](ade/rails.py#L63-L71) "tools OFF" / "tools ON"; nothing in engine/ reads `loop_class`, no current widget reads `rail_catalog`.
+- FOUND: [Sandbox Suite.json](library/graphs/Sandbox%20Suite.json) has no edges for cross-module Python calls (tracks.py, frames.py → rails.normalize). Gap size unmeasured.
+- DONE: [settings-rows.js:359](static/js/widgets/shared/settings-rows.js#L359) `claude_tools` draws as on/off; on commits every tool, off commits [].
+- DONE: [settings.py:80](engine/settings.py#L80) `claude_tools` default every tool.
+- CHECKED: node --check clean; settings import shows new default. No browser test; server restart needed. Saved [] regions stay off.
+- Review: [SESSION-REVIEW-2026-09-13-claude-tools-toggle.md](Docs/Reports/SESSION-REVIEW-2026-09-13-claude-tools-toggle.md).
+
+### 2026-09-13 — Editor Open follows the picker setting, Opus 5
+- FOUND: Editor Open asked for a typed path; the target picker session's picker rollout missed it.
+- DONE: [editor.js:449](static/js/widgets/usertools/editor/editor.js#L449) Open calls `MX.openRootBrowser` with ext "*", start at current tab's folder or "/".
+- CHECKED: node --check clean. No browser test; no server restart needed.
+- Review: [SESSION-REVIEW-2026-09-13-editor-open-browser.md](Docs/Reports/SESSION-REVIEW-2026-09-13-editor-open-browser.md).
+
+### 2026-09-13 21:14-22:16Z — Anchor Chat tidy and two-chat follow fix, Opus session agent
+- Anchor Chat: spacing tightened, zoom bar added, meters split to cache for cloud regions and ctx for local. Server: two widgets on one socket following one region no longer starve or cut each other off. Untested, server not restarted. Review: [SESSION-REVIEW-2026-09-13-anchor-chat-sync.md](Docs/Reports/SESSION-REVIEW-2026-09-13-anchor-chat-sync.md).
+
+### 2026-09-13 23:38Z-2026-09-14 00:12Z — Editor Save As follows the picker setting, Opus session agent
+- Editor Save As on an untitled tab used a typed-path prompt; it now opens the shared root browser in save mode, native or suite per the `picker` setting on the Suite page. The root browser gained `opts.save`, `opts.name` and `opts.cancel`; `/api/fs/pick` gained `kind=save`. Cancel resolves the save as not done, so the close prompt cannot hang. Syntax checks clean; not run in the browser, server not restarted. Anchor Chat code blocks and cache reading raised, then dropped. Review: [SESSION-REVIEW-2026-09-13-editor-save-picker.md](Docs/Reports/SESSION-REVIEW-2026-09-13-editor-save-picker.md).

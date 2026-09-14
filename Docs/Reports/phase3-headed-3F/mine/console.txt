@@ -1,0 +1,18 @@
+[harness] session open: {'sid': '410ef20f1a9d'}
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[p1:pageerror] Canceled
+[harness] widgets left on the surface: ['canvas', 'canvas_tools', 'canvas', 'canvas_code', 'canvas']
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3-headed.json
+[harness] annotate PNGs written: ['annotate-1789345460936.png', 'annotate-1789345465841.png', 'annotate-1789345471255.png']

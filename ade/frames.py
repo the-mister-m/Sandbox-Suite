@@ -211,6 +211,8 @@ class AdeCtx:
         self.anchored    = None
         # region id -> Region: every instance in this window streams its own
         self.mirrors     = {}
+        # region id -> set of instance ids following it on this socket
+        self.mirror_insts = {}
 
 
 _DRAG_IMAGE_MIMES = {".png": "image/png", ".jpg": "image/jpeg",
@@ -299,17 +301,25 @@ def _rebind_environment(ctx, environment):
 
 
 # one socket, many followed regions
-def _follow(ctx, region):
-    if region.id in ctx.mirrors:
-        return
+def _follow(ctx, region, inst=""):
+    ctx.mirror_insts.setdefault(region.id, set()).add(inst)
     view = tracks.MirrorView(ctx.webio, region.id)
-    region.hub.add_mirror(view, ctx.conn_sid)
-    ctx.mirrors[region.id] = region
+    if region.id not in ctx.mirrors:
+        region.hub.add_mirror(view, ctx.conn_sid)
+        ctx.mirrors[region.id] = region
+    # every follow gets the transcript, first instance or not
     view.transcript(region.sess.messages)
     view.gatelog(_track_gatelog(region.id))
 
 
-def _unfollow(ctx, region_id):
+# inst None drops the region for every instance on this socket
+def _unfollow(ctx, region_id, inst=None):
+    insts = ctx.mirror_insts.get(region_id)
+    if inst is not None and insts is not None:
+        insts.discard(inst)
+        if insts:
+            return
+    ctx.mirror_insts.pop(region_id, None)
     region = ctx.mirrors.pop(region_id, None)
     if region is None:
         return
@@ -866,7 +876,7 @@ def handle(ctx, msg):
         # the server owns the write: the gate answers here, not the browser
         result  = rt.write_file(_human_path(ctx.environment, path), content)
         ok      = not _write_refused(result)
-        webio.send_saved(path, result, inst=_inst, ok=ok)
+        webio.send_saved(path, result, inst=_inst, ok=ok, content=content)
         if ok:
             _broadcast_all("send_tree_dirty", "*")
             dq.notify("file_save")
@@ -1027,10 +1037,10 @@ def handle(ctx, msg):
             if track is None:
                 webio.out("[follow: unknown region]", dim=True)
             else:
-                _follow(ctx, track)
+                _follow(ctx, track, msg.get("inst") or "")
 
     elif t == "unfollow":
-        _unfollow(ctx, msg.get("track", ""))
+        _unfollow(ctx, msg.get("track", ""), msg.get("inst") or "")
 
     elif t == "edit_track":
         track = tracks.get_region(msg.get("track", ""))

@@ -1,0 +1,36 @@
+[1] PASS — New surface. Add Canvas. It opens in preview, 'no target'.
+      mode='preview' status='no target' targets=[] tabRowHidden=True optMode='preview'
+[2] PASS — Add Targets. It binds. '+ Add' the copy. A tab appears. The page draws. Clicks do nothing.
+      targets.js tag shipped in matrix.html=True module_registered=True add_clicked=True file_ready=True targets_empty_before=None rows=[{'name': 'phase3F-fixture.html', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture.html', 'on': True}] canvas_tabs=[{'name': 'phase3F-fixture.html', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture.html', 'on': True}] docMode='file' body_children=3 sourceLen=1359 status='loaded' clicked='h1' at (219,178) selection_after_click=[] picker_opts=[{'start': '/', 'opts': {'ext': ['.html', '.json']}}]
+[3] PASS — Add a second small .html. Two tabs. Switch. Switch back.
+      tabs=['phase3F-fixture.html', 'phase3F-fixture-2.html'] after_add_active=phase3F-fixture-2.html switch1=phase3F-fixture.html switch2=phase3F-fixture-2.html switch3=phase3F-fixture.html cached=['phase3F-fixture.html', 'phase3F-fixture-2.html'] body_children=3 status=''
+[4] PASS — Canvas mode. Click an element. Tools inspector shows it. Layers shows the tree with that row lit.
+      clicked div#path-0-2 pair_carries_data-od-id=True pair_alike=True sibling=div#path-0-3 selection=['path-0-2'] inspector_ids=['path-0-2'] inspector_titles=['div — text', 'Text', 'Layout', 'Spacing'] tools_tabs_hidden=['library', 'page'] layer_rows=8 rows_lit=['path-0-2']
+[5] PASS — Shift-click a sibling. Cmd-G. Layers shows a group row holding both.
+      selection_before_G=['path-0-2', 'path-0-3'] group_id='grp_0axaxg' in_live=True in_source=True live_children=['path-0-2', 'path-0-3'] source_children=['path-0-2', 'path-0-3'] source_child_tags=['div', 'div'] group_attr live='1' src='1' layers_group_row_at=[3] rows_under_it=['path-0-2', 'path-0-3'] dirty=True
+[6] PASS — Cmd-[. The group moves back one. Cmd-Z twice. Both undone.
+      group slot live 2 -> 1, source 2 -> 1 (moved_back=True); after undo 1 live slot=2 source slot=2 (move_undone=True); after undo 2 group in_live=False in_source=False first_child_slot live=2 src=2 expected=2 (group_undone=True); history {'canUndo': True, 'canRedo': False} -> {'canUndo': False, 'canRedo': True}
+[7] PASS — Edit text on tab one. Switch to tab two. Switch back. The edit is there. Cmd-Z undoes it.
+      leaf=p#path-0-1 was='A paragraph of fixture text for the text edit line.' inspector_text_field=True in_source_after_typing=True dirty=True switched_to=phase3F-fixture-2.html back_on=phase3F-fixture.html in_source_after_return=True in_live_after_return=True history_after_return={'canUndo': True, 'canRedo': False} in_source_after_cmdZ=False status='dirty'
+[8] PASS — Cmd-G the pair again. Save. Status reads saved. The file on disk has ids, the text edit and the group.
+      redo_pressed=True text_edit_back_in_source=True history_before_regroup={'canUndo': False, 'canRedo': True}; pair='path-0-2'+'path-0-3' same_pair_as_line_5=True selection_before_G=['path-0-2', 'path-0-3'] group_id='grp_2eqkz9' group in_live=True in_source=True children=['path-0-2', 'path-0-3']; status_reached_saved=True status_now='saved' dirty_after=False; on disk: data-od-id=9 data-od-group=1 group_id_present=True text_edit_present=True file_bytes=1381
+[9] PASS — Reload the page. Two tabs return. Preview mode. Nothing lost.
+      tabs=['phase3F-fixture.html', 'phase3F-fixture-2.html'] (two_back=True) active=phase3F-fixture.html same_as_before=True mode='preview' (preview=True) mode_before_reload='canvas' targets_option before=2 after=2 body_children=3 status='' targets_widget_rows=['phase3F-fixture.html', 'phase3F-fixture-2.html'] targets_widget_opts={'canvas': 'focused', 'followTarget': ''}
+[10] PASS — Console clean the whole way.
+      pageerrors=0 error_or_warning_lines=0 total_console_lines=8
+
+=== SUMMARY ===
+ 1  PASS  New surface. Add Canvas. It opens in preview, 'no target'.
+ 2  PASS  Add Targets. It binds. '+ Add' the copy. A tab appears. The page draws. Clicks do nothing.
+ 3  PASS  Add a second small .html. Two tabs. Switch. Switch back.
+ 4  PASS  Canvas mode. Click an element. Tools inspector shows it. Layers shows the tree with that row lit.
+ 5  PASS  Shift-click a sibling. Cmd-G. Layers shows a group row holding both.
+ 6  PASS  Cmd-[. The group moves back one. Cmd-Z twice. Both undone.
+ 7  PASS  Edit text on tab one. Switch to tab two. Switch back. The edit is there. Cmd-Z undoes it.
+ 8  PASS  Cmd-G the pair again. Save. Status reads saved. The file on disk has ids, the text edit and the group.
+ 9  PASS  Reload the page. Two tabs return. Preview mode. Nothing lost.
+10  PASS  Console clean the whole way.
+
+fixtures restored: {'phase3F-fixture.html': {'run_left_bytes': 1381, 'wrote_back_bytes': 1186, 'matches_before': True, 'data_od_id_after': 0}, 'phase3F-fixture-2.html': {'run_left_bytes': 673, 'wrote_back_bytes': 673, 'matches_before': True, 'data_od_id_after': 0}}
+fixtures: /Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture.html, /Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-2.html
+findings: []

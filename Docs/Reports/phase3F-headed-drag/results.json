@@ -1,0 +1,125 @@
+{
+  "results": [
+    {
+      "n": 0,
+      "name": "Setup. Canvas plus Tools plus Targets, drag fixture copy, canvas mode.",
+      "pass": true,
+      "shot": "00-setup.png",
+      "note": "add_clicked=True file_ready=True mode='canvas' docMode='file' iframe_viewport=776x910 stage_live=['h1', 'p', 'div', 'div', 'div', 'div', 'span'] stage_src=['h1', 'p', 'div', 'div', 'div', 'div', 'span'] live_eq_src=True not_hit_testable=[] ids={'h1': 'path-0-0', 'p': 'path-0-1', 'red': 'path-0-2', 'blue': 'path-0-3', 'green': 'path-0-4', 'gold': 'path-0-5', 'span': 'path-0-6'}",
+      "console_at": 5
+    },
+    {
+      "n": 1,
+      "name": "Drag one. Press on red, 100 right and 50 down, release.",
+      "pass": true,
+      "shot": "01-drag-one.png",
+      "note": "start transform live=None src=None left/top='40px'/'140px'; after transform live=(100.0, 50.0) src=(100.0, 50.0) want (100.0,50.0); left/top='40px'/'140px'; raw inline='translate(100px, 50px)'; dirty=True status='dirty' selection=['path-0-2'] want=['path-0-2']; canvas.select events=[{'target': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag.html', 'inst': 'canvas-mu0e9r6l-1', 'ids': ['path-0-2']}]",
+      "console_at": 6
+    },
+    {
+      "n": 2,
+      "name": "Undo one. Cmd-Z clears the transform in live and source.",
+      "pass": true,
+      "shot": "02-undo-one.png",
+      "note": "history_before={'canUndo': True, 'canRedo': False} keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'z' code=KeyZ meta=True shift=False prevented=True; bubble:'z' code=KeyZ meta=True shift=False prevented=True] after transform live=None src=None want None (empty); raw inline=''; history_after={'canUndo': False, 'canRedo': True} status='dirty'",
+      "console_at": 6
+    },
+    {
+      "n": 3,
+      "name": "Drag many. Red plus shift-blue, press on blue, 30 right.",
+      "pass": false,
+      "shot": "03-drag-many.png",
+      "note": "selection_before_drag=['path-0-2', 'path-0-3'] want=['path-0-2', 'path-0-3']; red transform live=None src=None; blue transform live=None src=None; want (30.0,0.0) on both; selection_after=['path-0-2', 'path-0-3'] dirty=True status='dirty'",
+      "console_at": 7
+    },
+    {
+      "n": 4,
+      "name": "Undo many. One Cmd-Z clears both; one history entry for the pair.",
+      "pass": false,
+      "shot": "04-undo-many.png",
+      "note": "line 3 actually moved both=False (this line has no verdict without it); history_before={'canUndo': False, 'canRedo': True} keydown[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'z' code=KeyZ meta=True shift=False prevented=True; bubble:'z' code=KeyZ meta=True shift=False prevented=True] after one undo: red live=None src=None blue live=None src=None want None on all; history_after_one={'canUndo': False, 'canRedo': True}; a second Cmd-Z[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'z' code=KeyZ meta=True shift=False prevented=True; bubble:'z' code=KeyZ meta=True shift=False prevented=True] then gave red live=None blue live=None (evidence the pair was one entry, not two)",
+      "console_at": 7
+    },
+    {
+      "n": 5,
+      "name": "Drag then click. The click after a drag release leaves the selection.",
+      "pass": false,
+      "shot": "05-drag-then-click.png",
+      "note": "selection_before_drag=['path-0-4'] want=['path-0-2', 'path-0-4'] click_retries=1; selection right after mouseup=['path-0-4']; selection 600ms later=['path-0-4']; a click that got through would collapse it to ['path-0-4']; canvas.select during and after the drag=[]",
+      "console_at": 8
+    },
+    {
+      "n": 6,
+      "name": "Drag in preview. Nothing moves, nothing selected, source unchanged.",
+      "pass": true,
+      "shot": "06-preview-drag.png",
+      "note": "mode_during='preview' selection_after_drag=[] want []; red transform before=(-274.0, 200.0) after=(-274.0, 200.0) src before=None after=None; source bytes 1359 -> 1359 unchanged=True; dirty=True status='dirty'; mode back to 'canvas'",
+      "console_at": 9
+    },
+    {
+      "n": 7,
+      "name": "Text edit. Double-click the paragraph, append ' plus', commit, Cmd-Z.",
+      "pass": false,
+      "shot": "07-text-edit.png",
+      "note": "dblclick opened={'session': 'path-0-1', 'docHasFocus': True, 'active': 'p', 'activeEditable': 'true', 'activeOdId': 'path-0-1', 'ranges': 1, 'anchor': '#text@28'} caret='caret at end of p' typing_landed_in_live_dom=True committed_by='neither'; text before live='A paragraph of fixture text for the text edit line.'; after live='A paragraph of fixture text for the text edit line.' src='A paragraph of fixture text for the text edit line.' in_source=False dirty=True; Cmd-Z[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'z' code=KeyZ meta=True shift=False prevented=True; bubble:'z' code=KeyZ meta=True shift=False prevented=True] -> live='A paragraph of fixture text for the text edit line.' src='A paragraph of fixture text for the text edit line.' plus_gone_from_source=True",
+      "console_at": 11
+    },
+    {
+      "n": 8,
+      "name": "Dirty tabs. Edit tab one, drag on tab two, Cmd-S saves tab two only.",
+      "pass": false,
+      "shot": "08-dirty-tabs.png",
+      "note": "tab one edit typing_landed=True committed_by='neither' in_source=False dirty=True; add_two=True file_ready=True active_is_two=True active_path=phase3F-fixture-drag-2.html tabs=['phase3F-fixture-drag.html', 'phase3F-fixture-drag-2.html']; tile one transform before=None after live=(40.0, 0.0) src=(40.0, 0.0) want (40.0,0.0); dirty active=True cached={'/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag.html': True} both_dirty=True; Cmd-S[capture:'Meta' code=MetaLeft meta=True shift=False prevented=False; bubble:'Meta' code=MetaLeft meta=True shift=False prevented=False; capture:'s' code=KeyS meta=True shift=False prevented=True; bubble:'s' code=KeyS meta=True shift=False prevented=True] reached_saved=True frames_sent=[{'type': 'save', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag-2.html', 'bytes': 791, 'hasPlus': False, 'hasTf': True}]; disk fixture-drag-2 has translate=True; disk fixture-drag has ' plus'=False (want False); tab one still dirty after the save=True",
+      "console_at": 13
+    },
+    {
+      "n": 9,
+      "name": "Close prompt, P8. The dirty tab one saves when the widget closes.",
+      "pass": true,
+      "shot": "09-close-prompt.png",
+      "note": "close path in canvas.js is canClose(frame), not beforeunload: it calls MX.ui.choose with Save / Discard / Cancel and Save runs doSaveAll(cv), which saves the active tab then every dirty cached tab; dirty tabs before the close={'/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag.html': True}; modal={'title': 'Unsaved changes', 'message': 'phase3F-fixture-drag.html has unsaved changes.', 'buttons': ['Save', 'Discard', 'Cancel']}; Save_clicked=True; frames on the wire after Save=[{'type': 'save', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag-2.html', 'bytes': 791, 'hasPlus': False, 'hasTf': True}, {'type': 'save', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag.html', 'bytes': 1359, 'hasPlus': False, 'hasTf': False}]; save frame for tab one=[{'type': 'save', 'path': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-drag.html', 'bytes': 1359, 'hasPlus': False, 'hasTf': False}]; disk fixture-drag bytes after close=1359 equals the bytes sent for tab one=True; disk fixture-drag has ' plus' after close=False (only meaningful if line 7 or 8 committed the text edit); disk fixture-drag-2 still has translate=True; removeWidget resolved=True frame_gone=True",
+      "console_at": 13
+    },
+    {
+      "n": 10,
+      "name": "Console clean the whole way.",
+      "pass": true,
+      "shot": "10-final.png",
+      "note": "pageerrors=0 error_or_warning_lines=0 total_console_lines=13",
+      "console_at": 13
+    }
+  ],
+  "findings": [
+    "3 \u2014 canvas.js multi-select drag",
+    "4 \u2014 canvas.js one history entry per multi-select drag",
+    "5 \u2014 canvas.js drag suppressing the trailing click",
+    "7 \u2014 canvas.js inline text edit commit or its inverse",
+    "8 \u2014 canvas.js per-tab dirty flags or Cmd-S scope (P8)"
+  ],
+  "fixtures_restored": {
+    "phase3F-fixture-drag.html": {
+      "run_left_bytes": 1359,
+      "wrote_back_bytes": 1186,
+      "matches_original": true,
+      "original_untouched": true
+    },
+    "phase3F-fixture-drag-2.html": {
+      "run_left_bytes": 791,
+      "wrote_back_bytes": 673,
+      "matches_original": true,
+      "original_untouched": true
+    }
+  },
+  "ids": {
+    "h1": "path-0-0",
+    "p": "path-0-1",
+    "red": "path-0-2",
+    "blue": "path-0-3",
+    "green": "path-0-4",
+    "gold": "path-0-5",
+    "span": "path-0-6",
+    "tile1": "path-0-1",
+    "h2": "path-0-0"
+  },
+  "surface_left": []
+}

@@ -4,20 +4,49 @@
   "name": "Empty surface 2",
   "widgets": [
     {
-      "id": "canvas-mu067zet-1",
-      "type": "canvas",
+      "id": "anchor_chat-mu0h6ran-4",
+      "type": "anchor_chat",
       "slot": {
         "col": 1,
         "row": 1,
-        "w": 12,
-        "h": 16
+        "w": 9,
+        "h": 13
       },
       "options": {
-        "target": "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/Mock CodecanvasV3/9-1 codecanvas specs/TEST/nirvana-canvas.html",
+        "region": "e24750b50e86",
+        "speech_enabled": false,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "timeline-mu0i0ay1-5",
+      "type": "timeline",
+      "slot": {
+        "col": 10,
+        "row": 1,
+        "w": 7,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "id": "canvas-mu0igkqe-2",
+      "type": "canvas",
+      "slot": {
+        "col": 17,
+        "row": 10,
+        "w": 11,
+        "h": 9
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/city-street-night.html",
+        "targets": [
+          "/Users/moth3rship/Desktop/city-street-night.html"
+        ],
         "mode": "code",
         "zoom": 100,
         "selection": [
-          "path-1-0-0-1-0-0"
+          "path-0-88"
         ],
         "schematic": false,
         "page": "",
@@ -29,43 +58,59 @@
       }
     },
     {
-      "id": "canvas_tools-mu06838l-2",
-      "type": "canvas_tools",
+      "id": "queue_log-mu0ih8ii-3",
+      "type": "queue_log",
       "slot": {
-        "col": 13,
-        "row": 1,
-        "w": 8,
-        "h": 7
+        "col": 1,
+        "row": 14,
+        "w": 9,
+        "h": 5
+      },
+      "options": {}
+    },
+    {
+      "id": "canvas_code-mu0iivwr-4",
+      "type": "canvas_code",
+      "slot": {
+        "col": 10,
+        "row": 9,
+        "w": 7,
+        "h": 10
       },
       "options": {
-        "target": "/Users/moth3rship/Desktop/AI Design/School stuff/Music History/Mock CodecanvasV3/9-1 codecanvas specs/TEST/nirvana-canvas.html",
+        "target": "/Users/moth3rship/Desktop/city-street-night.html",
         "canvas": "focused",
-        "section": "tools",
+        "view": "blocks",
+        "codeMode": "resolved",
+        "docEditable": false,
+        "locked": false,
         "followTarget": ""
       }
     },
     {
-      "id": "anchor_chat-mu06phx1-5",
-      "type": "anchor_chat",
+      "id": "canvas_tools-mu0ik323-5",
+      "type": "canvas_tools",
       "slot": {
-        "col": 21,
-        "row": 1,
+        "col": 10,
+        "row": 5,
         "w": 7,
-        "h": 13
+        "h": 4
       },
       "options": {
-        "region": "",
-        "speech_enabled": false
+        "target": "/Users/moth3rship/Desktop/city-street-night.html",
+        "canvas": "focused",
+        "section": "layers",
+        "followTarget": ""
       }
     },
     {
-      "id": "devagent-mu06q212-8",
-      "type": "devagent",
+      "id": "ledger-mu0it4t6-1",
+      "type": "ledger",
       "slot": {
-        "col": 13,
-        "row": 8,
-        "w": 8,
-        "h": 11
+        "col": 17,
+        "row": 1,
+        "w": 12,
+        "h": 9
       },
       "options": {}
     }

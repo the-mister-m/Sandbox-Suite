@@ -1,0 +1,16 @@
+[harness] copied phase3F-fixture.html -> phase3F-fixture-drag.html (1186 bytes) and phase3F-fixture-2.html -> phase3F-fixture-drag-2.html (673 bytes)
+[harness] session open: {'sid': '410ef20f1a9d'}
+[harness] ade socket live: True (state='live')
+[harness] widgets on the surface at start: []
+[harness] iframe keydown tap: installed
+[harness] reset drained 0 history entries
+[harness] reset drained 0 history entries
+[harness] reset drained 0 history entries
+[harness] reset drained 0 history entries
+[harness] reset drained 0 history entries
+[harness] line 7: opened={'session': 'path-0-1', 'docHasFocus': True, 'active': 'p', 'activeEditable': 'true', 'activeOdId': 'path-0-1', 'ranges': 1, 'anchor': '#text@28'} caret='caret at end of p' typing_landed_live=True committed_by=Enter
+[harness] reset drained 0 history entries
+[harness] line 8: opened={'session': 'path-0-1', 'docHasFocus': True, 'active': 'p', 'activeEditable': 'true', 'activeOdId': 'path-0-1', 'ranges': 1, 'anchor': '#text@28'} caret='caret at end of p' typing_landed_live=True committed_by=Enter
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3F-headed-drag.json
+[harness] restored copies: {'phase3F-fixture-drag.html': {'run_left_bytes': 1364, 'wrote_back_bytes': 1186, 'matches_original': True, 'original_untouched': True}, 'phase3F-fixture-drag-2.html': {'run_left_bytes': 791, 'wrote_back_bytes': 673, 'matches_original': True, 'original_untouched': True}}

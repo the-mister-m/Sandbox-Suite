@@ -2,10 +2,10 @@
 //
 // MX.canvasCore(): a memoized promise of {kit, makeState, makeResolve,
 // makeRender, patch, baseDocument, channels, optionControls, mirrors}.
-// baseDocument(mode, fileText): the iframe srcdoc. doc mode returns the
-// chrome stylesheet plus <div id="matrix"></div>; file mode returns the
-// caller's file text with the guides stylesheet and the id-assign
-// script appended.
+// baseDocument(mode, fileText, baseHref): the iframe srcdoc. doc mode
+// returns the chrome stylesheet plus <div id="matrix"></div>; file mode
+// returns the caller's file text with a base tag in head when baseHref
+// is given, the guides stylesheet and the id-assign script appended.
 // channels: the six canvas.* names, contract 2.7.
 // optionControls(): the target select, current targets filtered to
 // .json and .html, New opens the shared root browser.
@@ -274,9 +274,18 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
   // function: the iframe srcdoc. doc mode builds the chrome and an empty
   // matrix; file mode appends the guides sheet and the id script to the
   // caller's text.
-  function baseDocument(mode, fileText) {
+  function baseDocument(mode, fileText, baseHref) {
     if (mode === "file") {
-      return String(fileText || "") + "\n" + GUIDES_CSS + "\n" + ID_SCRIPT;
+      let text = String(fileText || "");
+      if (baseHref) {
+        const tag = '<base href="' + baseHref + '">';
+        const head = text.match(/<head[^>]*>/i);
+        const html = text.match(/<html[^>]*>/i);
+        if (head) text = text.slice(0, head.index + head[0].length) + tag + text.slice(head.index + head[0].length);
+        else if (html) text = text.slice(0, html.index + html[0].length) + tag + text.slice(html.index + html[0].length);
+        else text = tag + text;
+      }
+      return text + "\n" + GUIDES_CSS + "\n" + ID_SCRIPT;
     }
     return "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n"
       + "<style>" + CHROME_CSS + "</style>\n"

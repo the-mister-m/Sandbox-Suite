@@ -137,6 +137,11 @@
     "claude_exclude_dynamic", "claude_hook_ask_blocking", "claude_bare",
     "claude_memory_enabled"];
 
+  // claude_tools on value — every tool; off is []
+  const CLAUDE_TOOLS_ALL = ["Read", "Write", "Edit", "Bash", "BashOutput",
+    "KillShell", "Glob", "Grep", "NotebookRead", "NotebookEdit", "WebFetch",
+    "WebSearch"];
+
   function controlKind(v, key) {
     if (Array.isArray(v)) return "list";
     if (typeof v === "boolean") return "bool";
@@ -348,6 +353,26 @@
         if (sel.value) loadPreset(frame, state, rerender, region, sel.value);
       });
       row.appendChild(sel);
+      return row;
+    }
+
+    // claude_tools draws as on/off; on commits every tool, off commits []
+    if (key === "claude_tools") {
+      const input = el("input");
+      input.type = "checkbox";
+      input.checked = Array.isArray(value) && value.length > 0;
+      row.appendChild(input);
+      const btn = el("button", "mx-btn", "apply");
+      btn.type = "button";
+      const baseline = input.checked;
+      const checkDirty = () => { btn.hidden = input.checked === baseline; };
+      checkDirty();
+      input.addEventListener("change", checkDirty);
+      btn.addEventListener("click", () => {
+        commit(frame, state, rerender, region,
+          { claude_tools: input.checked ? CLAUDE_TOOLS_ALL.slice() : [] });
+      });
+      row.appendChild(btn);
       return row;
     }
 

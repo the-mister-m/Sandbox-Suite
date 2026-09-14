@@ -1,0 +1,12 @@
+[harness] held before the run: phase3F-fixture.html, 1186 bytes
+[harness] held before the run: phase3F-fixture-2.html, 673 bytes
+[harness] session open: {'sid': '410ef20f1a9d'}
+[harness] socket right after load: ['live', '410ef20f1a9d']
+[harness] ade socket live: True (state='live')
+[harness] widgets on the surface at start: []; after clearing: []
+[harness] targets.js script tag in the served matrix.html: True; module registered: True
+[harness] '+ Add' clicked=True file_ready=True
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3F-headed.json
+[harness] restored phase3F-fixture.html: run left 1381 bytes, wrote back 1186, matches_before=True
+[harness] restored phase3F-fixture-2.html: run left 673 bytes, wrote back 673, matches_before=True

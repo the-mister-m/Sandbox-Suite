@@ -10,6 +10,8 @@
   const MX = window.MX = window.MX || {};
 
   const SECTIONS = ["tools", "layers", "library", "page"];
+  // label: the tab's face. The section key stays the contract name.
+  const SECTION_LABELS = { page: "pages" };
   const TAGS = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote", "small"];
   const GRID_STYLES = ["lines", "dots", "dynamic"];
   const WIDTH_MODES = ["fixed", "fluid"];
@@ -525,7 +527,7 @@
   }
 
   function renderLayers(tl, host, a) {
-    if (!a.state) { empty(host, "Layers need a doc canvas."); return; }
+    if (!a.state) { renderFileLayers(tl, host, a); return; }
     const state = a.state;
     const snap = state.get();
     let page = null;
@@ -602,6 +604,160 @@
 
     for (const w of (byParent.__root__ || [])) renderRow(w, 0);
     if (!widgets.length) empty(host, "This page is empty.");
+  }
+
+  // ---------- file mode layers ----------
+
+  const FILE_LAYER_SKIP_TAGS = ["script", "style", "template", "link", "meta"];
+
+  // function: chrome or skip-tag node, dropped from the file layers tree.
+  function isFileLayerSkip(tl, node) {
+    const sel = tl.core.patch.HOST_NODE_SELECTOR;
+    if (node.matches && node.matches(sel)) return true;
+    if (node.matches && node.matches("[data-od-edit-guides-layer]")) return true;
+    const tag = node.tagName ? node.tagName.toLowerCase() : "";
+    return FILE_LAYER_SKIP_TAGS.indexOf(tag) >= 0;
+  }
+
+  // function: element children shown in the file layers tree.
+  function fileLayerChildren(tl, node) {
+    const out = [];
+    for (const child of Array.prototype.slice.call(node.children || [])) {
+      if (!isFileLayerSkip(tl, child)) out.push(child);
+    }
+    return out;
+  }
+
+  function fileRowLabel(node) {
+    const tag = node.tagName ? node.tagName.toLowerCase() : "?";
+    if (node.id) return tag + "#" + node.id;
+    if (node.classList && node.classList.length) return tag + "." + node.classList[0];
+    return tag;
+  }
+
+  // function: first four words of an element's own text nodes.
+  function fileOwnWords(node) {
+    let text = "";
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) text += child.textContent;
+    }
+    return text.trim().split(/\s+/).filter(Boolean).slice(0, 4).join(" ");
+  }
+
+  // function: replace or toggle the file-mode selection, then emit it.
+  function fileSelect(tl, a, id, additive) {
+    const cur = a.selected();
+    const at = cur.indexOf(id);
+    const next = !additive ? [id]
+      : (at >= 0 ? cur.slice(0, at).concat(cur.slice(at + 1)) : cur.concat([id]));
+    tl.mirrors.select.emit({ ids: next });
+    // state: the canvas paints a sibling's selection without re-emitting.
+    render(tl);
+  }
+
+  // function: an element's parent id for a.move; body maps to "__body__".
+  // function: an element's id, the canvas's stableId fallback when unset.
+  function fileNodeId(node) {
+    return MX.canvasPatch().stableId(node);
+  }
+
+  function fileParentId(node) {
+    const parent = node.parentElement;
+    if (!parent) return "__body__";
+    if (parent.tagName && parent.tagName.toLowerCase() === "body") return "__body__";
+    return fileNodeId(parent);
+  }
+
+  // function: an element's non-host-node children, matching patch.js's
+  // childrenOf. Feeds both drag index and drop-as-last-child count.
+  function fileNonHostChildren(tl, node) {
+    const sel = tl.core.patch.HOST_NODE_SELECTOR;
+    const out = [];
+    for (const child of Array.prototype.slice.call(node.children || [])) {
+      if (!(child.matches && child.matches(sel))) out.push(child);
+    }
+    return out;
+  }
+
+  function fileChildIndex(tl, node) {
+    const parent = node.parentElement;
+    if (!parent) return 0;
+    return fileNonHostChildren(tl, parent).indexOf(node);
+  }
+
+  function fileChildCount(tl, node) {
+    return fileNonHostChildren(tl, node).length;
+  }
+
+  function renderFileLayers(tl, host, a) {
+    const idoc = a.doc ? a.doc() : null;
+    if (!idoc || !idoc.body) { empty(host, "Canvas not loaded."); return; }
+    const body = idoc.body;
+    const chosen = a.selected();
+
+    const head = el("div", "cc-panel-order-head");
+    head.appendChild(el("span", "cc-panel-tool-title", "Layers"));
+    const groupBtn = mkBtn("Group", "cc-panel-toggle", () => a.group(a.selected()));
+    const ungroupBtn = mkBtn("Ungroup", "cc-panel-toggle", () => a.ungroup(a.selected()[0]));
+    groupBtn.disabled = !chosen.length;
+    ungroupBtn.disabled = !chosen.length;
+    head.appendChild(groupBtn);
+    head.appendChild(ungroupBtn);
+    host.appendChild(head);
+
+    function renderRow(node, depth) {
+      const id = fileNodeId(node);
+      const row = el("div", "cc-panel-row");
+      row.draggable = true;
+      row.dataset.id = id || "";
+      row.style.paddingLeft = (8 + depth * 12) + "px";
+      row.appendChild(el("div", "cc-panel-row-name", fileRowLabel(node)));
+      const words = fileOwnWords(node);
+      if (words) row.appendChild(el("div", "cc-panel-row-content", words));
+      if (node.hasAttribute("data-od-group")) {
+        row.appendChild(el("div", "cc-panel-row-content", "group"));
+      }
+      if (id && chosen.indexOf(id) >= 0) row.classList.add("cc-panel-row-active");
+
+      const hidden = node.style.display === "none";
+      const eye = mkBtn(hidden ? "◌" : "◉", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        a.patchSource({ id: id, kind: "set-style", styles: { display: hidden ? "" : "none" } });
+      });
+      eye.title = hidden ? "hidden" : "visible";
+      row.appendChild(eye);
+
+      row.addEventListener("click", (e) => {
+        if (id) fileSelect(tl, a, id, e.shiftKey);
+      });
+      row.addEventListener("dragstart", (e) => {
+        if (id) e.dataTransfer.setData("text/plain", id);
+      });
+      row.addEventListener("dragover", (e) => e.preventDefault());
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const draggedId = e.dataTransfer.getData("text/plain");
+        if (!draggedId || draggedId === id) return;
+        const rect = row.getBoundingClientRect();
+        const offset = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
+        const parentId = fileParentId(node);
+        // state: index counted with the dragged element out of the list.
+        const sibs = node.parentElement
+          ? fileNonHostChildren(tl, node.parentElement).filter((n) => fileNodeId(n) !== draggedId)
+          : [];
+        const at = Math.max(0, sibs.indexOf(node));
+        if (offset < 0.25) a.move(draggedId, parentId, at);
+        else if (offset > 0.75) a.move(draggedId, parentId, at + 1);
+        else a.move(draggedId, id, fileChildCount(tl, node));
+      });
+
+      host.appendChild(row);
+      for (const child of fileLayerChildren(tl, node)) renderRow(child, depth + 1);
+    }
+
+    const top = fileLayerChildren(tl, body);
+    if (!top.length) { empty(host, "This page is empty."); return; }
+    for (const node of top) renderRow(node, 0);
   }
 
   function renderLibrary(tl, host) {
@@ -806,7 +962,17 @@
 
   // ---------- render ----------
 
+  // function: file mode has no library or page; those tabs hide.
   function renderTabs(tl) {
+    const a = api(tl);
+    const fileMode = !!a && !a.state;
+    for (const name of ["library", "page"]) {
+      const b = tl.tabs[name];
+      if (b) b.hidden = fileMode;
+    }
+    if (fileMode && (tl.section === "library" || tl.section === "page")) {
+      tl.section = "tools";
+    }
     for (const name of SECTIONS) {
       const b = tl.tabs[name];
       if (b) b.classList.toggle("mxtl-on", name === tl.section);
@@ -867,7 +1033,7 @@
       const wrap = el("div", "mxtl-wrap");
       const tabs = el("div", "mxtl-tabs");
       for (const name of SECTIONS) {
-        const b = mkBtn(name, "mxtl-tab", () => {
+        const b = mkBtn(SECTION_LABELS[name] || name, "mxtl-tab", () => {
           tl.section = name;
           markDirty(tl);
           render(tl);

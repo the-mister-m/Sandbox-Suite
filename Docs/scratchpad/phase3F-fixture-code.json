@@ -1,0 +1,200 @@
+{
+  "app": "Code Canvas",
+  "version": 2,
+  "settings": {
+    "grid": 8,
+    "gridStyle": "dynamic",
+    "width": {
+      "mode": "fixed",
+      "px": 1280
+    },
+    "palette": "default",
+    "palettes": {}
+  },
+  "page": "pg_rg7mho",
+  "pages": [
+    {
+      "id": "pg_rg7mho",
+      "name": "Page 1",
+      "notes": "",
+      "widgets": [
+        {
+          "id": "wg_adwxyp",
+          "type": "text.block",
+          "parent": null,
+          "box": {
+            "x": 80,
+            "y": 40,
+            "w": 320,
+            "h": 80
+          },
+          "content": {
+            "mode": "literal",
+            "value": "Phase 3 headed heading"
+          },
+          "props": {
+            "size": "md",
+            "weight": "normal",
+            "align": "left",
+            "font": "sans",
+            "fill": "none",
+            "text": "ink",
+            "border": "none",
+            "padding": 8,
+            "margin": 0,
+            "corner": 0,
+            "shadow": "none",
+            "tag": "p"
+          },
+          "link": null,
+          "notes": "",
+          "locked": false,
+          "hidden": false,
+          "behaviors": [],
+          "animations": [],
+          "code": {
+            "custom": false,
+            "html": "",
+            "css": "",
+            "js": ""
+          }
+        },
+        {
+          "id": "wg_hqnpe7",
+          "type": "text.block",
+          "parent": null,
+          "box": {
+            "x": 40,
+            "y": 180,
+            "w": 320,
+            "h": 70
+          },
+          "content": {
+            "mode": "literal",
+            "value": "A paragraph of headed proof text."
+          },
+          "props": {
+            "size": "md",
+            "weight": "normal",
+            "align": "left",
+            "font": "sans",
+            "fill": "none",
+            "text": "ink",
+            "border": "none",
+            "padding": 8,
+            "margin": 0,
+            "corner": 0,
+            "shadow": "none",
+            "tag": "p"
+          },
+          "link": null,
+          "notes": "",
+          "locked": false,
+          "hidden": false,
+          "behaviors": [],
+          "animations": [],
+          "code": {
+            "custom": false,
+            "html": "",
+            "css": "",
+            "js": ""
+          }
+        },
+        {
+          "id": "wg_zrbjmv",
+          "type": "status.badge",
+          "parent": null,
+          "box": {
+            "x": 40,
+            "y": 300,
+            "w": 160,
+            "h": 32
+          },
+          "content": {
+            "mode": "literal",
+            "value": "badge"
+          },
+          "props": {
+            "size": "md",
+            "weight": "normal",
+            "align": "left",
+            "font": "sans",
+            "fill": "none",
+            "text": "ink",
+            "border": "none",
+            "padding": 8,
+            "margin": 0,
+            "corner": 0,
+            "shadow": "none"
+          },
+          "link": null,
+          "notes": "",
+          "locked": false,
+          "hidden": false,
+          "behaviors": [],
+          "animations": [],
+          "code": {
+            "custom": false,
+            "html": "",
+            "css": "",
+            "js": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "pg_myeim7",
+      "name": "Page 2",
+      "notes": "",
+      "widgets": [
+        {
+          "id": "wg_2udl5r",
+          "type": "text.block",
+          "parent": null,
+          "box": {
+            "x": 20,
+            "y": 20,
+            "w": 200,
+            "h": 40
+          },
+          "content": {
+            "mode": "literal",
+            "value": ""
+          },
+          "props": {
+            "size": "md",
+            "weight": "normal",
+            "align": "left",
+            "font": "sans",
+            "fill": "none",
+            "text": "ink",
+            "border": "none",
+            "padding": 8,
+            "margin": 0,
+            "corner": 0,
+            "shadow": "none",
+            "tag": "p"
+          },
+          "link": null,
+          "notes": "",
+          "locked": false,
+          "hidden": false,
+          "behaviors": [],
+          "animations": [],
+          "code": {
+            "custom": false,
+            "html": "",
+            "css": "",
+            "js": ""
+          }
+        }
+      ]
+    }
+  ],
+  "library": {
+    "objects": [],
+    "animations": [],
+    "behaviors": []
+  },
+  "assets": []
+}

@@ -1,0 +1,5 @@
+[harness] session open: {'sid': '410ef20f1a9d'}
+[p1:pageerror] Canceled
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/410ef20f1a9d/phase3-headed.json
+[harness] annotate PNGs written: ['annotate-1789340390348.png', 'annotate-1789340395260.png', 'annotate-1789340400631.png']

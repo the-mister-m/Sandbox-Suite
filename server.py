@@ -1775,6 +1775,18 @@ def api_fs_raw():
     return send_file(path, mimetype=mime or "application/octet-stream", conditional=True)
 
 
+# label: raw file by absolute path in the URL, the canvas iframe's base.
+@app.route("/raw/<path:p>")
+def api_raw_path(p):
+    import mimetypes
+    from flask import send_file
+    path = os.path.abspath("/" + p)
+    if not os.path.isfile(path):
+        return jsonify({"error": f"not a file: {path}"}), 404
+    mime, _ = mimetypes.guess_type(path)
+    return send_file(path, mimetype=mime or "application/octet-stream", conditional=True)
+
+
 # native file/folder picker
 @app.route("/api/fs/pick")
 def api_fs_pick():
@@ -1790,6 +1802,13 @@ def api_fs_pick():
         # folder picker
         script = ('tell application "Finder"\nactivate\n'
                   'POSIX path of (choose folder%s)\nend tell' % where)
+    elif kind == "save":
+        # save dialog; name: default filename
+        name = (request.args.get("name") or "").strip()
+        default_name = (' default name "%s"' % name.replace("\\", "\\\\").replace('"', '\\"')
+                        if name else "")
+        script = ('tell application "Finder"\nactivate\n'
+                  'POSIX path of (choose file name%s%s)\nend tell' % (default_name, where))
     else:
         # ext: one extension, a comma list, or * for any file
         raw_ext = (request.args.get("ext") or "json").strip().lower()

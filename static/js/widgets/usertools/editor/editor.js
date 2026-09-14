@@ -4,8 +4,10 @@
 // content, echoing that id), "save" (path and content to the server), "saved"
 // (the server's gate outcome, echoing the id).
 //
-// State: the server owns every write. There is no local file write and no save
-// dialog. A refused save leaves the tab dirty with the reason on the bar.
+// State: the server owns every write. There is no local file write. Save As on
+// an untitled tab picks the path through the shared root browser, native or
+// suite per global.json picker. A refused save leaves the tab dirty with the
+// reason on the bar.
 
 (function () {
   "use strict";
@@ -352,7 +354,12 @@
     if (!ed || !tab) return Promise.resolve(false);
     const content = tab.model ? tab.model.getValue() : tab.text;
     if (!tab.path) {
-      return MX.ui.askText("Save as", "path", "").then((path) => {
+      // save as: shared root browser in save mode; cancel resolves empty
+      return new Promise((resolve) => {
+        MX.openRootBrowser("/", resolve, {
+          save: true, name: tab.name || "", cancel: () => resolve(""),
+        });
+      }).then((path) => {
         if (!path) return false;
         tab.path = path;
         if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
@@ -446,12 +453,16 @@
         openTab(frame, "", "");
         if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(frame);
       });
+      // open: shared root browser, native or suite per global.json picker
       const btnOpen = mkBtn("Open", () => {
-        MX.ui.askText("Open file", "path", "").then((path) => {
+        const cur = activeTab(frame);
+        const start = (cur && cur.path && cur.path.lastIndexOf("/") > 0)
+          ? cur.path.slice(0, cur.path.lastIndexOf("/")) : "/";
+        MX.openRootBrowser(start, (path) => {
           if (path) {
             frame.send({ type: "open", path: path, inst: frame.id });
           }
-        });
+        }, { ext: "*" });
       });
       const btnSave = mkBtn("Save", () => doSave(frame));
       const btnPreview = mkBtn("Preview", () => togglePreview(frame));

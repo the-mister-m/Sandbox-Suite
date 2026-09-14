@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Layers drag onto the target row's top quarter, both directions. Dragged row lands right before the target, live and source. Cmd-Z restores.",
+      "pass": false,
+      "shot": "01b-red-before-gold.png",
+      "note": "gold box onto red box at frac 0.1: drag={'ok': True, 'carried': 'path-0-5', 'frac': 0.1, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.gold|gold box', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.gold|gold box', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.gold|gold box', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True ;; red box onto gold box at frac 0.1: drag={'ok': True, 'carried': 'path-0-2', 'frac': 0.1, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.red|red box', 'div.gold|gold box', 'span|a span sibling'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'div.red|red box', 'span|a span sibling'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'div.red|red box', 'span|a span sibling'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True"
+    },
+    {
+      "n": 2,
+      "name": "Layers drag onto the target row's bottom quarter, both directions. Dragged row lands right after the target, live and source. Cmd-Z restores.",
+      "pass": false,
+      "shot": "02b-red-after-gold.png",
+      "note": "gold box onto red box at frac 0.9: drag={'ok': True, 'carried': 'path-0-5', 'frac': 0.9, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.gold|gold box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.gold|gold box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.gold|gold box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True ;; red box onto gold box at frac 0.9: drag={'ok': True, 'carried': 'path-0-2', 'frac': 0.9, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'div.red|red box', 'span|a span sibling'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling', 'div.red|red box'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling', 'div.red|red box'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True"
+    },
+    {
+      "n": 3,
+      "name": "Layers drag onto the stage row's middle, both directions. The dragged row is the stage's last child, live and source. Cmd-Z restores.",
+      "pass": true,
+      "shot": "03b-red-into.png",
+      "note": "gold box onto stage at frac 0.5: drag={'ok': True, 'carried': 'path-0-5', 'frac': 0.5, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling', 'div.gold|gold box'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling', 'div.gold|gold box'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'span|a span sibling', 'div.gold|gold box'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True ;; red box onto stage at frac 0.5: drag={'ok': True, 'carried': 'path-0-2', 'frac': 0.5, 'rowHeight': 21} want=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling', 'div.red|red box'] live_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling', 'div.red|red box'] source_after=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling', 'div.red|red box'] undo_live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] undo_source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True"
+    },
+    {
+      "n": 4,
+      "name": "Eye on blue's row hides it, live and source. Click again: display back to empty, not 'block'. Cmd-Z twice restores.",
+      "pass": true,
+      "shot": "04-eye.png",
+      "note": "first_click={'ok': True, 'before': {'title': 'visible', 'text': '\u25c9'}} hidden live_display='none' source_display='none' live_style='left: 200px; top: 140px; display: none;' source_style='left: 200px; top: 140px; display: none;'; second_click={'ok': True, 'before': {'title': 'hidden', 'text': '\u25cc'}} live_display='' source_display='' live_style='left: 200px; top: 140px;' source_style='left: 200px; top: 140px;'; after_two_undos live='' source='' order_restored=True"
+    },
+    {
+      "n": 5,
+      "name": "Click red, shift-click blue, Group. The group row holds both. Ungroup. Back to red, blue. Cmd-Z twice.",
+      "pass": true,
+      "shot": "05-group-ungroup.png",
+      "note": "selection_before_group=['path-0-2', 'path-0-3'] head_before_group={'buttons': [{'label': 'Group', 'disabled': False}, {'label': 'Ungroup', 'disabled': False}], 'rows_lit': ['path-0-2', 'path-0-3'], 'section': 'layers'} head_after_group={'buttons': [{'label': 'Group', 'disabled': False}, {'label': 'Ungroup', 'disabled': False}], 'rows_lit': ['grp_0pr4ia'], 'section': 'layers'} group_button={'ok': True} group_id='grp_0pr4ia' group_row_present=True rows_under_it=[['red box'], ['blue box']] stage_live_after_group=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div|red boxblue bo', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] stage_source_after_group=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div|red boxblue bo', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling']; ungroup_button={'ok': True} stage_live_after_ungroup=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] stage_source_after_ungroup=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling']; after_two_undos live=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] source=['h1|Phase 3F fixtu', 'p|A paragraph of', 'div.red|red box', 'div.blue|blue box', 'div.green|green box', 'div.gold|gold box', 'span|a span sibling'] restored=True"
+    },
+    {
+      "n": 6,
+      "name": "A edits the paragraph and saves. B, clean on the same path, reopens on its own within 5 seconds. A undoes and saves the file back.",
+      "pass": true,
+      "shot": "06-cross-instance-reopen.png",
+      "note": "B dirty before=False; A text edit in source=True saved_status=True; on disk after A's save=True; B showed the new text=True in 0.00s (limit 5s) B_path=phase3F-fixture-tools.html B_dirty=False B_status='loaded'; A undo removed it from source=True resave_status=True text_gone_from_disk=True disk_bytes=1359"
+    },
+    {
+      "n": 7,
+      "name": "B edits and switches away, its record stashed dirty. A saves that exact text. B's record goes clean and shows the text on return.",
+      "pass": true,
+      "shot": "07-cross-instance-dirty-clear.png",
+      "note": "B edit in B's source=True; B's held record for the tools copy after switching away: has=True dirty=True bytes=1331; A set-full-source to that text (1331 bytes), A's source now 1331 bytes, holds B's text=True saved_status=True; B's record after A's save: has=True dirty=False bytes=1331; B switched back: live_has_text=True source_has_text=True dirty=False status='loaded' path=phase3F-fixture-tools.html"
+    },
+    {
+      "n": 8,
+      "name": "Socket first bind over ten fresh contexts.",
+      "pass": null,
+      "shot": "08-socket-first-bind.png",
+      "note": "rebinds_needed=0 of 10; seconds_to_file_ready=[0.03, 0.04, 0.03, 0.05, 0.03, 0.04, 0.04, 0.04, 0.03, 0.04]; ready=[True, True, True, True, True, True, True, True, True, True]; socket_state_at_mount=['live', 'live', 'live', 'live', 'live', 'live', 'live', 'live', 'live', 'live']"
+    },
+    {
+      "n": 9,
+      "name": "Reload. Two canvases come back in preview, Tools and Targets bound.",
+      "pass": true,
+      "shot": "09-after-reload.png",
+      "note": "A ready=True mode='preview' path=phase3F-fixture-tools.html body_children=3; B ready=True mode='preview' path=phase3F-fixture-tools.html body_children=3 targets=2; tools_binding={'canvasOpt': 'canvas-mu0d1d0m-1', 'focusedInst': 'canvas-mu0d1ewn-3', 'optTarget': '/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase3F-fixture-tools.html', 'who': 'pinned canvas-mu0d1d0m-1'} tools_tabs=['tools', 'layers', '\u2699']; targets_rows=['phase3F-fixture-tools.html']"
+    },
+    {
+      "n": 10,
+      "name": "Console clean the whole way.",
+      "pass": true,
+      "shot": "10-final.png",
+      "note": "pageerrors=0 error_or_warning_lines=0 page_console_lines=0 total_console_lines=20"
+    }
+  ],
+  "findings": [
+    "1 \u2014 tools.js renderFileLayers drop / canvas.js move",
+    "2 \u2014 tools.js renderFileLayers drop / canvas.js move"
+  ],
+  "boots": [
+    {
+      "n": 1,
+      "rebound": false,
+      "secs": 0.03,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 2,
+      "rebound": false,
+      "secs": 0.04,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 3,
+      "rebound": false,
+      "secs": 0.03,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 4,
+      "rebound": false,
+      "secs": 0.05,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 5,
+      "rebound": false,
+      "secs": 0.03,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 6,
+      "rebound": false,
+      "secs": 0.04,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 7,
+      "rebound": false,
+      "secs": 0.04,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 8,
+      "rebound": false,
+      "secs": 0.04,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 9,
+      "rebound": false,
+      "secs": 0.03,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    },
+    {
+      "n": 10,
+      "rebound": false,
+      "secs": 0.04,
+      "ready": true,
+      "state_at_mount": "live",
+      "state_end": "live"
+    }
+  ],
+  "fixtures_restored": {
+    "phase3F-fixture-tools.html": {
+      "run_left_bytes": 1331,
+      "wrote_back_bytes": 1186,
+      "matches_before": true,
+      "data_od_id_after": 0
+    },
+    "phase3F-fixture-tools-2.html": {
+      "run_left_bytes": 673,
+      "wrote_back_bytes": 673,
+      "matches_before": true,
+      "data_od_id_after": 0
+    }
+  }
+}
