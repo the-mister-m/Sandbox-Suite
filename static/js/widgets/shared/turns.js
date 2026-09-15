@@ -116,7 +116,8 @@
   }
 
   // tool block — collapsed row: gate-colored name, target, time; open: in/out boxes
-  function makeToolBlock(row, resultText) {
+  // opts.frame + a pending (yellow) row.gate_id add approve/deny, reusing gate-common.js
+  function makeToolBlock(row, resultText, opts) {
     row = row || {};
     const gate = row.gate || 'white';
     const details = document.createElement('details');
@@ -137,9 +138,37 @@
     summary.appendChild(t);
     details.appendChild(summary);
     const args = row.args && Object.keys(row.args).length ? JSON.stringify(row.args, null, 2) : '';
+    const outBox = _toolIo('out', resultText);
     details.appendChild(_toolIo('in', args));
-    details.appendChild(_toolIo('out', resultText));
+    details.appendChild(outBox);
+    details._live = { row, edgeEl: edge, outBoxEl: outBox.querySelector('.tool-io-box') };
+    if (gate === 'yellow' && row.gate_id && opts && opts.frame && MX.gates) {
+      const btns = MX.gates.settleButtons(opts.frame, row.gate_id, () => {
+        for (const b of btns.querySelectorAll('button')) b.disabled = true;
+      }, opts.region);
+      summary.appendChild(btns);
+      details._live.gateBtns = btns;
+    }
     return details;
+  }
+
+  // updates a card made by makeToolBlock in place: new gate color, new result text
+  function updateToolBlock(details, patch) {
+    const live = details && details._live;
+    if (!live) return;
+    patch = patch || {};
+    if (patch.gate && patch.gate !== live.row.gate) {
+      live.row.gate = patch.gate;
+      details.className = 'cot tool ' + patch.gate;
+      live.edgeEl.className = 'tool-edge ' + patch.gate;
+      if (patch.gate !== 'yellow' && live.gateBtns) {
+        live.gateBtns.remove();
+        live.gateBtns = null;
+      }
+    }
+    if (patch.result !== undefined) {
+      live.outBoxEl.textContent = patch.result || '—';
+    }
   }
 
   function _groupTurns(messages) {
@@ -244,5 +273,5 @@
     return { blk, liveBub };
   }
 
-  MX.turns = { _groupTurns, _buildTurnBlock, renderMarkdown, makeToolBlock };
+  MX.turns = { _groupTurns, _buildTurnBlock, renderMarkdown, makeToolBlock, updateToolBlock };
 })();

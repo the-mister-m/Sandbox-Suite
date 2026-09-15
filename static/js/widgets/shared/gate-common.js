@@ -54,11 +54,14 @@
       : r;
   }
 
-  function actionRecords(msg) {
+  // mergeGates default true: hide a merged gate row and fold its hook/answer
+  // onto the surviving row. false shows the merged gate as its own row again.
+  function actionRecords(msg, mergeGates) {
+    const merge = mergeGates !== false;
     return (msg && Array.isArray(msg.records) ? msg.records : [])
       .filter((r) => r && r.kind === "action")
-      .filter((r) => !(r.action_type === "gate" && r.merged))
-      .map(flatten);
+      .filter((r) => merge ? !(r.action_type === "gate" && r.merged) : true)
+      .map((r) => (merge ? flatten(r) : r));
   }
 
   // region id to name, from ade_init or track_list

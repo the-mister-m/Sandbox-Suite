@@ -1,0 +1,81 @@
+{
+  "name": "basic chat 1",
+  "grid": {
+    "cols": 28,
+    "rows": 18
+  },
+  "widgets": [
+    {
+      "type": "ledger",
+      "slot": {
+        "col": 12,
+        "row": 1,
+        "w": 13,
+        "h": 7
+      },
+      "options": {}
+    },
+    {
+      "type": "browser",
+      "slot": {
+        "col": 25,
+        "row": 1,
+        "w": 4,
+        "h": 18
+      },
+      "options": {
+        "root": "/Users/moth3rship/Desktop",
+        "expanded": []
+      }
+    },
+    {
+      "type": "devagent",
+      "slot": {
+        "col": 13,
+        "row": 14,
+        "w": 12,
+        "h": 4
+      },
+      "options": {}
+    },
+    {
+      "type": "canvas_tools",
+      "slot": {
+        "col": 13,
+        "row": 8,
+        "w": 4,
+        "h": 6
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/city-street-night.html",
+        "canvas": "focused",
+        "section": "layers",
+        "followTarget": ""
+      }
+    },
+    {
+      "type": "anchor_chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 12,
+        "h": 18
+      },
+      "options": {
+        "region": "1ebd39a061de",
+        "speech_enabled": false,
+        "zoom": 1.5
+      }
+    },
+    {
+      "type": "queue_log",
+      "slot": {
+        "col": 13,
+        "row": 8,
+        "w": 12,
+        "h": 6
+      },
+      "options": {}
+    }
+  ]
+}

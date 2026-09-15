@@ -44,7 +44,7 @@ def test_the_chat_widget_rows_are_the_speech_options():
 
 def test_the_queue_widget_rows_are_the_two_old_edit_track_fields():
     d = engine_settings.widget_defaults("queue")
-    assert set(d) == {"claude_cache_ttl", "claude_exclude_dynamic"}
+    assert set(d) == {"claude_cache_ttl", "claude_exclude_dynamic", "merge_gates"}
 
 
 @pytest.mark.parametrize("wtype,filename", sorted(MINE.items()))

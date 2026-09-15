@@ -343,11 +343,14 @@
     if (!st.feed) return;
 
     const byId = new Map(st.tracks.map((t) => [t.id, t]));
+    const mergeGates = frame.options.merge_gates !== false;
 
     const rows = st.records
-      .filter((r) => !(r.action_type === "gate" && r.merged))
+      .filter((r) => (mergeGates ? !(r.action_type === "gate" && r.merged) : true))
       .filter((r) => st.visible[regionOf(r)] !== false)
-      .map((r) => (r.gate_id ? Object.assign({}, r, { hook: r.gate_hook, answer: r.gate_answer }) : r));
+      .map((r) => (mergeGates && r.gate_id
+        ? Object.assign({}, r, { hook: r.gate_hook, answer: r.gate_answer })
+        : r));
     rows.sort((a, b) => (b.parked || 0) - (a.parked || 0));
 
     st.feed.innerHTML = "";
@@ -605,6 +608,10 @@
         if (d && d.id) { st.details[d.id] = d; if (st.open[d.id]) render(frame); }
         return;
       }
+    },
+
+    onOption(frame, key) {
+      if (key === "merge_gates") render(frame);
     },
   });
 })();

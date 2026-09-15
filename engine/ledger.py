@@ -448,6 +448,40 @@ def _pair_gates(records):
             _carry_gate_prompt(E, G)
 
 
+def _pair_claude_gates(records):
+    # Claude rail: the gate record's edge is the tool name (e.g. "Write");
+    # the open record's action_type carries the same tool name even after
+    # _pair_tool_use renames the surviving row (write/edit). Match on
+    # region, turn, tool name, and target; take the nearest unmerged gate
+    # parked at or before the open record.
+    from engine import policy as _policy
+    by_id = {r.get("id"): r for r in records}
+    pool = {}
+    for g in records:
+        if (g.get("action_type") == "gate" and g.get("outcome") == "fired"
+                and not g.get("merged")):
+            key = (g.get("region"), g.get("turn"), g.get("edge"))
+            pool.setdefault(key, []).append(g)
+    for r in records:
+        open_id = r.get("tool_use_open_id")
+        O = by_id.get(open_id) if open_id else None
+        if O is None or not (O.get("action_type") or "").startswith("claude_hook:"):
+            continue
+        tool = O["action_type"].split(":", 1)[-1]
+        target = _policy.target_of((O.get("payload") or {}).get("tool_input"))
+        candidates = [g for g in pool.get((r.get("region"), r.get("turn"), tool), [])
+                      if not g.get("merged")
+                      and (g.get("payload") or {}).get("target") == target
+                      and (g.get("parked") or 0) <= (O.get("parked") or 0)]
+        if not candidates:
+            continue
+        G = max(candidates, key=lambda g: g.get("parked") or 0)
+        r["gate_id"] = G["id"]
+        r["gate_hook"] = G.get("hook")
+        r["gate_answer"] = G.get("answer")
+        G["merged"] = True
+
+
 def _pair_tool_use(records):
     opens = {}
     for r in records:
@@ -470,6 +504,8 @@ def _pair_tool_use(records):
         if r.get("prompt") is None:
             r["prompt"] = O.get("prompt")
             r["prompt_blob"] = O.get("prompt_blob")
+        if r.get("tool_input") is None:
+            r["tool_input"] = (O.get("payload") or {}).get("tool_input")
         _translate_rail_c_write(r, O)
 
 
@@ -519,6 +555,7 @@ def snapshot(limit=None, shell=None, log_dir=None):
     log_records = read_log(shell=shell, log_dir=log_dir)
     _pair_gates(log_records)
     _pair_tool_use(log_records)
+    _pair_claude_gates(log_records)
     for r in log_records:
         rid = r.get("id")
         if r.get("merged") and (r.get("action_type") or "").startswith("claude_hook:"):

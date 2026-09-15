@@ -56,12 +56,12 @@
     return /^\[WRITE/.test(r.summary || '');
   }
 
-  function ioBox(label, text, blobPath) {
+  function ioBox(label, text, blobPath, resolving) {
     if (text !== null && text !== undefined && text !== '') {
       return '<div class="ql-io-box"><div class="io-l">' + esc(label) + '</div>' +
              '<div class="scrollbox">' + esc(text) + '</div></div>';
     }
-    const note = blobPath ? '— (too large to show inline)' : '—';
+    const note = resolving ? '— (resolving…)' : (blobPath ? '— (too large to show inline)' : '—');
     return '<div class="ql-io-box"><div class="io-l">' + esc(label) + '</div>' +
            '<div class="io-blank">' + esc(note) + '</div></div>';
   }
@@ -93,6 +93,44 @@
   function matchedActions(t, st) {
     const acts = reduceActions(st.records);
     return acts.filter(a => sameTurn(a, t));
+  }
+
+  // open-state key: region+turn, stable across a turn's live -> finished
+  // transition (the live row and its eventual turn record have different ids).
+  function turnKey(t) {
+    return String(regionOf(t)) + '::' + String(t.turn);
+  }
+
+  // running turns: actions whose region+turn has no turn record yet.
+  function liveTurnsFor(st) {
+    const finishedKeys = new Set(allTurns(st).map(turnKey));
+    const groups = {};
+    for (const a of reduceActions(st.records)) {
+      const region = regionOf(a);
+      if (region == null || a.turn == null) continue;
+      const key = String(region) + '::' + String(a.turn);
+      if (finishedKeys.has(key)) continue;
+      if (!groups[key]) groups[key] = { id: 'live::' + key, live: true, region, turn: a.turn };
+    }
+    return Object.values(groups);
+  }
+
+  // open state: a live row starts open; once its turn record lands, collapse
+  // it once. Never touches open state for any other turn.
+  function applyLiveOpenState(st, liveTurns) {
+    const liveKeys = new Set(liveTurns.map(turnKey));
+    for (const t of allTurns(st)) {
+      const key = turnKey(t);
+      if (st.wasLive[key] && !st.liveCollapsed[key]) {
+        st.open[key] = false;
+        st.liveCollapsed[key] = true;
+      }
+    }
+    liveKeys.forEach(key => {
+      if (!(key in st.open)) st.open[key] = true;
+    });
+    st.wasLive = {};
+    liveKeys.forEach(key => { st.wasLive[key] = true; });
   }
 
   const BASE_COLS = [
@@ -183,7 +221,8 @@
   function cellFor(key, t, st) {
     const u = usageOf(t);
     switch (key) {
-      case 'time':      return '<span class="caret">' + (st.open[t.id] ? '▾' : '▸') + '</span>' + fmtTime(t.started);
+      case 'time':      return '<span class="caret">' + (st.open[turnKey(t)] ? '▾' : '▸') + '</span>' +
+                               (t.live ? '<span class="live-badge">live</span>' : '') + fmtTime(t.started);
       case 'track':     {
         const rid = regionOf(t), rn = trackName(rid, st);
         return '<span class="' + ('track-name' + goneCls(rid, st)) + '" title="' + escAttr(rn) + '">' + esc(rn) + '</span>';
@@ -228,7 +267,11 @@
       hiddenCols: { in: true, cread: true, cwrite: true },
       sort: { key: 'time', dir: -1 },
       open: {},
+      wasLive: {},
+      liveCollapsed: {},
       openSub: {},
+      details: {},
+      detailAsked: {},
       atOpen: false,
       pendingFocus: null,
       dragSrcKey: null,
@@ -458,7 +501,10 @@
       });
     });
 
-    let turns = allTurns(st).filter(t => st.visible[regionOf(t)] !== false);
+    const liveTurns = liveTurnsFor(st);
+    applyLiveOpenState(st, liveTurns);
+
+    let turns = allTurns(st).concat(liveTurns).filter(t => st.visible[regionOf(t)] !== false);
 
     turns.sort((a, b) => {
       const av = sortVal(st.sort.key, a, st), bv = sortVal(st.sort.key, b, st);
@@ -474,22 +520,22 @@
       for (const t of turns) {
         const match = (pf.track == null || String(regionOf(t)) === String(pf.track)) &&
                       (pf.turn == null || String(t.turn) === String(pf.turn));
-        if (match) { st.open[t.id] = true; _focusHitId = t.id; break; }
+        if (match) { st.open[turnKey(t)] = true; _focusHitId = t.id; break; }
       }
     }
 
     let bodyHtml = '';
     for (const t of turns) {
-      const open = st.open[t.id];
-      const rowCls = open ? 'trow open' : 'trow';
-      bodyHtml += '<tr class="' + rowCls + '" data-id="' + escAttr(t.id) + '">';
+      const open = st.open[turnKey(t)];
+      const rowCls = 'trow' + (open ? ' open' : '') + (t.live ? ' live' : '');
+      bodyHtml += '<tr class="' + rowCls + '" data-id="' + escAttr(t.id) + '" data-key="' + escAttr(turnKey(t)) + '">';
       for (const c of cols) {
         const numCls = NUMCOLS.includes(c.key) ? ' class="num"' : '';
         bodyHtml += '<td' + numCls + '>' + cellFor(c.key, t, st) + '</td>';
       }
       bodyHtml += '</tr>';
       if (open) {
-        bodyHtml += subRowsFor(t, cols.length, st);
+        bodyHtml += subRowsFor(frame, t, cols.length, st);
       }
     }
     if (!turns.length) {
@@ -498,7 +544,7 @@
     bodyEl.innerHTML = bodyHtml;
 
     for (const t of turns) {
-      if (!st.open[t.id]) continue;
+      if (!st.open[turnKey(t)]) continue;
       const wrap = bodyEl.querySelector('#tx-' + CSS.escape(t.id));
       if (wrap) mountTranscript(frame, st, t, wrap);
     }
@@ -506,8 +552,8 @@
     bodyEl.querySelectorAll('tr.trow').forEach(tr => {
       tr.onclick = (e) => {
         if (e.target.closest('.srow')) return;
-        const id = tr.dataset.id;
-        st.open[id] = !st.open[id];
+        const key = tr.dataset.key;
+        st.open[key] = !st.open[key];
         render(frame);
       };
     });
@@ -571,7 +617,7 @@
     });
   }
 
-  function subRowsFor(t, colSpan, st) {
+  function subRowsFor(frame, t, colSpan, st) {
     const acts = matchedActions(t, st).sort((a, b) => (a.parked || 0) - (b.parked || 0));
     let html = '';
 
@@ -598,7 +644,7 @@
             (r.summary ? ' <span class="muted" style="font-size:10.5px">— ' + esc(r.summary) + '</span>' : '') +
             (isUser ? '<span class="ql-you">you</span>' : '') +
             (r.duration_ms != null ? ' <span class="muted" style="font-size:10.5px">' + r.duration_ms + 'ms</span>' : '') +
-            (open ? '<div class="ql-io" style="margin-top:6px">' + ioBox('input', r.prompt, r.prompt_blob) + ioBox('output', r.result, r.result_blob) + '</div>' : '') +
+            (open ? '<div style="margin-top:6px">' + subDetailHtml(frame, st, r) + '</div>' : '') +
           '</div>' +
         '</div>' +
       '</td></tr>';
@@ -606,6 +652,102 @@
 
     html += transcriptRowHtml(t, colSpan);
     return html;
+  }
+
+  // sub-row expand body: write/edit gets a diff, bash gets command/output,
+  // everything else keeps the generic input/output boxes.
+  function subDetailHtml(frame, st, r) {
+    if (r.action_type === 'write') return writeDiffHtml(frame, st, r);
+    if (actionTool(r) === 'Bash') return bashIoHtml(r);
+    return '<div class="ql-io">' + ioBox('input', r.prompt, r.prompt_blob) + ioBox('output', r.result, r.result_blob) + '</div>';
+  }
+
+  function actionTool(r) {
+    const at = r.action_type || '';
+    const p = 'claude_hook_result:';
+    return at.indexOf(p) === 0 ? at.slice(p.length) : null;
+  }
+
+  function bashIoHtml(r) {
+    const cmd = (r.tool_input && r.tool_input.command) || null;
+    const tr = (r.payload && r.payload.tool_response) || null;
+    let out = null;
+    if (tr) out = [tr.stdout, tr.stderr].filter(s => s).join('\n');
+    if (out === null && r.result !== null && r.result !== undefined) out = r.result;
+    return '<div class="ql-io">' + ioBox('input', cmd, null) + ioBox('output', out, r.result_blob) + '</div>';
+  }
+
+  function priorTextFor(st, r) {
+    const p = r.payload || {};
+    if (p.prior_existed === false) return '';
+    const d = st.details[r.id];
+    if (d && d.payload && d.payload.prior !== null && d.payload.prior !== undefined) return d.payload.prior;
+    return p.prior !== undefined ? p.prior : null;
+  }
+
+  function resultTextFor(st, r) {
+    const d = st.details[r.id];
+    if (d && d.result !== null && d.result !== undefined) return d.result;
+    return r.result !== undefined ? r.result : null;
+  }
+
+  function requestDetail(frame, st, id) {
+    if (!id || st.detailAsked[id]) return;
+    st.detailAsked[id] = true;
+    frame.send({ type: 'ledger_detail', id, inst: frame.id });
+  }
+
+  // Write/Edit diff — prior vs result, ported from changes.js diffLines.
+  const DIFF_MAX_CELLS = 4000000;
+  function diffLines(oldText, newText) {
+    const a = oldText.split('\n');
+    const b = newText.split('\n');
+    if (a.length * b.length > DIFF_MAX_CELLS) return null;
+    const n = a.length, m = b.length;
+    const dp = new Array(n + 1);
+    for (let i = 0; i <= n; i++) dp[i] = new Uint32Array(m + 1);
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    const out = [];
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (a[i] === b[j]) { out.push({ t: 'ctx', text: a[i] }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ t: 'del', text: a[i] }); i++; }
+      else { out.push({ t: 'add', text: b[j] }); j++; }
+    }
+    while (i < n) { out.push({ t: 'del', text: a[i] }); i++; }
+    while (j < m) { out.push({ t: 'add', text: b[j] }); j++; }
+    return out;
+  }
+
+  function writeDiffHtml(frame, st, r) {
+    const priorBlob = (r.payload || {}).prior_blob || null;
+    const resultBlob = r.result_blob || null;
+    const priorText = priorTextFor(st, r);
+    const resultText = resultTextFor(st, r);
+    const priorAvailable = priorText !== null && priorText !== undefined;
+    const resultAvailable = resultText !== null && resultText !== undefined;
+
+    if (!priorAvailable || !resultAvailable) {
+      if ((priorBlob || resultBlob) && !st.detailAsked[r.id]) requestDetail(frame, st, r.id);
+      const resolving = !st.details[r.id] && !!(priorBlob || resultBlob);
+      return '<div class="ql-io">' +
+        ioBox('prior', priorAvailable ? priorText : null, priorBlob, resolving) +
+        ioBox('written', resultAvailable ? resultText : null, resultBlob, resolving) +
+        '</div>';
+    }
+
+    const lines = diffLines(priorText, resultText);
+    if (!lines) {
+      return '<div class="muted" style="font-size:10.5px;padding:4px 0;">file too large to diff inline — showing prior/written separately</div>' +
+        '<div class="ql-io">' + ioBox('prior', priorText, null) + ioBox('written', resultText, null) + '</div>';
+    }
+    return '<div class="ql-diff">' +
+      lines.map(l => '<div class="dline ' + l.t + '">' + esc(l.text) + '</div>').join('') +
+      '</div>';
   }
 
   function transcriptRowHtml(t, colSpan) {
@@ -734,7 +876,12 @@ tr.trow.open{ background:rgba(255,255,255,0.05); }
 tr.trow.flash{ animation:mxLedFlash 1.6s ease-out 1; }
 @keyframes mxLedFlash{ 0%,40%{ background:rgba(57,135,229,.28); } 100%{ background:transparent; } }
 tr.trow td:first-child{ white-space:nowrap; }
+tr.trow.live{ box-shadow:inset 3px 0 0 var(--gate-blue); }
 .caret{ display:inline-block; width:11px; color:var(--text-4); font-size:9px; }
+.live-badge{ display:inline-block; font-size:9px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--gate-blue); border:1px solid var(--gate-blue); border-radius:3px; padding:0 4px;
+  margin-right:6px; vertical-align:middle; }
+.ql-diff{ max-height:280px; overflow-y:auto; border:1px solid var(--gridline); border-radius:4px; }
 tr.srow td{ border-bottom:none; padding:3px 10px 3px 30px; background:var(--well); }
 tr.srow.last td{ border-bottom:1px solid var(--gridline); padding-bottom:8px; }
 .sline{ display:flex; align-items:flex-start; gap:9px; }
@@ -782,7 +929,7 @@ tr.srow.last td{ border-bottom:1px solid var(--gridline); padding-bottom:8px; }
       };
       document.addEventListener('mx:open-ledger', frame._ledgerOpenHandler);
 
-      frame.subscribe(['track_list', 'ade_init', 'feed', 'feed_dirty', 'transcript']);
+      frame.subscribe(['track_list', 'ade_init', 'feed', 'feed_dirty', 'transcript', 'ledger_detail']);
       frame.send({ type: "roster", inst: frame.id });
       frame.send({ type: 'feed', inst: frame.id });
 
@@ -822,6 +969,9 @@ tr.srow.last td{ border-bottom:1px solid var(--gridline); padding-bottom:8px; }
       } else if (msg.type === 'transcript') {
         st.transcripts[msg.id] = msg.messages || [];
         render(frame);
+      } else if (msg.type === 'ledger_detail') {
+        const d = msg.detail;
+        if (d && d.id) { st.details[d.id] = d; render(frame); }
       }
     },
   });

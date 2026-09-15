@@ -186,7 +186,7 @@ GLOBAL_DEFAULTS = {
                "stt_engine": "parakeet_mlx", "listen_mode": "ptt"},
     "models": {"order": [], "hidden": []},
     # one entry per widget type; the registry reads it, widgets carry none
-    "widget_defaults": {"chat": {}, "mini_queue": {}, "queue": {},
+    "widget_defaults": {"chat": {}, "mini_queue": {}, "queue": {}, "queue_log": {},
                         "editor": {"showPreview": False, "tabs": [],
                                    "active": ""},
                         "terminal": {"region": "", "tabs": [], "active": ""},
@@ -471,8 +471,14 @@ WIDGET_ROWS = {
     "queue": [
         Row("claude_cache_ttl",       "widget", str,  "1h",  preset=False, live=True),
         Row("claude_exclude_dynamic", "widget", bool, False, preset=False, live=True),
+        Row("merge_gates",            "widget", bool, True,  preset=False, live=True),
     ],
-    "mini_queue": [],
+    "mini_queue": [
+        Row("merge_gates", "widget", bool, True, preset=False, live=True),
+    ],
+    "queue_log": [
+        Row("merge_gates", "widget", bool, True, preset=False, live=True),
+    ],
     "editor":     [],
     "terminal":   [],
     "browser":    [],

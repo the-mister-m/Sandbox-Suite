@@ -605,6 +605,23 @@ def _open_rail_c_tool_record(meta, action_type, edge, tool_input, tool_use_id, h
         pass
 
 
+def _live_tool_row(region, name, target, tool_input, tool_use_id, gate_color, gate_id=None):
+    # Claude rail live tool card: same shape as the native row, id = tool_use_id
+    # so anchor-chat can update the card in place once the gate settles or the
+    # result lands. gate_id (queue/ask entries only) carries the approve/deny id.
+    if region is None or not tool_use_id:
+        return
+    row = {"id": tool_use_id, "name": name, "target": target,
+           "args": tool_input if isinstance(tool_input, dict) else {},
+           "gate": gate_color, "ts": time.time()}
+    if gate_id:
+        row["gate_id"] = gate_id
+    try:
+        region.hub.tool(row)
+    except Exception:
+        pass
+
+
 @app.route("/api/policy/resolve-hook", methods=["POST"])
 def api_policy_resolve_hook():
     body = request.get_json(silent=True)
@@ -648,30 +665,38 @@ def api_policy_resolve_hook():
                              answer=True, hook="open")
         _open_rail_c_tool_record(meta, action_type, edge, tool_input, tool_use_id,
                                  "open", prompt)
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "green")
         return jsonify({"decision": "open"})
 
     if hook == "locked":
         dq.record_resolved(action_type, payload, "model", hook="locked", outcome="locked", meta=meta)
         agent_loop.log_event(region.sess, "gate", action=tool_name, target=target,
                              answer=False, hook="locked")
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "red")
         return jsonify({"decision": "locked"})
 
     if hook == "queue":
-        dq.park(action_type, payload, "model", hook="queue", meta=meta,
-                prompt=prompt, ensure_gate=True)
+        entry = dq.park(action_type, payload, "model", hook="queue", meta=meta,
+                        prompt=prompt, ensure_gate=True)
         agent_loop.log_event(region.sess, "gate", action=tool_name, target=target,
                              answer=None, hook="queue")
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "yellow",
+                       gate_id=entry["id"])
         return jsonify({"decision": "queue"})
 
     if not region.sess.settings.get("claude_hook_ask_blocking", True):
-        dq.park(action_type, payload, "model", hook="queue", meta=meta,
-                prompt=prompt, ensure_gate=True)
+        entry = dq.park(action_type, payload, "model", hook="queue", meta=meta,
+                        prompt=prompt, ensure_gate=True)
         agent_loop.log_event(region.sess, "gate", action=tool_name, target=target,
                              answer=None, hook="queue")
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "yellow",
+                       gate_id=entry["id"])
         return jsonify({"decision": "queue"})
 
     entry = dq.park(action_type, payload, "model", hook="ask", meta=meta,
                     prompt=prompt, register_waiter=True)
+    _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "yellow",
+                   gate_id=entry["id"])
     agent_loop.log_event(region.sess, "alert", trigger="gate")
     gate_wait_s = region.sess.settings.get("gate_wait_s")
     ans = dq.await_answer(entry["id"], timeout=gate_wait_s)
@@ -691,6 +716,9 @@ def api_policy_resolve_hook():
     if ans:
         _open_rail_c_tool_record(meta, action_type, edge, tool_input, tool_use_id,
                                  "ask", prompt)
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "blue")
+    else:
+        _live_tool_row(region, tool_name, target, tool_input, tool_use_id, "red")
     return jsonify({"decision": "open" if ans else "locked"})
 
 
@@ -722,6 +750,12 @@ def api_policy_record_tool_outcome():
             outcome="fired",
             summary=f"{tool_name} outcome")
         ledger.append(rec)
+    except Exception:
+        pass
+    try:
+        resp = body.get("tool_response")
+        result_text = resp if isinstance(resp, str) else json.dumps(resp)
+        region.hub.tool({"id": tool_use_id, "result": result_text})
     except Exception:
         pass
     return jsonify({"ok": True})

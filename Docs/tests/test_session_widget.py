@@ -81,7 +81,8 @@ def test_widget_defaults_for_chat_and_queue():
     assert "tts_engine" in chat and "listen_mode" in chat
     queue = st.widget_defaults("queue")
     assert queue == {"claude_cache_ttl": "1h",
-                     "claude_exclude_dynamic": False}
+                     "claude_exclude_dynamic": False,
+                     "merge_gates": True}
 
 
 def test_widget_defaults_for_an_unknown_type_is_empty():

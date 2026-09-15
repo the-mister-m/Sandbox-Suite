@@ -1,0 +1,23 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "",
+  "widgets": [
+    {
+      "id": "chat-mu20fqn8-1",
+      "type": "chat",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 13,
+        "h": 18
+      },
+      "options": {
+        "listen_mode": "ptt",
+        "speech_enabled": false,
+        "tts_engine": "say",
+        "region": "1ebd39a061de"
+      }
+    }
+  ]
+}

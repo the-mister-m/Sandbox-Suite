@@ -754,12 +754,15 @@ details.cot.tool .tool-io{ padding-left:14px; margin-top:3px; }
       loadProviderKinds();
       const pin = makeScrollPin(scriptEl, jumpBtn);
       const _stream = { liveBub: null, liveText: '', thinkingEl: null };
+      // live tool cards by id (tool_use_id) — lets appendTool update in place
+      let _liveTools = Object.create(null);
       let trackName = '';
 
       const pane = {
         setTrack(id, name) {
           trackName = name || '';
           _stream.liveBub = null; _stream.liveText = ''; _stream.thinkingEl = null;
+          _liveTools = Object.create(null);
           scriptEl.innerHTML = '';
           busyMeters.reset();
           pin.reset();
@@ -767,6 +770,7 @@ details.cot.tool .tool-io{ padding-left:14px; margin-top:3px; }
         renderTranscript(messages) {
           scriptEl.innerHTML = '';
           _stream.liveBub = null; _stream.liveText = ''; _stream.thinkingEl = null;
+          _liveTools = Object.create(null);
           const turns = MX.turns._groupTurns(messages);
           if (!turns.length) {
             scriptEl.innerHTML = '<div class="empty">no turns on this track</div>';
@@ -782,6 +786,12 @@ details.cot.tool .tool-io{ padding-left:14px; margin-top:3px; }
           _streamOut(scriptEl, trackName, _stream, busyMeters, text, o || {}, pin);
         },
         appendTool(row) {
+          // an id (Claude rail) updates its card in place; no id (native rail) appends
+          if (row.id && _liveTools[row.id]) {
+            MX.turns.updateToolBlock(_liveTools[row.id], row);
+            pin.scrollIfPinned();
+            return;
+          }
           const emp = scriptEl.querySelector('.empty');
           if (emp) emp.remove();
           if (_stream.liveBub) {
@@ -793,7 +803,9 @@ details.cot.tool .tool-io{ padding-left:14px; margin-top:3px; }
             _stream.thinkingEl = null;
             busyMeters.hmmFreeze();
           }
-          scriptEl.appendChild(MX.turns.makeToolBlock(row, row.result));
+          const blk = MX.turns.makeToolBlock(row, row.result, { frame, region: c.region });
+          if (row.id) _liveTools[row.id] = blk;
+          scriptEl.appendChild(blk);
           pin.scrollIfPinned();
         },
         renderMail(evt) {

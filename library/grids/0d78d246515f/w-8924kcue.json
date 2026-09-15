@@ -1,39 +1,62 @@
 {
   "cols": 12,
   "rows": 12,
+  "name": "",
   "widgets": [
     {
-      "id": "timeline-mtqous1b-1",
-      "type": "timeline",
-      "slot": {
-        "col": 1,
-        "row": 1,
-        "w": 4,
-        "h": 12
-      },
-      "options": {}
-    },
-    {
-      "id": "devagent-mtqoz8fw-2",
-      "type": "devagent",
-      "slot": {
-        "col": 5,
-        "row": 1,
-        "w": 4,
-        "h": 4
-      },
-      "options": {}
-    },
-    {
-      "id": "mount-mtqp2p2i-3",
-      "type": "mount",
+      "id": "anchor_chat-mu0pingp-3",
+      "type": "anchor_chat",
       "slot": {
         "col": 9,
         "row": 1,
         "w": 4,
+        "h": 9
+      },
+      "options": {
+        "region": "56a11b33cc79",
+        "speech_enabled": false,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "gate_list-mu0pjgzv-5",
+      "type": "gate_list",
+      "slot": {
+        "col": 5,
+        "row": 9,
+        "w": 4,
         "h": 4
       },
-      "options": {}
+      "options": {
+        "region": ""
+      }
+    },
+    {
+      "id": "canvas-mu0pue32-1",
+      "type": "canvas",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 8,
+        "h": 8
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/city-street-night.html",
+        "targets": [],
+        "mode": "canvas",
+        "zoom": 100,
+        "selection": [
+          "path-0-1-7-45"
+        ],
+        "schematic": false,
+        "linksLive": false,
+        "page": "",
+        "assetMode": "data",
+        "backLink": true,
+        "annotate": false,
+        "snapshot": "raster",
+        "annotateTrack": ""
+      }
     }
   ]
 }

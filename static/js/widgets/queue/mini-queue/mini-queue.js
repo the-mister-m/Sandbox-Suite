@@ -71,6 +71,24 @@
     render(frame);
   }
 
+  // pending gates are never merged, so merge_gates has no visible effect
+  // here; kept so the feed rebuilds from the same option the other two
+  // queue widgets read.
+  function applyFeed(frame) {
+    const q = frame._mq;
+    if (!q || !q.raw) return;
+    q.rows = Object.create(null);
+    for (const r of G.actionRecords(q.raw, frame.options.merge_gates)) {
+      if (!G.isPending(r)) continue;
+      q.rows[r.id] = {
+        id: r.id, src: "feed", region: G.regionOf(r), parked: r.parked || 0,
+        edge: r.edge || r.action_type || "gate",
+        text: r.summary || G.target(r),
+      };
+    }
+    render(frame);
+  }
+
   MX.registerWidget("mini_queue", {
     mount(frame) {
       const q = frame._mq = { rows: Object.create(null), names: Object.create(null) };
@@ -119,16 +137,8 @@
 
       if (msg.type === "feed") {
         if (msg.inst && msg.inst !== frame.id) return;
-        q.rows = Object.create(null);
-        for (const r of G.actionRecords(msg)) {
-          if (!G.isPending(r)) continue;
-          q.rows[r.id] = {
-            id: r.id, src: "feed", region: G.regionOf(r), parked: r.parked || 0,
-            edge: r.edge || r.action_type || "gate",
-            text: r.summary || G.target(r),
-          };
-        }
-        render(frame);
+        q.raw = msg;
+        applyFeed(frame);
         return;
       }
 
@@ -161,8 +171,9 @@
       }
     },
 
-    // no default options for this type; nothing to apply back
-    onOption() {},
+    onOption(frame, key) {
+      if (key === "merge_gates") applyFeed(frame);
+    },
 
     getOptions(frame) {
       return JSON.parse(JSON.stringify(frame.options));

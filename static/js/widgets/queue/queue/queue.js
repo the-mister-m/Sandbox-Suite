@@ -143,7 +143,8 @@
 
       if (msg.type === "feed") {
         if (msg.inst && msg.inst !== frame.id) return;
-        q.records = G.actionRecords(msg);
+        q.raw = msg;
+        q.records = G.actionRecords(msg, frame.options.merge_gates);
         for (const r of q.records) {
           const cached = q.details[r.id];
           if (cached && cached.outcome !== r.outcome) delete q.details[r.id];
@@ -167,6 +168,10 @@
     onOption(frame, key, value) {
       if (key === "claude_cache_ttl" || key === "claude_exclude_dynamic") {
         frame.options[key] = value;
+      }
+      if (key === "merge_gates" && frame._q) {
+        frame._q.records = G.actionRecords(frame._q.raw, value);
+        render(frame);
       }
     },
 
