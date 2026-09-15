@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Fixture copy opens in file mode",
+      "pass": true,
+      "note": ""
+    },
+    {
+      "n": 2,
+      "name": "Snippets tab shows nine cards",
+      "pass": true,
+      "note": "got 9"
+    },
+    {
+      "n": 3,
+      "name": "Drop Text frame at 200,300: one div, selected",
+      "pass": true,
+      "note": "{\"found\": true, \"count\": 1, \"selected\": true, \"elId\": \"el_f71m3t\"}"
+    },
+    {
+      "n": 4,
+      "name": "Undo removes the dropped element",
+      "pass": true,
+      "note": "before=4 after=4"
+    }
+  ],
+  "console": [
+    "[harness] session open: {'sid': '0d78d246515f'}"
+  ]
+}

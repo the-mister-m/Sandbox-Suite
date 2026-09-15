@@ -1,4 +1,4 @@
-// targets widget — the .html/.json tabs one canvas has open: add, remove,
+// targets widget — the .html tabs one canvas has open: add, remove,
 // reorder, switch.
 //
 // Binds to one canvas widget on this surface that shares its target: the
@@ -143,7 +143,7 @@
         bf.setOption("targets", targets);
       }
       bf.setOption("target", path);
-    }, { ext: [".html", ".json"] });
+    }, { ext: [".html"] });
   }
 
   function buildRow(tg, bf, path, active) {

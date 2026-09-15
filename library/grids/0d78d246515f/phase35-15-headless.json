@@ -1,0 +1,56 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "",
+  "widgets": [
+    {
+      "id": "canvas-mu25g2oa-1",
+      "type": "canvas",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35_15-magazine-copy.html",
+        "targets": [],
+        "mode": "canvas",
+        "selection": [
+          "el_t7s5ni"
+        ],
+        "annotate": false,
+        "snapshot": "raster",
+        "annotateTrack": "",
+        "zoomPct": 100,
+        "snap": true,
+        "snapTo": [
+          "grid",
+          "guides",
+          "objects"
+        ],
+        "rulers": true,
+        "showGuides": true,
+        "showMargins": true,
+        "showColumns": true,
+        "activeLayer": ""
+      }
+    },
+    {
+      "id": "canvas_tools-mu25g2oj-2",
+      "type": "canvas_tools",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35_15-magazine-copy.html",
+        "canvas": "focused",
+        "section": "snippets",
+        "followTarget": ""
+      }
+    }
+  ]
+}

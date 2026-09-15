@@ -41,7 +41,8 @@
   var KINDS = [
     "set-style", "replace-outer-html", "set-css-token",
     "set-text", "set-full-source",
-    "wrap", "unwrap", "move", "remove", "insert"
+    "wrap", "unwrap", "move", "remove", "insert",
+    "set-attr", "set-css-rule", "remove-css-rule"
   ];
 
   var ALIAS = {
@@ -289,6 +290,7 @@
       prior[keys[i]] = el.style.getPropertyValue(cssName) || "";
     }
     setInlineStyles(el, styles);
+    if (el.style.length === 0) el.removeAttribute("style");
     return { ok: true, inverse: { kind: "set-style", id: patch.id, styles: prior } };
   }
 
@@ -343,7 +345,10 @@
     return { ok: true, inverse: { kind: "set-css-token", token: patch.token, value: result.prev } };
   }
 
-  // function: wrap. inverse: unwrap the same id.
+  // function: wrap. tag: element name for the wrapper, "div" when absent.
+  // A given tag skips the data-od-group stamp — a plain-tag wrapper is
+  // structural (e.g. contract 3.1's section layer), not an undo group.
+  // inverse: unwrap the same id.
   function doWrap(doc, patch) {
     var ids = patch.ids || [];
     if (!ids.length) {
@@ -367,24 +372,23 @@
     var kids = childrenOf(parent);
     var selected = kids.filter(function (kid) { return elements.indexOf(kid) !== -1; });
     var slots = selected.map(function (kid) { return kids.indexOf(kid); });
-    var wrapper = doc.createElement("div");
+    var wrapper = doc.createElement(patch.tag || "div");
     wrapper.setAttribute("data-od-id", patch.id);
-    wrapper.setAttribute("data-od-group", "1");
+    if (!patch.tag) wrapper.setAttribute("data-od-group", "1");
     parent.insertBefore(wrapper, selected[0]);
     for (var k = 0; k < selected.length; k++) wrapper.appendChild(selected[k]);
     return { ok: true, inverse: { kind: "unwrap", id: patch.id, slots: slots } };
   }
 
   // function: unwrap. slots: original index per child, restored when present.
-  // inverse: wrap the same children back into the same id.
+  // Targets a data-od-group wrapper or a wrap.tag structural wrapper (no
+  // group stamp to check). inverse: wrap the same children back into the
+  // same id (data-od-group only; a tag wrapper's tag is not recoverable
+  // from the inverse alone).
   function doUnwrap(doc, patch) {
     var el = find(doc, patch.id);
     if (!el) {
       console.warn("canvasPatch: unwrap target not found:", patch.id);
-      return null;
-    }
-    if (!el.getAttribute("data-od-group")) {
-      console.warn("canvasPatch: unwrap refused, not a group:", patch.id);
       return null;
     }
     var parent = el.parentElement;
@@ -453,7 +457,9 @@
     return { ok: true, inverse: { kind: "insert", parent: parentKey, index: index, html: html } };
   }
 
-  // function: insert. inverse: remove the inserted root by its id.
+  // function: insert. ns "svg" parses html inside an <svg> template so
+  // the root and its children land in the SVG namespace.
+  // inverse: remove the inserted root by its id.
   function doInsert(doc, patch) {
     var parent = find(doc, patch.parent);
     if (!parent) {
@@ -461,13 +467,26 @@
       return null;
     }
     var template = doc.createElement("template");
-    template.innerHTML = String(patch.html || "").trim();
-    var elements = Array.prototype.slice.call(template.content.children);
-    if (elements.length !== 1) {
-      console.warn("canvasPatch: insert html must contain exactly one root element.");
-      return null;
+    var root;
+    if (patch.ns === "svg") {
+      template.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg">'
+        + String(patch.html || "").trim() + "</svg>";
+      var svg = template.content.firstElementChild;
+      var svgKids = svg ? Array.prototype.slice.call(svg.children) : [];
+      if (svgKids.length !== 1) {
+        console.warn("canvasPatch: insert svg html must contain exactly one root element.");
+        return null;
+      }
+      root = svgKids[0];
+    } else {
+      template.innerHTML = String(patch.html || "").trim();
+      var elements = Array.prototype.slice.call(template.content.children);
+      if (elements.length !== 1) {
+        console.warn("canvasPatch: insert html must contain exactly one root element.");
+        return null;
+      }
+      root = elements[0];
     }
-    var root = elements[0];
     if (!root.getAttribute("data-od-id")) root.setAttribute("data-od-id", newId("el"));
     var descendants = root.querySelectorAll("*");
     for (var i = 0; i < descendants.length; i++) {
@@ -477,6 +496,87 @@
     if (ref) parent.insertBefore(root, ref);
     else parent.appendChild(root);
     return { ok: true, inverse: { kind: "remove", id: root.getAttribute("data-od-id") } };
+  }
+
+  // function: the <style data-cc="block"> element in head, created and
+  // appended when create is true and none exists.
+  function styleBlock(doc, block, create) {
+    var head = doc.head || doc.querySelector("head");
+    if (!head) return null;
+    var el = head.querySelector('style[data-cc="' + cssEscape(block) + '"]');
+    if (!el && create) {
+      el = doc.createElement("style");
+      el.setAttribute("data-cc", block);
+      head.appendChild(el);
+    }
+    return el;
+  }
+
+  // function: a rule pattern matching "selector { declarations }" text
+  // for one exact selector, whitespace before the brace only.
+  function cssRulePattern(selector) {
+    return new RegExp("(" + escapeRegExp(selector) + ")\\s*\\{([^}]*)\\}");
+  }
+
+  // function: set-attr. null value removes the attribute.
+  // inverse: set-attr with the prior value or null.
+  function doSetAttr(doc, patch) {
+    var el = find(doc, patch.id);
+    if (!el) {
+      console.warn("canvasPatch: target not found:", patch.id);
+      return null;
+    }
+    var name = patch.name;
+    if (String(name).indexOf("data-od-") === 0) {
+      console.warn("canvasPatch: set-attr refused, data-od- name:", name);
+      return null;
+    }
+    var prior = el.hasAttribute(name) ? el.getAttribute(name) : null;
+    if (patch.value === null) el.removeAttribute(name);
+    else el.setAttribute(name, patch.value);
+    return { ok: true, inverse: { kind: "set-attr", id: patch.id, name: name, value: prior } };
+  }
+
+  // function: set-css-rule. Replaces the rule's declarations, or
+  // appends it when absent. inverse: set-css-rule with the prior
+  // declarations, or remove-css-rule when the rule was new.
+  function doSetCssRule(doc, patch) {
+    var el = styleBlock(doc, patch.block, true);
+    var text = el.textContent || "";
+    var pattern = cssRulePattern(patch.selector);
+    var match = text.match(pattern);
+    var prior;
+    if (match) {
+      prior = match[2].trim();
+      text = text.replace(pattern, "$1 { " + patch.declarations + " }");
+    } else {
+      prior = null;
+      text = (text.trim() ? text.replace(/\s*$/, "") + "\n" : "")
+        + patch.selector + " { " + patch.declarations + " }";
+    }
+    el.textContent = text;
+    var inverse = (prior === null)
+      ? { kind: "remove-css-rule", block: patch.block, selector: patch.selector }
+      : { kind: "set-css-rule", block: patch.block, selector: patch.selector, declarations: prior };
+    return { ok: true, inverse: inverse };
+  }
+
+  // function: remove-css-rule. inverse: set-css-rule with the removed
+  // declarations. Refused when the rule is absent.
+  function doRemoveCssRule(doc, patch) {
+    var el = styleBlock(doc, patch.block, false);
+    var text = el ? (el.textContent || "") : "";
+    var pattern = cssRulePattern(patch.selector);
+    var match = text.match(pattern);
+    if (!el || !match) {
+      console.warn("canvasPatch: css rule not found:", patch.selector);
+      return null;
+    }
+    var declarations = match[2].trim();
+    var remaining = text.replace(pattern, "").replace(/\n{3,}/g, "\n\n").trim();
+    if (remaining) el.textContent = remaining;
+    else el.remove();
+    return { ok: true, inverse: { kind: "set-css-rule", block: patch.block, selector: patch.selector, declarations: declarations } };
   }
 
   // function: mutate one patch into a live document. {ok, inverse}.
@@ -497,6 +597,9 @@
     else if (kind === "move") result = doMove(doc, patch);
     else if (kind === "remove") result = doRemove(doc, patch);
     else if (kind === "insert") result = doInsert(doc, patch);
+    else if (kind === "set-attr") result = doSetAttr(doc, patch);
+    else if (kind === "set-css-rule") result = doSetCssRule(doc, patch);
+    else if (kind === "remove-css-rule") result = doRemoveCssRule(doc, patch);
     else {
       console.warn("canvasPatch: unknown patch kind:", patch.kind);
       result = null;

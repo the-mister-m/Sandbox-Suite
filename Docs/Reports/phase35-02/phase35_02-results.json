@@ -1,0 +1,38 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Fixture copy opens in file mode",
+      "pass": true,
+      "note": ""
+    },
+    {
+      "n": 2,
+      "name": "Pages tab: set A4, body computed width 794px",
+      "pass": true,
+      "note": "got '794px'"
+    },
+    {
+      "n": 3,
+      "name": "Pages tab: set columns 2, token reads 2",
+      "pass": true,
+      "note": "got '2'"
+    },
+    {
+      "n": 4,
+      "name": "Reload: A4 width and columns 2 persist",
+      "pass": true,
+      "note": "width='794px' columns='2'"
+    },
+    {
+      "n": 5,
+      "name": "Plain html with no page block: set Letter creates the block with all tokens",
+      "pass": true,
+      "note": ""
+    }
+  ],
+  "console": [
+    "[harness] session open: {'sid': '0d78d246515f'}",
+    "[harness] save before reload: saved=True"
+  ]
+}

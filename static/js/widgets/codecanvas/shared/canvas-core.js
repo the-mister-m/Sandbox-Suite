@@ -1,14 +1,13 @@
 // canvas core — the one door every canvas widget opens
 //
-// MX.canvasCore(): a memoized promise of {kit, makeState, makeResolve,
-// makeRender, patch, baseDocument, channels, optionControls, mirrors}.
-// baseDocument(mode, fileText, baseHref): the iframe srcdoc. doc mode
-// returns the chrome stylesheet plus <div id="matrix"></div>; file mode
-// returns the caller's file text with a base tag in head when baseHref
-// is given, the guides stylesheet and the id-assign script appended.
+// MX.canvasCore(): a memoized promise of {patch, baseDocument, channels,
+// optionControls, mirrors}.
+// baseDocument(mode, fileText, baseHref): the iframe srcdoc. The caller's
+// file text with a base tag in head when baseHref is given, the guides
+// stylesheet and the id-assign script appended.
 // channels: the six canvas.* names, contract 2.7.
 // optionControls(): the target select, current targets filtered to
-// .json and .html, New opens the shared root browser.
+// .html, New opens the shared root browser.
 // MX.canvasTargetControl(withNew): the same target select, sync.
 // mirrors(frame, handlers): one mirror per channel, plus off().
 
@@ -26,146 +25,6 @@
     freeze: "canvas.freeze",
     mode: "canvas.mode"
   });
-
-  // state: app chrome stylesheet, style.css.
-  const CHROME_CSS = `
-:root {
-  --cc-bar: 44px;
-  --cc-lib-w: 240px;
-  --cc-panel-left: 0px;
-  --cc-left: 0px;
-  --cc-ink: #e8e8e8;
-  --cc-dim: #9a9a9a;
-  --cc-bg: #1b1b1b;
-  --cc-bg2: #232323;
-  --cc-line: #3a3a3a;
-  --cc-accent: #2a6df4;
-}
-
-html, body { height: 100%; }
-
-body {
-  margin: 0;
-  background: var(--cc-bg);
-  color: var(--cc-ink);
-  font: 13px system-ui, sans-serif;
-}
-
-#matrix { margin: 0 auto; }
-
-.cc-nav-btn {
-  background: #2f2f2f;
-  color: var(--cc-ink);
-  border: 1px solid var(--cc-line);
-  padding: 4px 10px;
-  font: 12px system-ui, sans-serif;
-  cursor: pointer;
-}
-
-.cc-nav-btn:hover { background: #3a3a3a; }
-.cc-nav-btn-on { border-color: var(--cc-accent); color: #fff; }
-
-.cc-nav-title { font-weight: bold; margin: 0 0 8px; font-size: 13px; }
-
-.cc-nav-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--cc-line);
-}
-
-.cc-nav-row-name { flex: 1; }
-.cc-nav-row-date { color: var(--cc-dim); font-size: 11px; }
-.cc-nav-empty { color: var(--cc-dim); padding: 6px 0; }
-
-.cc-nav-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
-
-.cc-nav-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 6px;
-}
-
-.cc-nav-card {
-  background: #2f2f2f;
-  border: 1px solid var(--cc-line);
-  padding: 8px 6px;
-  text-align: center;
-  cursor: grab;
-  user-select: none;
-}
-
-.cc-nav-card-type { display: block; color: var(--cc-dim); font-size: 10px; }
-
-.cc-nav-field { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
-.cc-nav-field label { flex: 1; color: var(--cc-dim); }
-
-.cc-nav-field input,
-.cc-nav-field select {
-  width: 110px;
-  background: #2f2f2f;
-  color: var(--cc-ink);
-  border: 1px solid var(--cc-line);
-  padding: 2px 4px;
-  font: 12px system-ui, sans-serif;
-}
-
-.cc-nav-spacer { flex: 1; }
-
-.cc-nav-tab {
-  background: #2f2f2f;
-  color: var(--cc-dim);
-  border: 1px solid var(--cc-line);
-  padding: 3px 8px;
-  font: 12px system-ui, sans-serif;
-  cursor: pointer;
-}
-
-.cc-nav-tab-on { color: #fff; border-color: var(--cc-accent); }
-.cc-nav-drop { outline: 2px dashed var(--cc-accent); }
-`;
-
-  // state: canvas chrome stylesheet, canvas.js STYLE block.
-  const CANVAS_CSS = [
-    "#matrix.cc-canvas-matrix { position: relative; min-height: 600px;",
-    "  background-color: #ffffff; background-repeat: repeat;",
-    "  background-position: 0 0; overflow: hidden; }",
-    ".cc-canvas-widget { position: absolute; box-sizing: border-box; }",
-    ".cc-canvas-selected { outline: 2px solid #2a6df4; outline-offset: 0; }",
-    ".cc-canvas-handle { position: absolute; width: 8px; height: 8px;",
-    "  background: #ffffff; border: 1px solid #2a6df4; box-sizing: border-box; }",
-    ".cc-canvas-handle-nw { left: -5px; top: -5px; cursor: nwse-resize; }",
-    ".cc-canvas-handle-n { left: 50%; top: -5px; margin-left: -4px; cursor: ns-resize; }",
-    ".cc-canvas-handle-ne { right: -5px; top: -5px; cursor: nesw-resize; }",
-    ".cc-canvas-handle-e { right: -5px; top: 50%; margin-top: -4px; cursor: ew-resize; }",
-    ".cc-canvas-handle-se { right: -5px; bottom: -5px; cursor: nwse-resize; }",
-    ".cc-canvas-handle-s { left: 50%; bottom: -5px; margin-left: -4px; cursor: ns-resize; }",
-    ".cc-canvas-handle-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }",
-    ".cc-canvas-handle-w { left: -5px; top: 50%; margin-top: -4px; cursor: ew-resize; }",
-    ".cc-canvas-marquee { position: absolute; border: 1px solid #2a6df4;",
-    "  background: rgba(42,109,244,0.10); pointer-events: none; }",
-    ".cc-canvas-schematic { width: 100%; height: 100%; box-sizing: border-box;",
-    "  border: 1px solid #6b6b6b; background: #ffffff; color: #1a1a1a;",
-    "  font: 12px ui-monospace, monospace; padding: 4px; overflow: hidden; }",
-    ".cc-canvas-menu { position: fixed; z-index: 9999; background: #ffffff;",
-    "  border: 1px solid #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.15);",
-    "  font: 13px system-ui, sans-serif; padding: 4px 0; }",
-    ".cc-canvas-menu div { padding: 4px 16px; cursor: default; }",
-    ".cc-canvas-menu div:hover { background: #eef3ff; }",
-    ".cc-canvas-frozen { pointer-events: none; }",
-    ".cc-canvas-viewport { position: relative; overflow: auto; width: 100%;",
-    "  height: 100%; box-sizing: border-box; }",
-    ".cc-canvas-zoom { position: absolute; right: 8px; bottom: 8px; z-index: 30;",
-    "  display: flex; align-items: center; gap: 4px; background: #232323;",
-    "  border: 1px solid #3a3a3a; padding: 4px; border-radius: 4px; }",
-    ".cc-canvas-zoom-btn { background: #2f2f2f; color: #e8e8e8;",
-    "  border: 1px solid #3a3a3a; padding: 2px 8px; font: 12px system-ui, sans-serif;",
-    "  cursor: pointer; }",
-    ".cc-canvas-zoom-btn:hover { background: #3a3a3a; }",
-    ".cc-canvas-zoom-readout { color: #e8e8e8; font: 12px system-ui, sans-serif;",
-    "  min-width: 36px; text-align: center; }"
-  ].join("\n");
 
   // state: edit guides stylesheet, Open Design bridge.ts.
   const GUIDES_CSS = `<style data-od-edit-bridge-style>
@@ -271,38 +130,31 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
   else assign();
 })();<\/script>`;
 
-  // function: the iframe srcdoc. doc mode builds the chrome and an empty
-  // matrix; file mode appends the guides sheet and the id script to the
-  // caller's text.
+  // function: the iframe srcdoc. The caller's text with the guides sheet
+  // and the id script appended.
   function baseDocument(mode, fileText, baseHref) {
-    if (mode === "file") {
-      let text = String(fileText || "");
-      if (baseHref) {
-        const tag = '<base href="' + baseHref + '">';
-        const head = text.match(/<head[^>]*>/i);
-        const html = text.match(/<html[^>]*>/i);
-        if (head) text = text.slice(0, head.index + head[0].length) + tag + text.slice(head.index + head[0].length);
-        else if (html) text = text.slice(0, html.index + html[0].length) + tag + text.slice(html.index + html[0].length);
-        else text = tag + text;
-      }
-      return text + "\n" + GUIDES_CSS + "\n" + ID_SCRIPT;
+    let text = String(fileText || "");
+    if (baseHref) {
+      const tag = '<base href="' + baseHref + '">';
+      const head = text.match(/<head[^>]*>/i);
+      const html = text.match(/<html[^>]*>/i);
+      if (head) text = text.slice(0, head.index + head[0].length) + tag + text.slice(head.index + head[0].length);
+      else if (html) text = text.slice(0, html.index + html[0].length) + tag + text.slice(html.index + html[0].length);
+      else text = tag + text;
     }
-    return "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n"
-      + "<style>" + CHROME_CSS + "</style>\n"
-      + "<style>" + CANVAS_CSS + "</style>\n"
-      + "</head>\n<body>\n<div id=\"matrix\"></div>\n</body>\n</html>";
+    return text + "\n" + GUIDES_CSS + "\n" + ID_SCRIPT;
   }
 
   // state: widget types of the canvas family.
   const CANVAS_TYPES = ["canvas", "canvas_code", "canvas_tools"];
 
   // function: the target select, sync. Targets held by canvas family
-  // widgets, .json and .html only. withNew adds New, the shared root browser.
+  // widgets, .html only. withNew adds New, the shared root browser.
   MX.canvasTargetControl = function (withNew) {
     function listFn() {
       const sid = MX.grid && MX.grid.sid;
       return MX.targetsFor(sid, CANVAS_TYPES).then((values) =>
-        values.filter((v) => /\.(json|html)$/i.test(String(v))));
+        values.filter((v) => /\.html?$/i.test(String(v))));
     }
 
     // shared root browser, native or suite per global.json
@@ -311,7 +163,7 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
         MX.openRootBrowser("/", (path) => {
           if (path) frame.setOption("target", path);
           resolve();
-        }, { ext: [".json", ".html"] });
+        }, { ext: [".html"] });
       });
     }
 
@@ -339,10 +191,6 @@ html[data-od-hide-edit-chrome] [data-od-editing="true"] {
 
   MX.canvasCore = function () {
     return MX.moduleReady("canvas", () => Promise.resolve({
-      kit: MX.canvasKit(),
-      makeState: MX.canvasState,
-      makeResolve: MX.canvasResolve,
-      makeRender: MX.canvasRender,
       patch: MX.canvasPatch(),
       baseDocument: baseDocument,
       channels: CHANNELS,

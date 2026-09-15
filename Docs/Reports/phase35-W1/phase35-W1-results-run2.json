@@ -1,0 +1,85 @@
+{
+  "run": "2",
+  "results": [
+    {
+      "line": 1,
+      "name": "Canvas, Tools, Targets on a new surface; the copy opens; preview mode; clicking the headline selects nothing",
+      "pass": true,
+      "shot": "line01-preview-nothing-selects.png",
+      "note": "widgets=['canvas', 'canvas_tools', 'canvas_targets'] mode='preview' click={\"ok\": true, \"tag\": \"H1\", \"selected\": []} selected=[]"
+    },
+    {
+      "line": 2,
+      "name": "Pages tab: Letter, 3 columns, 48px margins. The page is 816px wide and margin and column lines draw",
+      "pass": true,
+      "shot": "line02-page-letter-3col-48.png",
+      "note": "panel=[{\"label\": \"Size\", \"kind\": \"select\", \"value\": \"Letter\", \"options\": [\"Letter\", \"Tabloid\", \"A4\", \"A3\", \"Custom\"]}, {\"label\": \"W\", \"kind\": \"number\", \"value\": \"816\", \"options\": []}, {\"label\": \"H\", \"kind\": \"number\", \"value\": \"1056\", \"options\": []}, {\"label\": \"link\", \"kind\": \"checkbox\", \"value\": \"on\", \"options\": []}, {\"label\": \"Top\", \"kind\": \"number\", \"value\": \"48\", \"options\": []}, {\"label\": \"Right\", \"kind\": \"number\", \"value\": \"48\", \"options\": []}, {\"label\": \"Bottom\", \"kind\": \"number\", \"value\": \"48\", \"options\": []}, {\"label\": \"Left\", \"kind\": \"number\", \"value\": \"48\", \"options\": []}, {\"label\": \"Count\", \"kind\": \"number\", \"value\": \"3\", \"options\": []}, {\"label\": \"Gutter\", \"kind\": \"number\", \"value\": \"16\", \"options\": []}, {\"label\": \"Bleed\", \"kind\": \"number\", \"value\": \"0\", \"options\": []}, {\"label\": \"Grid\", \"kind\": \"number\", \"value\": \"8\", \"options\": []}] off_letter={\"bodyWidth\": \"1056px\", \"bodyHeight\": \"1632px\", \"w\": \"1056px\", \"h\": \"1632px\", \"columns\": \"3\", \"marginTop\": \"48px\", \"marginLeft\": \"48px\", \"marginLines\": 4, \"columnLines\": 4, \"guideLines\": 2} letter={\"bodyWidth\": \"816px\", \"bodyHeight\": \"1056px\", \"w\": \"816px\", \"h\": \"1056px\", \"columns\": \"3\", \"marginTop\": \"48px\", \"marginLeft\": \"48px\", \"marginLines\": 4, \"columnLines\": 4, \"guideLines\": 2} resized_between=True"
+    },
+    {
+      "line": 4,
+      "name": "Layers shows Text, Art, Master (locked, greyed); the footer does not select; a locked Art shape does not select; Hide empties Art, Show brings it back",
+      "pass": false,
+      "shot": "line04a-layers.png",
+      "note": "attempt1: panel=[{\"name\": \"Art\", \"plugin\": \"svg\", \"greyed\": false, \"lockedClass\": false, \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}, {\"name\": \"Text\", \"plugin\": \"html\", \"greyed\": false, \"lockedClass\": false, \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}] footer_click={\"ok\": false, \"note\": \"no match for [data-cc-var=\\\"page-number\\\"]\", \"selected\": []} footer_selected=[] locked_shape_click={\"ok\": true, \"tag\": \"ellipse\", \"selected\": []} shape_selected=[] art_hidden=[{\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": true, \"hidden\": true, \"display\": \"none\", \"kids\": 1}] art_shown=[{\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": true, \"hidden\": false, \"display\": \"block\", \"kids\": 1}] || attempt2: panel=[{\"name\": \"Art\", \"plugin\": \"svg\", \"greyed\": false, \"lockedClass\": false, \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}, {\"name\": \"Text\", \"plugin\": \"html\", \"greyed\": false, \"lockedClass\": false, \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}] footer_click={\"ok\": false, \"note\": \"no match for [data-cc-var=\\\"page-number\\\"]\", \"selected\": []} footer_selected=[] locked_shape_click={\"ok\": true, \"tag\": \"ellipse\", \"selected\": []} shape_selected=[] art_hidden=[{\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": true, \"hidden\": true, \"display\": \"none\", \"kids\": 1}] art_shown=[{\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": true, \"hidden\": false, \"display\": \"block\", \"kids\": 1}]"
+    },
+    {
+      "line": 5,
+      "name": "Drag the photo row from Text into Art; it changes layer; two \u25b2 move it up two; both right-click menus carry every 3.4 job 4 and job 5 line",
+      "pass": false,
+      "shot": "line05a-photo-in-art.png",
+      "note": "attempt1: before={\"found\": true, \"layer\": \"Text\", \"index\": 5, \"count\": 7} drag={\"ok\": true, \"dragged\": \"path-0-5\"} moved={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} up1={\"ok\": false, \"note\": \"arrow disabled\"} mid={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} up2={\"ok\": false, \"note\": \"arrow disabled\"} after={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} item_menu=[\"Group\", \"Ungroup\", \"Isolate\", \"Arrange\", \"Lock\", \"Unlock all\", \"Hide\", \"Show all\", \"Move to layer\", \"Duplicate\", \"Delete\", \"Isolate\"] missing_item=[] missing_arrange=[] menuItems_api=[\"Group\", \"Ungroup\", \"Isolate\", \"Arrange\", \"Bring to front\", \"Bring forward\", \"Send backward\", \"Send to back\", \"Lock\", \"Unlock all\", \"Hide\", \"Show all\", \"Move to layer\", \"Text\", \"Art\", \"Duplicate\", \"Delete\"] layer_menu=[\"New layer\", \"Duplicate layer\", \"Delete layer\", \"Rename\", \"Lock\", \"Hide\", \"Merge down\", \"Select all on layer\", \"Move selection here\"] missing_layer=[] || attempt2: before={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} drag={\"ok\": true, \"dragged\": \"path-0-5\"} moved={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} up1={\"ok\": false, \"note\": \"arrow disabled\"} mid={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} up2={\"ok\": false, \"note\": \"arrow disabled\"} after={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} item_menu=[\"Group\", \"Ungroup\", \"Isolate\", \"Arrange\", \"Lock\", \"Unlock all\", \"Hide\", \"Show all\", \"Move to layer\", \"Duplicate\", \"Delete\", \"Isolate\"] missing_item=[] missing_arrange=[] menuItems_api=[\"Group\", \"Ungroup\", \"Isolate\", \"Arrange\", \"Bring to front\", \"Bring forward\", \"Send backward\", \"Send to back\", \"Lock\", \"Unlock all\", \"Hide\", \"Show all\", \"Move to layer\", \"Text\", \"Art\", \"Duplicate\", \"Delete\"] layer_menu=[\"New layer\", \"Duplicate layer\", \"Delete layer\", \"Rename\", \"Lock\", \"Hide\", \"Merge down\", \"Select all on layer\", \"Move selection here\"] missing_layer=[]"
+    },
+    {
+      "line": 6,
+      "name": "Snippets: a text frame dropped at page 120,820 lands on the active layer at that point and takes typing",
+      "pass": false,
+      "shot": "line06-snippet-dropped.png",
+      "note": "attempt1: active={\"ok\": true, \"active\": \"path-0\"} dropped={\"found\": true, \"eid\": \"el_yw02y7\", \"layer\": \"Text\", \"tag\": \"DIV\", \"text\": \"Lorem ipsum dolor sit amet, consectetur \", \"editable\": false} typing={\"ok\": true, \"editable\": false, \"focused\": false} text='Lorem ipsum dolor sit amet, consectetur adipiscing elit.' || attempt2: active={\"ok\": true, \"active\": \"path-0\"} dropped={\"found\": true, \"eid\": \"el_yw02y7\", \"layer\": \"Text\", \"tag\": \"DIV\", \"text\": \"Lorem ipsum dolor sit amet, consectetur \", \"editable\": false} typing={\"ok\": true, \"editable\": false, \"focused\": false} text='Lorem ipsum dolor sit amet, consectetur adipiscing elit.'"
+    },
+    {
+      "line": 13,
+      "name": "Cmd-S: status reads saved; the file holds the page block, three layers, folded translate, and no rulers, guides layer, chrome or master content",
+      "pass": false,
+      "shot": "line13-saved.png",
+      "note": "attempt1: status_saved=True layers_on_disk=['Text', 'Art'] page_block=True translate_folded=True no_chrome=True no_master_content=True layers_in_dom=[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"display\": \"block\", \"kids\": 8}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"display\": \"block\", \"kids\": 2}] || attempt2: status_saved=True layers_on_disk=['Text', 'Art'] page_block=True translate_folded=True no_chrome=True no_master_content=True layers_in_dom=[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"display\": \"block\", \"kids\": 8}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"display\": \"block\", \"kids\": 2}]"
+    },
+    {
+      "line": 14,
+      "name": "Reload the surface: the layers, the moved photo and the snippet return; the master footer is present and locked; the page number reads 1",
+      "pass": false,
+      "shot": "line14-after-reload.png",
+      "note": "attempt1: reloaded=True layers_before=['Text', 'Art'] layers_after=['Text', 'Art'] photo={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} snippet={\"found\": true, \"layer\": \"Text\", \"index\": 6, \"count\": 8} page_number={\"varText\": null, \"metaSource\": \"1\", \"masterLayer\": false, \"masterLocked\": false} || attempt2: reloaded=True layers_before=['Text', 'Art'] layers_after=['Text', 'Art'] photo={\"found\": true, \"layer\": \"Art\", \"index\": 1, \"count\": 2} snippet={\"found\": true, \"layer\": \"Text\", \"index\": 6, \"count\": 8} page_number={\"varText\": null, \"metaSource\": \"1\", \"masterLayer\": false, \"masterLocked\": false}"
+    },
+    {
+      "line": 15,
+      "name": "Console clean the whole way",
+      "pass": true,
+      "shot": "line15-console.png",
+      "note": "pageerrors=0 noisy_lines=0 first=[]"
+    }
+  ],
+  "findings": [
+    "4 \u2014 static/js/widgets/codecanvas/canvas/canvas.js (masters, job 14, no 'master' anywhere in the file) / tools/tools.js (layer rows)",
+    "5 \u2014 static/js/widgets/codecanvas/tools/tools.js (openLayerMenu, item rows) / canvas/canvas.js (menuItems)",
+    "6 \u2014 static/js/widgets/codecanvas/tools/tools.js (snippet drop) / canvas/canvas.js (insertAt, text editing)",
+    "13 \u2014 static/js/widgets/codecanvas/canvas/canvas.js (doSave, serialize, chrome strip)",
+    "14 \u2014 static/js/widgets/codecanvas/canvas/canvas.js (masters job 14, reload restore)"
+  ],
+  "sha_before": {
+    "magazine": "d0a2e790e9589f592041568f869b9437bb3e8088d87dd8a1d608a2da58a50f5f",
+    "master": "6f8e8d6b0857f72b37c330e6489b4da0e5a98ba3bc3711d09a362cddfaa9b716"
+  },
+  "sha_after": {
+    "magazine": "d0a2e790e9589f592041568f869b9437bb3e8088d87dd8a1d608a2da58a50f5f",
+    "master": "6f8e8d6b0857f72b37c330e6489b4da0e5a98ba3bc3711d09a362cddfaa9b716"
+  },
+  "pageerrors": [],
+  "console": [
+    "[harness] session open: {'sid': '0d78d246515f'}",
+    "[harness] retry after fail",
+    "[harness] retry after fail",
+    "[harness] retry after fail",
+    "[harness] retry after fail",
+    "[harness] retry after fail"
+  ]
+}

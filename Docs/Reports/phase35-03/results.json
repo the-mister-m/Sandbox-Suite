@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Canvas mounts on the copy in canvas mode. The 3.4 job 3 API is on frame._canvas and page() reads the :root tokens.",
+      "pass": true,
+      "shot": "01-canvas-mode.png",
+      "note": "mode='canvas' missing_from_api=[] page={'w': 816, 'h': 1056, 'marginTop': 48, 'marginRight': 48, 'marginBottom': 48, 'marginLeft': 48, 'columns': 3, 'gutter': 16, 'bleed': 0, 'grid': 8} zoomPct=100"
+    },
+    {
+      "n": 2,
+      "name": "Zoom to 50%. The element's on-screen box is half its box at 100%, its page px are unchanged, and the chrome sits on it.",
+      "pass": true,
+      "shot": "02-zoom-50.png",
+      "note": "view_w_100=229 view_w_50=114.5 page_w_100=229 page_w_50=229 chrome={'x': 35, 'y': 77, 'w': 115, 'h': 127} transform='scale(0.5)'"
+    },
+    {
+      "n": 3,
+      "name": "Two ruler strips with ticks. Every number sits where its page px land at this zoom. No ruler markup in the saved source.",
+      "pass": true,
+      "shot": "03-rulers.png",
+      "note": "rulers={'strips': [True, True], 'ticksTop': 204, 'ticksLeft': 233, 'nums': 8, 'majors': 17, 'worst': 0.5, 'inSaved': False}"
+    },
+    {
+      "n": 4,
+      "name": "Drag out of the top ruler to y=420. data-cc-guides on body gains h:420 and the source holds it.",
+      "pass": true,
+      "shot": "04-guide-drag.png",
+      "note": "guides_before={'v': [120], 'h': [300]} guides_after={'v': [120], 'h': [300, 420]} body_attr='v:120;h:300;h:420' in_source=True"
+    },
+    {
+      "n": 5,
+      "name": "Snap on. Dragging the item's top to 297 lands it on the guide at 300.",
+      "pass": true,
+      "shot": "05-snap-on.png",
+      "note": "item={'eid': 'path-0-1-0', 'tag': 'p', 'cls': '', 'scanned': 17, 'candidates': 5} top_before=153 top_after=300"
+    },
+    {
+      "n": 6,
+      "name": "Cmd-Z puts the item back where the drag started.",
+      "pass": true,
+      "shot": "06-undo.png",
+      "note": "top_now=153 top_at_drag_start=153"
+    },
+    {
+      "n": 7,
+      "name": "Snap off. The same drag lands at 297.",
+      "pass": true,
+      "shot": "07-snap-off.png",
+      "note": "snap=False top_after=297"
+    },
+    {
+      "n": 8,
+      "name": "Save and reload. The guide is on disk and comes back; no ruler, guide layer or chrome stylesheet reached the file.",
+      "pass": true,
+      "shot": "08-after-reload.png",
+      "note": "status_saved=True guides_on_disk=True chrome_kept_out=True guides_after_reload={'v': [120], 'h': [300, 420]}"
+    },
+    {
+      "n": 9,
+      "name": "Console clean the whole way, nothing 404s.",
+      "pass": true,
+      "shot": "09-final.png",
+      "note": "pageerrors=0 error_warning_404_lines=0 total_console_lines=4"
+    }
+  ],
+  "findings": [],
+  "surface_left": []
+}

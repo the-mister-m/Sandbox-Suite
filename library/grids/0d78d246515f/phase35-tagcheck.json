@@ -1,0 +1,54 @@
+{
+  "cols": 28,
+  "rows": 18,
+  "name": "",
+  "widgets": [
+    {
+      "id": "canvas-mu24fggz-1",
+      "type": "canvas",
+      "slot": {
+        "col": 1,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35_04-plain-check.html",
+        "targets": [],
+        "mode": "preview",
+        "selection": [],
+        "annotate": false,
+        "snapshot": "raster",
+        "annotateTrack": "",
+        "zoomPct": 100,
+        "snap": true,
+        "snapTo": [
+          "grid",
+          "guides",
+          "objects"
+        ],
+        "rulers": true,
+        "showGuides": true,
+        "showMargins": true,
+        "showColumns": true,
+        "activeLayer": ""
+      }
+    },
+    {
+      "id": "canvas_tools-mu24fgh7-2",
+      "type": "canvas_tools",
+      "slot": {
+        "col": 5,
+        "row": 1,
+        "w": 4,
+        "h": 4
+      },
+      "options": {
+        "target": "/Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35_04-plain-check.html",
+        "canvas": "focused",
+        "section": "layers",
+        "followTarget": ""
+      }
+    }
+  ]
+}

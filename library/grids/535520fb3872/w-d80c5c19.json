@@ -4,8 +4,8 @@
   "name": "",
   "widgets": [
     {
-      "id": "chat-mu20fqn8-1",
-      "type": "chat",
+      "id": "anchor_chat-mu20ur3t-1",
+      "type": "anchor_chat",
       "slot": {
         "col": 1,
         "row": 1,
@@ -13,10 +13,22 @@
         "h": 18
       },
       "options": {
-        "listen_mode": "ptt",
+        "region": "1ebd39a061de",
         "speech_enabled": false,
-        "tts_engine": "say",
-        "region": "1ebd39a061de"
+        "zoom": 1
+      }
+    },
+    {
+      "id": "queue_log-mu20v4zc-2",
+      "type": "queue_log",
+      "slot": {
+        "col": 14,
+        "row": 1,
+        "w": 12,
+        "h": 17
+      },
+      "options": {
+        "merge_gates": true
       }
     }
   ]

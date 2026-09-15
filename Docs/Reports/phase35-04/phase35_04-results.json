@@ -1,0 +1,79 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Fixture copy opens in file mode",
+      "pass": true,
+      "note": ""
+    },
+    {
+      "n": 2,
+      "name": "Layers tab shows Text and Art, top is front",
+      "pass": true,
+      "note": "[{\"name\": \"Art\", \"plugin\": \"svg\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}, {\"name\": \"Text\", \"plugin\": \"html\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}]"
+    },
+    {
+      "n": 3,
+      "name": "+ Layer then rename gives Notes on top",
+      "pass": true,
+      "note": "[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 7}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"kids\": 1}, {\"name\": \"Notes\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 0}]"
+    },
+    {
+      "n": 4,
+      "name": "Drag the pull quote row into Notes",
+      "pass": true,
+      "note": "layer=Notes drag={\"ok\": true, \"dragged\": \"path-0-4\"}"
+    },
+    {
+      "n": 5,
+      "name": "\u25b2 once moves the bottom item one slot forward",
+      "pass": true,
+      "note": "{\"ok\": true, \"before\": \"H1:0\", \"tag\": \"H1\", \"after\": 1} after=1"
+    },
+    {
+      "n": 6,
+      "name": "Lock Notes: the lock shows",
+      "pass": true,
+      "note": "[{\"name\": \"Notes\", \"plugin\": \"html\", \"hiddenClass\": false, \"lockTitle\": \"locked\"}, {\"name\": \"Art\", \"plugin\": \"svg\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}, {\"name\": \"Text\", \"plugin\": \"html\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}]"
+    },
+    {
+      "n": 7,
+      "name": "Hide Notes: the row greys",
+      "pass": true,
+      "note": "[{\"name\": \"Notes\", \"plugin\": \"html\", \"hiddenClass\": true, \"lockTitle\": \"locked\"}, {\"name\": \"Art\", \"plugin\": \"svg\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}, {\"name\": \"Text\", \"plugin\": \"html\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}]"
+    },
+    {
+      "n": 8,
+      "name": "Select all on layer: count equals the layer's children",
+      "pass": true,
+      "note": "selected=6 kids=[6] menu={\"ok\": true, \"labels\": [\"New layer\", \"Duplicate layer\", \"Delete layer\", \"Rename\", \"Lock\", \"Hide\", \"Merge down\", \"Select all on layer\", \"Move selection here\"]}"
+    },
+    {
+      "n": 9,
+      "name": "Merge down Notes into the layer below",
+      "pass": true,
+      "note": "[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 6}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"kids\": 2}] quote in Art"
+    },
+    {
+      "n": 10,
+      "name": "Undo x3 brings Notes and the pull quote back",
+      "pass": true,
+      "note": "[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 6}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"kids\": 1}, {\"name\": \"Notes\", \"plugin\": \"html\", \"locked\": true, \"hidden\": false, \"kids\": 1}] quote in Notes"
+    },
+    {
+      "n": 11,
+      "name": "Save, reload: the tree matches",
+      "pass": true,
+      "note": "before=[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 6}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"kids\": 1}, {\"name\": \"Notes\", \"plugin\": \"html\", \"locked\": true, \"hidden\": false, \"kids\": 1}] after=[{\"name\": \"Text\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 6}, {\"name\": \"Art\", \"plugin\": \"svg\", \"locked\": false, \"hidden\": false, \"kids\": 1}, {\"name\": \"Notes\", \"plugin\": \"html\", \"locked\": true, \"hidden\": false, \"kids\": 1}]"
+    },
+    {
+      "n": 12,
+      "name": "A plain html with no layers gets Layer 1",
+      "pass": true,
+      "note": "[{\"name\": \"Layer 1\", \"plugin\": \"html\", \"locked\": false, \"hidden\": false, \"kids\": 2}] panel=[{\"name\": \"Layer 1\", \"plugin\": \"html\", \"hiddenClass\": false, \"lockTitle\": \"unlocked\"}]"
+    }
+  ],
+  "console": [
+    "[harness] session open: {'sid': '0d78d246515f'}"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Fixture copy opens in file mode",
+      "pass": true,
+      "note": ""
+    },
+    {
+      "n": 2,
+      "name": "Snippets tab shows nine cards",
+      "pass": true,
+      "note": "got 9"
+    },
+    {
+      "n": 3,
+      "name": "Drop Text frame at 200,300: one div, selected",
+      "pass": true,
+      "note": "{\"found\": true, \"count\": 1, \"selected\": true, \"elId\": \"el_t7s5ni\"}"
+    },
+    {
+      "n": 4,
+      "name": "Undo removes the dropped element",
+      "pass": true,
+      "note": "before=4 after=4"
+    },
+    {
+      "n": 5,
+      "name": "Double-click the dropped frame, type hello, blur, source contains hello, source has no contenteditable",
+      "pass": true,
+      "note": "{\"ok\": true, \"editing\": true, \"source\": \"<!doctype html>\\n<html><head>\\n<meta charset=\\\"utf-8\\\">\\n<title>Phase 3.5 magazine fixture</title>\\n<style data-cc=\\\"page\\\">\\n  :root { --cc-page-w: 816px; --c"
+    }
+  ],
+  "console": [
+    "[harness] session open: {'sid': '0d78d246515f'}"
+  ]
+}

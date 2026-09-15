@@ -1,0 +1,71 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Canvas mounts on the copy in canvas mode. Every 3.4 job 2, 4 and 5 name is on frame._canvas and layers() reads the sections.",
+      "pass": true,
+      "shot": "01-canvas-mode.png",
+      "note": "mode='canvas' missing_from_api=[] layers=[{'id': 'path-0', 'name': 'Text', 'plugin': 'html', 'locked': False, 'hidden': False}, {'id': 'path-1', 'name': 'Art', 'plugin': 'svg', 'locked': False, 'hidden': False}]"
+    },
+    {
+      "n": 2,
+      "name": "setLayerFlag locks the svg layer. A click on one of its shapes selects nothing.",
+      "pass": true,
+      "shot": "02-locked-layer.png",
+      "note": "shape=ellipse locked=True selection=[] layers=[{'id': 'path-0', 'name': 'Text', 'plugin': 'html', 'locked': False, 'hidden': False}, {'id': 'path-1', 'name': 'Art', 'plugin': 'svg', 'locked': True, 'hidden': False}]"
+    },
+    {
+      "n": 3,
+      "name": "The lock comes off and the same click selects the shape.",
+      "pass": true,
+      "shot": "03-unlocked.png",
+      "note": "selection=['path-1-0-1']"
+    },
+    {
+      "n": 4,
+      "name": "Cmd-3 hides the pull quote \u2014 data-cc-hidden and display none. Cmd-Opt-3 brings it back.",
+      "pass": false,
+      "shot": "04b-shown.png",
+      "note": "quote={'eid': None, 'candidates': 0, 'scanned': 11} hidden=None shown=None"
+    },
+    {
+      "n": 5,
+      "name": "insertAt drops a snippet into the active layer at left 100 top 100.",
+      "pass": true,
+      "shot": "05-insert-at.png",
+      "note": "new_id=el_0kb22x placed={'centre': {'x': 153.5, 'y': 211}, 'pos': 'absolute', 'hidden': False, 'locked': False, 'display': 'block', 'styleDisplay': '', 'styleLeft': '100px', 'styleTop': '100px', 'styleTransform': '', 'usedLeft': 100, 'usedTop': 100, 'parentLayer': 'path-0'} active=path-0 want_layer=path-0"
+    },
+    {
+      "n": 6,
+      "name": "A 30px drag of an absolute element writes left +30 and leaves no transform behind.",
+      "pass": true,
+      "shot": "06-drag-left-top.png",
+      "note": "before={'centre': {'x': 153.5, 'y': 211}, 'pos': 'absolute', 'hidden': False, 'locked': False, 'display': 'block', 'styleDisplay': '', 'styleLeft': '100px', 'styleTop': '100px', 'styleTransform': '', 'usedLeft': 100, 'usedTop': 100, 'parentLayer': 'path-0'} after={'centre': {'x': 183.5, 'y': 211}, 'pos': 'absolute', 'hidden': False, 'locked': False, 'display': 'block', 'styleDisplay': '', 'styleLeft': '130px', 'styleTop': '100px', 'styleTransform': '', 'usedLeft': 130, 'usedTop': 100, 'parentLayer': 'path-0'}"
+    },
+    {
+      "n": 7,
+      "name": "Right-click gives Group, Ungroup, Isolate, Arrange with four rows, Lock, Unlock all, Hide, Show all, Move to layer with one row per layer, Duplicate, Delete.",
+      "pass": true,
+      "shot": "07-menu.png",
+      "note": "labels=['Group', 'Ungroup', 'Isolate', 'Arrange', 'Lock', 'Unlock all', 'Hide', 'Show all', 'Move to layer', 'Duplicate', 'Delete'] arrange=['Bring to front', 'Bring forward', 'Send backward', 'Send to back'] move_to_layer=['Text', 'Art'] missing=[] missing_arrange=[]"
+    },
+    {
+      "n": 8,
+      "name": "Cmd-A selects every child of the active layer, nothing else.",
+      "pass": true,
+      "shot": "08-select-all.png",
+      "note": "selection=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6', 'el_0kb22x'] layer_children=['path-0-0', 'path-0-1', 'path-0-2', 'path-0-3', 'path-0-4', 'path-0-5', 'path-0-6', 'el_0kb22x']"
+    },
+    {
+      "n": 9,
+      "name": "No page errors, no console errors, nothing 404s.",
+      "pass": true,
+      "shot": "09-console.png",
+      "note": "total_console_lines=5"
+    }
+  ],
+  "findings": [
+    "4 \u2014 canvas.js hideSelection / showAll / key handler"
+  ],
+  "surface_left": []
+}

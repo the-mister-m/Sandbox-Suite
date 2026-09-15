@@ -47,3 +47,10 @@
 - Goto agent definition recites an older seven-rule block with a 500K cap; the first Code Canvas port 1A spawn stalled on it. Check ~/.claude/agents/Goto.md.
 - Phase 4 (Code Canvas port, motion/3D): scope doc only. No specs until Brandon rules.
 - Harness token counts ran above spec caps on most Code Canvas port jobs this session (table in [SESSION-REVIEW-2026-09-12-phases1-3-build.md](Docs/Reports/SESSION-REVIEW-2026-09-12-phases1-3-build.md)); agents' own counts were under. Decide which count the rule reads.
+- Live Actions P1–P3: restart the server once, browser-test all three. See [SESSION-REVIEW-2026-09-14-live-actions.md](Docs/Reports/SESSION-REVIEW-2026-09-14-live-actions.md).
+- Live Actions P2 stale cards: queued approve and ask timeout stay yellow; result with no card makes a blank "tool" card.
+- Live Actions P3: live row sorts to the bottom; sub-row open key resets at turn end; diff recomputed every render.
+- Live Actions P4 (tonight): per-call $ mid-turn — [providers.py:699](engine/providers.py#L699) collects rows, nothing sends them; ledger `_call` never filled.
+- Ledger transcript cache: fetched once per region, never refreshed — [ledger.js:628](static/js/widgets/adetools/ledger/ledger.js#L628). Fix drafted in session, not applied.
+- Transcripts lost for regions closed before a session is saved — [tracks.py:1448](ade/tracks.py#L1448), [tracks.py:1750](ade/tracks.py#L1750). `remove_track` callers not traced.
+- mini-queue `merge_gates` toggle is inert (pending only) — keep or drop.

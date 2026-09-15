@@ -1,0 +1,8 @@
+[harness] copy made: /Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35-05-copy.html
+[harness] cleared a stale grid file at /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/0d78d246515f/phase35-05.json
+[harness] session open: {'sid': '0d78d246515f'}
+[harness] ade socket live: True
+[harness] widgets on the surface at start: []
+[harness] widgets left on the surface: []
+[harness] removed /Users/moth3rship/Desktop/AI Design/Sandbox Suite/library/grids/0d78d246515f/phase35-05.json
+[harness] removed the copy /Users/moth3rship/Desktop/AI Design/Sandbox Suite/Docs/scratchpad/phase35-05-copy.html

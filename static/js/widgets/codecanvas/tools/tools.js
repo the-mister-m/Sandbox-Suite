@@ -1,4 +1,4 @@
-// tools widget — inspector, layer tree, library and page options for one canvas
+// tools widget — inspector, layer tree, snippets and page options for one canvas
 //
 // Binds to one canvas widget on this surface that shares its target: the
 // instance named by the `canvas` option, else the last to emit canvas.focus.
@@ -9,12 +9,9 @@
 
   const MX = window.MX = window.MX || {};
 
-  const SECTIONS = ["tools", "layers", "library", "page"];
+  const SECTIONS = ["tools", "layers", "snippets", "page"];
   // label: the tab's face. The section key stays the contract name.
   const SECTION_LABELS = { page: "pages" };
-  const TAGS = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote", "small"];
-  const GRID_STYLES = ["lines", "dots", "dynamic"];
-  const WIDTH_MODES = ["fixed", "fluid"];
 
   // state: STYLE_CONTROL — control kind per file-mode style prop.
   const STYLE_COLOR_PROPS = ["color", "backgroundColor", "borderColor"];
@@ -51,6 +48,49 @@
       "borderRadius"]]
   ];
 
+  // state: page block — --cc-* token per page() field, and its default.
+  const PAGE_TOKEN = {
+    w: "--cc-page-w", h: "--cc-page-h",
+    marginTop: "--cc-margin-top", marginRight: "--cc-margin-right",
+    marginBottom: "--cc-margin-bottom", marginLeft: "--cc-margin-left",
+    columns: "--cc-columns", gutter: "--cc-gutter", bleed: "--cc-bleed", grid: "--cc-grid"
+  };
+  const PAGE_DEFAULTS = {
+    w: 816, h: 1056, marginTop: 48, marginRight: 48, marginBottom: 48,
+    marginLeft: 48, columns: 3, gutter: 16, bleed: 0, grid: 8
+  };
+  const PAGE_UNITLESS = { columns: true };
+  const PAGE_SIZES = [
+    ["Letter", 816, 1056], ["Tabloid", 1056, 1632],
+    ["A4", 794, 1123], ["A3", 1123, 1587]
+  ];
+
+  // state: snippets — Layout set, dropped onto the active layer.
+  const SNIPPET_IMG_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+    + "width='320' height='240'%3E%3Crect width='100%25' height='100%25' fill='%23ccc'/%3E%3C/svg%3E";
+  const SNIPPETS_LAYOUT = [
+    { name: "Text frame", tag: "div", w: 240, h: 120, extra: "",
+      inner: "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>" },
+    { name: "Headline", tag: "h1", w: 240, h: 60, extra: "margin:0;",
+      inner: "Headline" },
+    { name: "Image frame", tag: "div", w: 320, h: 240, extra: "overflow:hidden;",
+      inner: '<img src="' + SNIPPET_IMG_PLACEHOLDER + '" alt="" '
+        + 'style="width:100%;height:100%;object-fit:cover;display:block">' },
+    { name: "Pull quote", tag: "blockquote", w: 240, h: 120, extra: "margin:0;",
+      inner: "Pull quote text goes here." },
+    { name: "Caption", tag: "p", w: 240, h: 24, extra: "margin:0;",
+      inner: "<small>Caption</small>" },
+    { name: "Rectangle", tag: "div", w: 160, h: 100, extra: "border:1px solid #333;", inner: "" },
+    { name: "Ellipse", tag: "div", w: 160, h: 100,
+      extra: "border:1px solid #333;border-radius:50%;", inner: "" },
+    { name: "Line", tag: "div", w: 160, h: 1, extra: "background:#333;", inner: "" },
+    { name: "Group", tag: "div", w: 200, h: 200, extra: "outline:1px dashed #888;", inner: "" }
+  ];
+  // state: SVG shapes land here in job 9. Heading only, for now.
+  const SNIPPET_SETS = [["Layout", SNIPPETS_LAYOUT], ["Shapes", []]];
+  const SNIPPET_BY_NAME = Object.create(null);
+  for (const def of SNIPPETS_LAYOUT) SNIPPET_BY_NAME[def.name] = def;
+
   function ensureStyles() {
     if (document.getElementById("mxtl-style")) return;
     const style = document.createElement("style");
@@ -77,25 +117,12 @@
       .cc-panel-field { width: 100%; box-sizing: border-box; margin-top: 2px;
         background: var(--surface-2, #2f2f2f); color: var(--text-1, #e8e8e8);
         border: 1px solid var(--border, #3a3a3a); font: inherit; }
-      .cc-panel-notes-field { min-height: 60px; }
       .cc-panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
       .cc-panel-swatch-row { display: flex; align-items: center; gap: 4px; margin: 4px 0; }
-      .cc-panel-swatch-label { font-size: 10px; color: var(--text-3, #888);
-        min-width: 4em; }
-      .cc-panel-swatch { width: 16px; height: 16px; border: 1px solid #555; padding: 0; }
-      .cc-panel-swatch-active { outline: 2px solid #2a6df4; }
-      .cc-panel-palette-editor { display: flex; flex-wrap: wrap; gap: 4px;
-        align-items: center; margin-top: 6px; }
       .cc-panel-picker { width: 24px; height: 20px; padding: 0; border: 0; }
-      .cc-panel-link-list { display: flex; flex-direction: column; gap: 2px;
-        max-height: 160px; overflow-y: auto; }
-      .cc-panel-link-page, .cc-panel-link-widget, .cc-panel-link-clear,
-      .cc-panel-add-palette, .cc-panel-toggle {
+      .cc-panel-toggle {
         background: none; border: 1px solid var(--border, #3a3a3a);
         color: var(--text-2, #aaa); font: inherit; cursor: pointer; text-align: left; }
-      .cc-panel-link-page { font-weight: bold; }
-      .cc-panel-link-widget { padding-left: 12px; }
-      .cc-panel-link-active { border-color: #2a6df4; color: var(--text-1, #ddd); }
       .cc-panel-order-head { display: flex; justify-content: space-between;
         align-items: center; padding: 6px 8px; position: sticky; top: 0;
         background: var(--surface-1, #1b1b1b); z-index: 1; }
@@ -109,6 +136,13 @@
       .cc-panel-row-btn { background: none; border: 0; cursor: pointer;
         color: var(--text-3, #888); font-size: 11px; padding: 0 2px; }
       .cc-panel-row-btn.cc-panel-row-btn-on { color: #2a6df4; }
+      .cc-panel-row-btn:disabled { opacity: 0.3; cursor: default; }
+      .cc-layer-row { border-top: 1px solid var(--border, #333); font-weight: bold; }
+      .cc-layer-dot { color: #2a6df4; font-size: 10px; }
+      .cc-layer-plugin { color: var(--text-3, #888); font-size: 10px;
+        border: 1px solid var(--border, #3a3a3a); padding: 0 3px; }
+      .cc-layer-hidden { opacity: 0.45; }
+      .cc-layer-locked .cc-panel-row-name { font-style: italic; }
       .cc-nav-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 8px; }
       .cc-nav-tab { padding: 2px 6px; font-size: 11px; cursor: pointer;
         border: 1px solid var(--border, #3a3a3a); background: none;
@@ -293,12 +327,11 @@
     if (tl.menuEsc) { document.removeEventListener("keydown", tl.menuEsc, true); tl.menuEsc = null; }
   }
 
-  // function: the canvas's own menu items, opened from a Layers row. Inline
-  // rules match the canvas's context menu; the parent document has no
-  // access to the canvas's own stylesheet.
-  function openLayerMenu(tl, a, x, y) {
+  // function: a row menu at x,y. items are [label, fn] or [label, fn, off].
+  // Inline rules match the canvas's context menu; the parent document has
+  // no access to the canvas's own stylesheet.
+  function openMenu(tl, items, x, y) {
     closeLayerMenu(tl);
-    const items = a.menuItems ? a.menuItems() : [];
     const menu = el("div", null);
     menu.style.cssText = "position: fixed; z-index: 2147483647; background: #ffffff; "
       + "border: 1px solid #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); "
@@ -306,12 +339,14 @@
     menu.style.left = x + "px";
     menu.style.top = y + "px";
     for (const item of items) {
-      const label = item[0], fn = item[1];
+      const label = item[0], fn = item[1], off = !!item[2];
       const row = el("div", null, label);
-      row.style.cssText = "padding: 4px 16px; cursor: default;";
+      row.style.cssText = "padding: 4px 16px; cursor: default;"
+        + (off ? " opacity: 0.4;" : "");
       row.addEventListener("mousedown", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (off) return;
         closeLayerMenu(tl);
         fn();
       });
@@ -381,7 +416,6 @@
     tl.focusedInst = payload.inst;
     const want = payload.target || "";
     if (want !== (tl.frame.options.target || "")) {
-      unbindDrop(tl);
       tl.frame.setOption("target", want);
       return;
     }
@@ -393,264 +427,138 @@
     return f ? f._canvas : null;
   }
 
-  function defOf(tl, type) {
-    if (!tl.core) return null;
-    try { return tl.core.kit.get(type); } catch (e) { return null; }
-  }
+  // ---------- page ----------
 
-  // function: one resolve per state object, for palettes.
-  function resolveFor(tl, state) {
-    if (!tl.core || !state) return null;
-    if (tl.resolveOf !== state) {
-      tl.resolve = tl.core.makeResolve(tl.core.kit, state);
-      tl.resolveOf = state;
+  // function: page block read from computed :root. Defaults, missing:true when absent.
+  function readPage(a) {
+    const doc = a && a.doc ? a.doc() : null;
+    if (!doc || !doc.documentElement || !doc.defaultView) {
+      return Object.assign({}, PAGE_DEFAULTS, { missing: true });
     }
-    return tl.resolve;
-  }
-
-  // ---------- selection and writers ----------
-
-  function findWidget(state, id) {
-    const pages = state.get().pages;
-    for (const p of pages) {
-      for (const w of p.widgets) if (w.id === id) return { widget: w, page: p };
+    const computed = doc.defaultView.getComputedStyle(doc.documentElement);
+    const out = {};
+    let any = false;
+    for (const key of Object.keys(PAGE_TOKEN)) {
+      const raw = computed.getPropertyValue(PAGE_TOKEN[key]).trim();
+      if (raw) { any = true; out[key] = parseFloat(raw) || 0; }
+      else out[key] = PAGE_DEFAULTS[key];
     }
-    return null;
-  }
-
-  function selectedWidgets(tl, a) {
-    if (!a || !a.state) return [];
-    const out = [];
-    for (const id of a.selected()) {
-      const found = findWidget(a.state, id);
-      if (found) out.push(found.widget);
-    }
+    out.missing = !any;
     return out;
   }
 
-  // function: tools shared by every selected widget's kit entry.
-  function sharedTools(tl, widgets) {
-    if (!widgets.length) return [];
-    const lists = widgets.map((w) => {
-      const d = defOf(tl, w.type);
-      return d ? d.tools : [];
+  // function: token value text. Columns is unitless, the rest are px.
+  function pageTokenValue(key, value) {
+    return PAGE_UNITLESS[key] ? String(value) : value + "px";
+  }
+
+  // function: preset name for a w,h pair. "Custom" when no preset matches.
+  function pageSizeName(w, h) {
+    for (const size of PAGE_SIZES) {
+      if (size[1] === w && size[2] === h) return size[0];
+    }
+    return "Custom";
+  }
+
+  // function: page block missing. First write creates :root, body, layer
+  // rules from scope 3.1, root token values from page with key overridden.
+  function createPageBlock(a, page, key, value) {
+    const vals = Object.assign({}, page);
+    vals[key] = value;
+    const decl = Object.keys(PAGE_TOKEN)
+      .map((k) => PAGE_TOKEN[k] + ": " + pageTokenValue(k, vals[k]) + ";").join(" ");
+    a.patchSource({ kind: "set-css-rule", block: "page", selector: ":root", declarations: decl });
+    a.patchSource({
+      kind: "set-css-rule", block: "page", selector: "body",
+      declarations: "width: var(--cc-page-w); height: var(--cc-page-h); "
+        + "position: relative; margin: 0 auto; overflow: hidden;"
     });
-    return lists[0].filter((t) => lists.every((list) => list.indexOf(t) >= 0));
-  }
-
-  function idsOf(widgets) { return widgets.map((w) => w.id); }
-
-  function writeProp(state, ids, key, value) {
-    state.batch(() => { for (const id of ids) state.setProp(id, key, value); });
-  }
-  function writeNotes(state, ids, value) {
-    state.batch(() => { for (const id of ids) state.setNotes(id, value); });
-  }
-  function writeBox(state, ids, key, value) {
-    const patch = {};
-    patch[key] = value;
-    state.batch(() => { for (const id of ids) state.moveWidget(id, patch); });
-  }
-  function writeContent(state, widgets, mode, value) {
-    state.batch(() => {
-      for (const w of widgets) {
-        const m = mode !== undefined ? mode : w.content.mode;
-        const v = value !== undefined ? value : w.content.value;
-        state.setContent(w.id, m, v);
-      }
+    a.patchSource({
+      kind: "set-css-rule", block: "page", selector: "[data-cc-layer]",
+      declarations: "position: absolute; inset: 0;"
+    });
+    a.patchSource({
+      kind: "set-css-rule", block: "page", selector: "[data-cc-layer][data-cc-hidden]",
+      declarations: "display: none;"
     });
   }
-  function writeLink(state, ids, target) {
-    state.batch(() => { for (const id of ids) state.setLink(id, target); });
-  }
 
-  // ---------- tool builders ----------
-
-  function buildTextTool(tl, widgets, state) {
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Text"));
-    const first = widgets[0];
-    const ids = idsOf(widgets);
-    const kit = tl.core.kit;
-
-    const ta = el("textarea", "cc-panel-field");
-    ta.value = first.content.value;
-    bindTyping(tl, ta, "content", (v) => writeContent(state, widgets, undefined, v));
-    box.appendChild(labelWrap("Content", ta));
-
-    box.appendChild(selectField("Mode", ["literal", "instruction"], first.content.mode,
-      (v) => writeContent(state, widgets, v, undefined)));
-
-    const allHaveTag = widgets.every((w) => {
-      const d = defOf(tl, w.type);
-      return !!(d && d.defaults && d.defaults.tag !== undefined);
-    });
-    if (allHaveTag) {
-      box.appendChild(selectField("Tag", TAGS, first.props.tag,
-        (v) => writeProp(state, ids, "tag", v)));
-    }
-
-    box.appendChild(selectField("Size", Object.keys(kit.sizes), first.props.size,
-      (v) => writeProp(state, ids, "size", v)));
-    box.appendChild(selectField("Weight", ["normal", "bold"], first.props.weight,
-      (v) => writeProp(state, ids, "weight", v)));
-    box.appendChild(selectField("Align", ["left", "center", "right"], first.props.align,
-      (v) => writeProp(state, ids, "align", v)));
-
-    const fontKeys = Object.keys(kit.fonts);
-    const isKitFont = fontKeys.indexOf(first.props.font) >= 0;
-    const fontSel = el("select", "cc-panel-field");
-    for (const f of fontKeys.concat(["custom"])) {
-      const o = el("option", null, f);
-      o.value = f;
-      if ((isKitFont && first.props.font === f) || (!isKitFont && f === "custom")) o.selected = true;
-      fontSel.appendChild(o);
-    }
-    const fontCustom = el("input", "cc-panel-field");
-    fontCustom.type = "text";
-    fontCustom.placeholder = "Google Fonts family name";
-    fontCustom.value = isKitFont ? "" : first.props.font;
-    fontCustom.hidden = isKitFont;
-    fontSel.addEventListener("change", () => {
-      if (fontSel.value === "custom") { fontCustom.hidden = false; return; }
-      fontCustom.hidden = true;
-      writeProp(state, ids, "font", fontSel.value);
-    });
-    bindTyping(tl, fontCustom, "font", (v) => writeProp(state, ids, "font", v));
-    box.appendChild(labelWrap("Font", fontSel));
-    box.appendChild(fontCustom);
-
-    if (widgets.every((w) => w.type === "text.list")) {
-      box.appendChild(selectField("List style", ["bullet", "number"], first.props.style,
-        (v) => writeProp(state, ids, "style", v)));
-    }
-    return box;
-  }
-
-  function buildBoxTool(tl, widgets, state) {
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Box"));
-    const first = widgets[0];
-    const ids = idsOf(widgets);
-    const grid = el("div", "cc-panel-grid");
-    grid.appendChild(numberField(tl, "X", first.box.x, "x",
-      (v) => writeBox(state, ids, "x", v)));
-    grid.appendChild(numberField(tl, "Y", first.box.y, "y",
-      (v) => writeBox(state, ids, "y", v)));
-    grid.appendChild(numberField(tl, "Width", first.box.w, "w",
-      (v) => writeBox(state, ids, "w", v)));
-    grid.appendChild(numberField(tl, "Height", first.box.h, "h",
-      (v) => writeBox(state, ids, "h", v)));
-    grid.appendChild(numberField(tl, "Padding", first.props.padding, "padding",
-      (v) => writeProp(state, ids, "padding", v)));
-    grid.appendChild(numberField(tl, "Margin", first.props.margin, "margin",
-      (v) => writeProp(state, ids, "margin", v)));
-    grid.appendChild(numberField(tl, "Corner", first.props.corner, "corner",
-      (v) => writeProp(state, ids, "corner", v)));
-    grid.appendChild(selectField("Shadow", ["none", "sm", "md", "lg"], first.props.shadow,
-      (v) => writeProp(state, ids, "shadow", v)));
-    box.appendChild(grid);
-    return box;
-  }
-
-  function buildColorTool(tl, widgets, state) {
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Color"));
-    const first = widgets[0];
-    const ids = idsOf(widgets);
-    const snap = state.get();
-    const resolve = resolveFor(tl, state);
-    const palette = resolve ? resolve.palette(snap.settings) : {};
-
-    for (const propKey of ["fill", "text", "border"]) {
-      const row = el("div", "cc-panel-swatch-row");
-      row.appendChild(el("span", "cc-panel-swatch-label", propKey));
-      for (const name of Object.keys(palette)) {
-        const sw = el("button", "cc-panel-swatch");
-        sw.type = "button";
-        sw.style.background = palette[name];
-        sw.title = name;
-        if (first.props[propKey] === name) sw.classList.add("cc-panel-swatch-active");
-        sw.addEventListener("click", () => writeProp(state, ids, propKey, name));
-        row.appendChild(sw);
-      }
-      box.appendChild(row);
-    }
-
-    const editor = el("div", "cc-panel-palette-editor");
-    const nameInput = el("input", "cc-panel-field");
-    nameInput.type = "text";
-    nameInput.placeholder = "Palette name";
-    editor.appendChild(nameInput);
-    const keys = Object.keys(tl.core.kit.palettes.default);
-    const pickers = {};
-    for (const k of keys) {
-      const picker = el("input", "cc-panel-picker");
-      picker.type = "color";
-      picker.title = k;
-      pickers[k] = picker;
-      editor.appendChild(picker);
-    }
-    editor.appendChild(mkBtn("Add palette", "cc-panel-add-palette", () => {
-      if (!nameInput.value) return;
-      const entry = {};
-      for (const k of keys) entry[k] = pickers[k].value;
-      const merged = JSON.parse(JSON.stringify(state.get().settings.palettes));
-      merged[nameInput.value] = entry;
-      state.setSetting("palettes", merged);
-    }));
-    box.appendChild(editor);
-    return box;
-  }
-
-  function buildLinkTool(tl, widgets, state) {
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Link"));
-    const first = widgets[0];
-    const ids = idsOf(widgets);
-    const current = first.link ? first.link.target : null;
-    const list = el("div", "cc-panel-link-list");
-    for (const page of state.get().pages) {
-      const pageBtn = mkBtn(page.name, "cc-panel-link-page",
-        () => writeLink(state, ids, page.id));
-      if (current === page.id) pageBtn.classList.add("cc-panel-link-active");
-      list.appendChild(pageBtn);
-      for (const w of page.widgets) {
-        const d = defOf(tl, w.type);
-        const wBtn = mkBtn((d ? d.label : w.type) + " — " + w.id, "cc-panel-link-widget",
-          () => writeLink(state, ids, w.id));
-        if (current === w.id) wBtn.classList.add("cc-panel-link-active");
-        list.appendChild(wBtn);
+  // function: write one or more page fields. Creates the block on the
+  // first write when missing (scope 3.1's four rules, all four written).
+  function writePageFields(tl, a, page, changes) {
+    let missing = page.missing;
+    for (const change of changes) {
+      const key = change[0], value = change[1];
+      if (missing) {
+        createPageBlock(a, page, key, value);
+        missing = false;
+      } else {
+        a.patchSource({ kind: "set-css-token", token: PAGE_TOKEN[key], value: pageTokenValue(key, value) });
       }
     }
-    box.appendChild(list);
-    box.appendChild(mkBtn("Clear", "cc-panel-link-clear",
-      () => writeLink(state, ids, null)));
-    return box;
+    markDirty(tl);
+    render(tl);
   }
 
-  // Notes tool: inline textarea, every selected widget.
-  function buildNotesTool(tl, widgets, state) {
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Notes"));
-    const ta = el("textarea", "cc-panel-field cc-panel-notes-field");
-    ta.value = widgets[0].notes;
-    bindTyping(tl, ta, "notes", (v) => writeNotes(state, idsOf(widgets), v));
-    box.appendChild(ta);
-    return box;
-  }
+  // function: the pages tab — size, margins, columns, bleed, grid.
+  function renderPage(tl, host, a) {
+    const page = readPage(a);
+    const sizeName = pageSizeName(page.w, page.h);
+    const custom = sizeName === "Custom";
 
-  // function: builder table for this instance. The kit queue drains on top.
-  function toolTable(tl) {
-    const t = {
-      text: (w, s) => buildTextTool(tl, w, s),
-      box: (w, s) => buildBoxTool(tl, w, s),
-      color: (w, s) => buildColorTool(tl, w, s),
-      link: (w, s) => buildLinkTool(tl, w, s),
-      notes: (w, s) => buildNotesTool(tl, w, s)
-    };
-    for (const q of tl.core.kit.tools) t[q.name] = q.builder;
-    return t;
+    const sizeBox = el("div", "cc-panel-tool");
+    sizeBox.appendChild(el("div", "cc-panel-tool-title", "Size"));
+    sizeBox.appendChild(selectField("Size",
+      PAGE_SIZES.map((s) => s[0]).concat(["Custom"]), sizeName, (name) => {
+        if (name === "Custom") { render(tl); return; }
+        const preset = PAGE_SIZES.filter((s) => s[0] === name)[0];
+        writePageFields(tl, a, page, [["w", preset[1]], ["h", preset[2]]]);
+      }));
+    const wField = numberField(tl, "W", page.w, "pg-w",
+      (v) => writePageFields(tl, a, readPage(a), [["w", v]]));
+    const hField = numberField(tl, "H", page.h, "pg-h",
+      (v) => writePageFields(tl, a, readPage(a), [["h", v]]));
+    if (!custom) {
+      wField.querySelector("input").disabled = true;
+      hField.querySelector("input").disabled = true;
+    }
+    sizeBox.appendChild(wField);
+    sizeBox.appendChild(hField);
+    host.appendChild(sizeBox);
+
+    const marginBox = el("div", "cc-panel-tool");
+    marginBox.appendChild(el("div", "cc-panel-tool-title", "Margins"));
+    const linkRow = el("label", "cc-panel-label");
+    const linkCb = el("input", null);
+    linkCb.type = "checkbox";
+    linkCb.checked = !!tl.pageMarginLink;
+    linkCb.addEventListener("change", () => { tl.pageMarginLink = linkCb.checked; });
+    linkRow.appendChild(linkCb);
+    linkRow.appendChild(el("span", null, "link"));
+    marginBox.appendChild(linkRow);
+
+    const marginKeys = ["marginTop", "marginRight", "marginBottom", "marginLeft"];
+    const marginLabels = { marginTop: "Top", marginRight: "Right", marginBottom: "Bottom", marginLeft: "Left" };
+    for (const key of marginKeys) {
+      marginBox.appendChild(numberField(tl, marginLabels[key], page[key], "pg-" + key, (v) => {
+        const cur = readPage(a);
+        if (tl.pageMarginLink) writePageFields(tl, a, cur, marginKeys.map((k) => [k, v]));
+        else writePageFields(tl, a, cur, [[key, v]]);
+      }));
+    }
+    host.appendChild(marginBox);
+
+    const gridBox = el("div", "cc-panel-tool");
+    gridBox.appendChild(el("div", "cc-panel-tool-title", "Columns"));
+    gridBox.appendChild(numberField(tl, "Count", page.columns, "pg-columns",
+      (v) => writePageFields(tl, a, readPage(a), [["columns", v]])));
+    gridBox.appendChild(numberField(tl, "Gutter", page.gutter, "pg-gutter",
+      (v) => writePageFields(tl, a, readPage(a), [["gutter", v]])));
+    gridBox.appendChild(numberField(tl, "Bleed", page.bleed, "pg-bleed",
+      (v) => writePageFields(tl, a, readPage(a), [["bleed", v]])));
+    gridBox.appendChild(numberField(tl, "Grid", page.grid, "pg-grid",
+      (v) => writePageFields(tl, a, readPage(a), [["grid", v]])));
+    host.appendChild(gridBox);
   }
 
   // ---------- sections ----------
@@ -659,110 +567,95 @@
     host.appendChild(el("div", "cc-panel-empty", text));
   }
 
-  function renderTools(tl, host, a) {
-    if (!a.state) { renderInspector(tl, host, a); return; }
-    const widgets = selectedWidgets(tl, a);
-    if (!widgets.length) { empty(host, "Nothing selected"); return; }
-    for (const name of sharedTools(tl, widgets)) {
-      const build = tl.tools[name];
-      if (build) host.appendChild(build(widgets, a.state));
+  // ---------- snippets ----------
+
+  // function: outer html for a drop, position/size baked in as inline style.
+  function snippetOuterHtml(def, id, x, y) {
+    const style = "position:absolute;left:" + Math.round(x) + "px;top:" + Math.round(y) + "px;"
+      + "width:" + def.w + "px;height:" + def.h + "px;" + (def.extra || "");
+    return "<" + def.tag + ' data-od-id="' + id + '" style="' + style + '">'
+      + (def.inner || "") + "</" + def.tag + ">";
+  }
+
+  // function: the snippets drawer — one card per Layout snippet, a
+  // second "Shapes" heading left empty for job 9's SVG shapes.
+  function renderSnippets(tl, host, a) {
+    for (const set of SNIPPET_SETS) {
+      const name = set[0], defs = set[1];
+      host.appendChild(el("div", "cc-nav-title", name));
+      if (!defs.length) continue;
+      const cards = el("div", "cc-nav-cards");
+      for (const def of defs) {
+        const c = el("div", "cc-nav-card");
+        c.appendChild(document.createTextNode(def.name));
+        c.appendChild(el("span", "cc-nav-card-type", def.tag));
+        c.draggable = true;
+        c.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", def.name);
+          e.dataTransfer.effectAllowed = "copy";
+        });
+        cards.appendChild(c);
+      }
+      host.appendChild(cards);
     }
   }
 
-  function firstWords(w) {
-    if (w.content.mode !== "literal") return "(instruction)";
-    const words = (w.content.value || "").trim().split(/\s+/).slice(0, 4).join(" ");
-    return words || "(empty)";
+  // ---------- drop into the canvas ----------
+
+  function unbindDrop(tl) {
+    if (!tl.drop) return;
+    try {
+      tl.drop.doc.removeEventListener("dragover", tl.drop.over);
+      tl.drop.doc.removeEventListener("drop", tl.drop.drop);
+    } catch (e) { /* the iframe document may be gone */ }
+    tl.drop = null;
   }
 
-  function renderLayers(tl, host, a) {
-    if (!a.state) { renderFileLayers(tl, host, a); return; }
-    const state = a.state;
-    const snap = state.get();
-    let page = null;
-    for (const p of snap.pages) if (p.id === snap.page) page = p;
-    const widgets = page ? page.widgets : [];
-    const chosen = a.selected();
-
-    const head = el("div", "cc-panel-order-head");
-    head.appendChild(el("span", "cc-panel-tool-title", "Layers"));
-    head.appendChild(mkBtn(tl.showContent ? "Show: content" : "Show: type",
-      "cc-panel-toggle", () => { tl.showContent = !tl.showContent; render(tl); }));
-    host.appendChild(head);
-
-    const byParent = {};
-    for (const w of widgets) {
-      const key = w.parent || "__root__";
-      if (!byParent[key]) byParent[key] = [];
-      byParent[key].push(w);
-    }
-
-    function indexOfWidget(id) {
-      for (let i = 0; i < widgets.length; i++) if (widgets[i].id === id) return i;
-      return widgets.length;
-    }
-
-    function renderRow(w, depth) {
-      const row = el("div", "cc-panel-row");
-      row.draggable = true;
-      row.dataset.id = w.id;
-      row.style.paddingLeft = (8 + depth * 12) + "px";
-      row.appendChild(el("div", "cc-panel-row-id", w.id));
-      const d = defOf(tl, w.type);
-      row.appendChild(el("div", "cc-panel-row-name", d ? d.label : w.type));
-      if (tl.showContent) row.appendChild(el("div", "cc-panel-row-content", firstWords(w)));
-      if (chosen.indexOf(w.id) >= 0) row.classList.add("cc-panel-row-active");
-
-      const eye = mkBtn(w.hidden ? "◌" : "◉", "cc-panel-row-btn", (e) => {
-        e.stopPropagation();
-        state.setHidden(w.id, !w.hidden);
-      });
-      eye.title = w.hidden ? "hidden" : "visible";
-      row.appendChild(eye);
-
-      const lock = mkBtn(w.locked ? "🔒" : "🔓", "cc-panel-row-btn", (e) => {
-        e.stopPropagation();
-        state.setLocked(w.id, !w.locked);
-      });
-      lock.title = w.locked ? "locked" : "unlocked";
-      if (w.locked) lock.classList.add("cc-panel-row-btn-on");
-      row.appendChild(lock);
-
-      row.addEventListener("click", () => {
-        if (tl.mirrors) tl.mirrors.select.emit({ ids: [w.id] });
-        render(tl);
-      });
-      row.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        if (a.selected().indexOf(w.id) < 0 && tl.mirrors) {
-          tl.mirrors.select.emit({ ids: [w.id] });
-        }
-        openLayerMenu(tl, a, e.clientX, e.clientY);
-      });
-      row.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", w.id);
-      });
-      row.addEventListener("dragover", (e) => e.preventDefault());
-      row.addEventListener("drop", (e) => {
-        e.preventDefault();
-        const draggedId = e.dataTransfer.getData("text/plain");
-        if (!draggedId || draggedId === w.id) return;
-        const rect = row.getBoundingClientRect();
-        const offset = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
-        if (offset < 0.25) state.reorder(draggedId, indexOfWidget(w.id));
-        else if (offset > 0.75) state.reorder(draggedId, indexOfWidget(w.id) + 1);
-        else state.setParent(draggedId, w.id);
-      });
-
-      host.appendChild(row);
-      for (const child of (byParent[w.id] || [])) renderRow(child, depth + 1);
-    }
-
-    for (const w of (byParent.__root__ || [])) renderRow(w, 0);
-    if (!widgets.length) empty(host, "This page is empty.");
+  // function: drop point relative to the page (body). Listeners live on
+  // the iframe's own document, whose event coordinates are already that
+  // frame's local space — no zoom accessor exists on the contract yet
+  // (3.3/3.4 job 3), see PICKS.
+  function dropPoint(doc, e) {
+    const rect = doc.body.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
-  // ---------- file mode layers ----------
+  // function: the first [data-cc-layer], or body when none.
+  function dropParentNode(doc) {
+    return doc.querySelector("[data-cc-layer]") || doc.body;
+  }
+
+  // function: HTML5 DnD crosses a same-origin iframe. The listener lives
+  // on the bound canvas's iframe document, as the old library did.
+  function bindDrop(tl) {
+    const a = api(tl);
+    const idoc = (a && a.doc) ? a.doc() : null;
+    if (!idoc || !idoc.body) { unbindDrop(tl); return; }
+    if (tl.drop && tl.drop.doc === idoc) return;
+    unbindDrop(tl);
+    const over = (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    };
+    const drop = (e) => {
+      e.preventDefault();
+      const name = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+      const def = SNIPPET_BY_NAME[name];
+      const cur = api(tl);
+      if (!def || !cur) return;
+      const doc = cur.doc();
+      const pt = dropPoint(doc, e);
+      const html = snippetOuterHtml(def, "drop", pt.x, pt.y);
+      cur.insertAt(html, pt);
+      markDirty(tl);
+      render(tl);
+    };
+    idoc.addEventListener("dragover", over);
+    idoc.addEventListener("drop", drop);
+    tl.drop = { doc: idoc, over: over, drop: drop };
+  }
+
+  // ---------- layers ----------
 
   const FILE_LAYER_SKIP_TAGS = ["script", "style", "template", "link", "meta"];
 
@@ -845,14 +738,323 @@
     return fileNonHostChildren(tl, node).length;
   }
 
-  function renderFileLayers(tl, host, a) {
+  // ---------- layer model ----------
+  // state: patchSource takes one patch per call, so every helper here is
+  // one or more sequential calls.
+
+  const LAYER_SEL = "[data-cc-layer]";
+  const LAYER_FLAG_ATTR = { locked: "data-cc-locked", hidden: "data-cc-hidden" };
+
+  // function: body's layer sections, DOM order, first is bottom.
+  function layerNodes(a) {
+    const doc = a && a.doc ? a.doc() : null;
+    if (!doc || !doc.body) return [];
+    return Array.prototype.slice.call(doc.body.children)
+      .filter((n) => n.matches && n.matches(LAYER_SEL));
+  }
+
+  function layerRecord(node) {
+    return {
+      id: fileNodeId(node),
+      name: node.getAttribute("data-cc-name") || "",
+      plugin: node.getAttribute("data-cc-plugin") || "html",
+      locked: node.hasAttribute("data-cc-locked"),
+      hidden: node.hasAttribute("data-cc-hidden")
+    };
+  }
+
+  function layers(a) {
+    return layerNodes(a).map(layerRecord);
+  }
+
+  function layerNodeById(a, id) {
+    for (const node of layerNodes(a)) if (fileNodeId(node) === id) return node;
+    return null;
+  }
+
+  // function: the layer an element sits in. "" when outside every layer.
+  function layerOf(a, id) {
+    const doc = a && a.doc ? a.doc() : null;
+    const node = doc ? tlFind(doc, id) : null;
+    if (!node) return "";
+    const layer = node.closest ? node.closest(LAYER_SEL) : null;
+    return layer ? fileNodeId(layer) : "";
+  }
+
+  function tlFind(doc, id) {
+    return MX.canvasPatch().find(doc, id);
+  }
+
+  // function: children patch.js counts for an insert or move index.
+  function nonHostKids(node) {
+    const sel = MX.canvasPatch().HOST_NODE_SELECTOR;
+    return Array.prototype.slice.call((node && node.children) || [])
+      .filter((child) => !(child.matches && child.matches(sel)));
+  }
+
+  function attrEscape(value) {
+    return String(value === undefined || value === null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // function: name not already taken by a layer, "Layer 2", "Layer 3"…
+  function freeLayerName(a, base) {
+    const taken = layers(a).map((l) => l.name);
+    if (taken.indexOf(base) < 0) return base;
+    for (let n = 2; n < 999; n++) {
+      if (taken.indexOf(base + " " + n) < 0) return base + " " + n;
+    }
+    return base;
+  }
+
+  // function: first load in canvas mode. A file with no layer section gets
+  // one, "Layer 1", wrapped around body's own children.
+  function ensureLayers(tl, a) {
+    const doc = a && a.doc ? a.doc() : null;
+    if (!doc || !doc.body) return false;
+    if (layerNodes(a).length) return false;
+    const id = MX.canvasPatch().newId("ly");
+    const kids = fileLayerChildren(tl, doc.body);
+    if (kids.length) {
+      a.patchSource({ kind: "wrap", id: id, ids: kids.map(fileNodeId), tag: "section" });
+      a.patchSource({ kind: "set-attr", id: id, name: "data-cc-layer", value: "1" });
+      a.patchSource({ kind: "set-attr", id: id, name: "data-cc-name", value: "Layer 1" });
+      a.patchSource({ kind: "set-attr", id: id, name: "data-cc-plugin", value: "html" });
+      return true;
+    }
+    addLayer(a, "Layer 1", "html");
+    return true;
+  }
+
+  function layerHtml(a, id, name, plugin) {
+    let inner = "";
+    if (plugin === "svg") {
+      const page = readPage(a);
+      inner = '<svg viewBox="0 0 ' + page.w + " " + page.h
+        + '" width="100%" height="100%"></svg>';
+    }
+    return '<section data-cc-layer="1" data-cc-name="' + attrEscape(name)
+      + '" data-cc-plugin="' + plugin + '" data-od-id="' + id + '">'
+      + inner + "</section>";
+  }
+
+  // function: new empty layer on top. svg plugin carries its own <svg>
+  // sized from the page tokens.
+  function addLayer(a, name, plugin) {
+    const doc = a && a.doc ? a.doc() : null;
+    if (!doc || !doc.body) return "";
+    const id = MX.canvasPatch().newId("ly");
+    const p = plugin === "svg" ? "svg" : "html";
+    a.patchSource({
+      kind: "insert", parent: "__body__",
+      index: nonHostKids(doc.body).length,
+      html: layerHtml(a, id, name, p)
+    });
+    return id;
+  }
+
+  function removeLayer(a, id) {
+    a.patchSource({ kind: "remove", id: id });
+  }
+
+  function renameLayer(a, id, name) {
+    a.patchSource({ kind: "set-attr", id: id, name: "data-cc-name", value: name });
+  }
+
+  // function: locked and hidden are present or absent, never "0".
+  function setLayerFlag(a, id, flag, on) {
+    const attr = LAYER_FLAG_ATTR[flag];
+    if (!attr) return;
+    a.patchSource({ kind: "set-attr", id: id, name: attr, value: on ? "1" : null });
+  }
+
+  // function: layer to a new slot among body's children.
+  function moveLayer(a, id, index) {
+    a.patchSource({ kind: "move", id: id, parent: "__body__", index: index });
+  }
+
+  // function: every child into the layer below, then the empty layer goes.
+  function mergeDown(a, id) {
+    const nodes = layerNodes(a);
+    const at = nodes.map(fileNodeId).indexOf(id);
+    if (at <= 0) return false;
+    const belowId = fileNodeId(nodes[at - 1]);
+    const kids = nonHostKids(nodes[at]);
+    let index = nonHostKids(nodes[at - 1]).length;
+    for (const kid of kids) {
+      a.patchSource({ kind: "move", id: fileNodeId(kid), parent: belowId, index: index });
+      index++;
+    }
+    removeLayer(a, id);
+    return true;
+  }
+
+  // function: each id to the end of the target layer.
+  function moveToLayer(a, ids, layerId) {
+    const node = layerNodeById(a, layerId);
+    if (!node) return;
+    let index = nonHostKids(node).length;
+    for (const id of ids || []) {
+      if (id === layerId) continue;
+      a.patchSource({ kind: "move", id: id, parent: layerId, index: index });
+      index++;
+    }
+  }
+
+  // function: active layer, the canvas option. Empty falls to the topmost
+  // unlocked layer.
+  function activeLayer(tl) {
+    const bf = boundFrame(tl);
+    const held = bf && bf.options ? (bf.options.activeLayer || "") : "";
+    if (held) return held;
+    return tl.activeLayerLocal || "";
+  }
+
+  function setActiveLayer(tl, id) {
+    const bf = boundFrame(tl);
+    tl.activeLayerLocal = id || "";
+    if (bf) bf.setOption("activeLayer", id || "");
+  }
+
+  // function: the layer new items land in. Empty option falls to the
+  // topmost unlocked layer.
+  function activeLayerId(tl, a) {
+    const stack = layerNodes(a);
+    const held = activeLayer(tl);
+    for (const node of stack) if (fileNodeId(node) === held) return held;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (!stack[i].hasAttribute("data-cc-locked")) return fileNodeId(stack[i]);
+    }
+    return "";
+  }
+
+  // function: the drop slot for a layer, counted with the dragged layer
+  // out of body's list. front is the later index.
+  function layerDropIndex(a, draggedId, targetNode, front) {
+    const doc = a.doc ? a.doc() : null;
+    if (!doc || !doc.body) return 0;
+    const kids = nonHostKids(doc.body).filter((n) => fileNodeId(n) !== draggedId);
+    const at = Math.max(0, kids.indexOf(targetNode));
+    return front ? at + 1 : at;
+  }
+
+  // ---------- row menus ----------
+
+  // function: a layer copy with every bridge id dropped, so the insert
+  // stamps fresh ones.
+  function duplicateLayer(a, id, name) {
+    const node = layerNodeById(a, id);
+    if (!node) return "";
+    const clone = node.cloneNode(true);
+    clone.setAttribute("data-cc-name", name);
+    const all = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll("*")));
+    for (const elx of all) {
+      for (const attr of Array.prototype.slice.call(elx.attributes)) {
+        if (attr.name.indexOf("data-od-") === 0) elx.removeAttribute(attr.name);
+      }
+    }
+    const newId = MX.canvasPatch().newId("ly");
+    clone.setAttribute("data-od-id", newId);
+    const doc = a.doc();
+    const at = nonHostKids(doc.body).indexOf(node);
+    a.patchSource({
+      kind: "insert", parent: "__body__",
+      index: at < 0 ? nonHostKids(doc.body).length : at + 1,
+      html: clone.outerHTML
+    });
+    return newId;
+  }
+
+  function layerChildIds(tl, a, id) {
+    const node = layerNodeById(a, id);
+    if (!node) return [];
+    return fileLayerChildren(tl, node).map(fileNodeId).filter(Boolean);
+  }
+
+  // function: every item on the layer becomes the selection.
+  function selectAllOnLayer(tl, a, id) {
+    tl.mirrors.select.emit({ ids: layerChildIds(tl, a, id) });
+    render(tl);
+  }
+
+  function layerMenuItems(tl, a, rec) {
+    const stack = layerNodes(a).map(fileNodeId);
+    const atBottom = stack.indexOf(rec.id) <= 0;
+    const chosen = a.selected();
+    return [
+      ["New layer", () => {
+        const id = addLayer(a, freeLayerName(a, "Layer " + (stack.length + 1)), "html");
+        if (id) setActiveLayer(tl, id);
+        render(tl);
+      }],
+      ["Duplicate layer", () => {
+        duplicateLayer(a, rec.id, freeLayerName(a, rec.name + " copy"));
+        render(tl);
+      }],
+      ["Delete layer", () => { removeLayer(a, rec.id); render(tl); }],
+      ["Rename", () => { tl.renamingLayer = rec.id; render(tl); }],
+      [rec.locked ? "Unlock" : "Lock", () => {
+        setLayerFlag(a, rec.id, "locked", !rec.locked);
+        render(tl);
+      }],
+      [rec.hidden ? "Show" : "Hide", () => {
+        setLayerFlag(a, rec.id, "hidden", !rec.hidden);
+        render(tl);
+      }],
+      ["Merge down", () => { mergeDown(a, rec.id); render(tl); }, atBottom],
+      ["Select all on layer", () => selectAllOnLayer(tl, a, rec.id)],
+      ["Move selection here", () => {
+        moveToLayer(a, chosen, rec.id);
+        render(tl);
+      }, !chosen.length]
+    ];
+  }
+
+  // function: an element and everything under it.
+  function subtreeIds(tl, a, id) {
+    const doc = a.doc ? a.doc() : null;
+    const node = doc ? tlFind(doc, id) : null;
+    if (!node) return [id];
+    const out = [id];
+    for (const kid of Array.prototype.slice.call(node.querySelectorAll("*"))) {
+      if (isFileLayerSkip(tl, kid)) continue;
+      const kidId = fileNodeId(kid);
+      if (kidId) out.push(kidId);
+    }
+    return out;
+  }
+
+  // function: the canvas's own items plus Isolate. job 5 paints the dim.
+  function itemMenuItems(tl, a, id) {
+    const items = a.menuItems ? a.menuItems().slice() : [];
+    items.push(["Isolate", () => {
+      tl.mirrors.select.emit({ ids: subtreeIds(tl, a, id), isolate: true });
+      render(tl);
+    }]);
+    return items;
+  }
+
+  function renderLayers(tl, host, a) {
     const idoc = a.doc ? a.doc() : null;
     if (!idoc || !idoc.body) { empty(host, "Canvas not loaded."); return; }
-    const body = idoc.body;
+    // state: one attempt per target; the change mirror redraws after it.
+    const targetKey = tl.frame.options.target || "";
+    if (tl.layersEnsured !== targetKey) {
+      tl.layersEnsured = targetKey;
+      ensureLayers(tl, a);
+    }
     const chosen = a.selected();
+    const stack = layerNodes(a);
+    const activeId = activeLayerId(tl, a);
 
     const head = el("div", "cc-panel-order-head");
     head.appendChild(el("span", "cc-panel-tool-title", "Layers"));
+    head.appendChild(mkBtn("+ Layer", "cc-panel-toggle", () => {
+      const id = addLayer(a, freeLayerName(a, "Layer " + (stack.length + 1)), "html");
+      if (id) setActiveLayer(tl, id);
+      render(tl);
+    }));
     const groupBtn = mkBtn("Group", "cc-panel-toggle", () => a.group(a.selected()));
     const ungroupBtn = mkBtn("Ungroup", "cc-panel-toggle", () => a.ungroup(a.selected()[0]));
     groupBtn.disabled = !chosen.length;
@@ -861,10 +1063,110 @@
     head.appendChild(ungroupBtn);
     host.appendChild(head);
 
-    function renderRow(node, depth) {
+    if (!stack.length) { empty(host, "This page is empty."); return; }
+
+    // function: inline rename. Enter commits, Esc cancels.
+    function startRename(layerId, nameEl, current) {
+      const input = el("input", "cc-panel-field");
+      input.value = current;
+      nameEl.textContent = "";
+      nameEl.appendChild(input);
+      input.addEventListener("click", (e) => e.stopPropagation());
+      input.addEventListener("dblclick", (e) => e.stopPropagation());
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          tl.renamingLayer = "";
+          renameLayer(a, layerId, input.value);
+          render(tl);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          tl.renamingLayer = "";
+          render(tl);
+        }
+      });
+      input.focus();
+      input.select();
+    }
+
+    function renderLayerRow(node) {
+      const rec = layerRecord(node);
+      const row = el("div", "cc-panel-row cc-layer-row");
+      row.draggable = true;
+      row.dataset.layer = rec.id;
+      row.dataset.id = rec.id;
+      if (rec.hidden) row.classList.add("cc-layer-hidden");
+      if (rec.locked) row.classList.add("cc-layer-locked");
+      if (rec.id === activeId) row.classList.add("cc-panel-row-active");
+
+      const dot = el("span", "cc-layer-dot", rec.id === activeId ? "●" : "○");
+      dot.title = rec.id === activeId ? "active layer" : "";
+      row.appendChild(dot);
+
+      const nameEl = el("div", "cc-panel-row-name", rec.name);
+      nameEl.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        startRename(rec.id, nameEl, rec.name);
+      });
+      row.appendChild(nameEl);
+      if (tl.renamingLayer === rec.id) startRename(rec.id, nameEl, rec.name);
+      // label: plugin — the layer's engine.
+      row.appendChild(el("span", "cc-layer-plugin", rec.plugin));
+
+      const eye = mkBtn(rec.hidden ? "◌" : "◉", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        setLayerFlag(a, rec.id, "hidden", !rec.hidden);
+        render(tl);
+      });
+      eye.title = rec.hidden ? "hidden" : "visible";
+      row.appendChild(eye);
+
+      const lock = mkBtn(rec.locked ? "■" : "□", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        setLayerFlag(a, rec.id, "locked", !rec.locked);
+        render(tl);
+      });
+      lock.title = rec.locked ? "locked" : "unlocked";
+      if (rec.locked) lock.classList.add("cc-panel-row-btn-on");
+      row.appendChild(lock);
+
+      row.addEventListener("click", () => {
+        setActiveLayer(tl, rec.id);
+        render(tl);
+      });
+      row.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        openMenu(tl, layerMenuItems(tl, a, rec), e.clientX, e.clientY);
+      });
+      row.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", rec.id);
+      });
+      row.addEventListener("dragover", (e) => e.preventDefault());
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const draggedId = e.dataTransfer.getData("text/plain");
+        if (!draggedId || draggedId === rec.id) return;
+        const rect = row.getBoundingClientRect();
+        const offset = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
+        if (offset < 0.25 || offset > 0.75) {
+          // state: the panel draws top-is-front; the top quarter is the later slot.
+          moveLayer(a, draggedId, layerDropIndex(a, draggedId, node, offset < 0.25));
+        } else {
+          moveToLayer(a, [draggedId], rec.id);
+        }
+        render(tl);
+      });
+
+      host.appendChild(row);
+      const kids = fileLayerChildren(tl, node);
+      for (let i = kids.length - 1; i >= 0; i--) renderItemRow(kids[i], 1, rec.locked);
+    }
+
+    function renderItemRow(node, depth, locked) {
       const id = fileNodeId(node);
       const row = el("div", "cc-panel-row");
-      row.draggable = true;
+      row.draggable = !locked;
       row.dataset.id = id || "";
       row.style.paddingLeft = (8 + depth * 12) + "px";
       row.appendChild(el("div", "cc-panel-row-name", fileRowLabel(node)));
@@ -874,6 +1176,41 @@
         row.appendChild(el("div", "cc-panel-row-content", "group"));
       }
       if (id && chosen.indexOf(id) >= 0) row.classList.add("cc-panel-row-active");
+
+      const parent = node.parentElement;
+      const parentId = fileParentId(node);
+      const idx = fileChildIndex(tl, node);
+      const sibs = parent ? fileNonHostChildren(tl, parent) : [];
+      const grand = parent ? parent.parentElement : null;
+      const canOut = !!(parent && grand && !parent.matches(LAYER_SEL)
+        && parent.tagName.toLowerCase() !== "body");
+
+      // function: order and nesting buttons. Same result as the drag.
+      const up = mkBtn("▲", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        a.move(id, parentId, idx + 1);
+      });
+      up.disabled = locked || idx >= sibs.length - 1;
+      const down = mkBtn("▼", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        a.move(id, parentId, idx - 1);
+      });
+      down.disabled = locked || idx <= 0;
+      const out = mkBtn("◀", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        a.move(id, fileParentId(parent), fileChildIndex(tl, parent) + 1);
+      });
+      out.disabled = locked || !canOut;
+      const into = mkBtn("▶", "cc-panel-row-btn", (e) => {
+        e.stopPropagation();
+        const prev = sibs[idx - 1];
+        if (prev) a.move(id, fileNodeId(prev), fileChildCount(tl, prev));
+      });
+      into.disabled = locked || idx <= 0;
+      row.appendChild(up);
+      row.appendChild(down);
+      row.appendChild(out);
+      row.appendChild(into);
 
       const hidden = node.style.display === "none";
       const eye = mkBtn(hidden ? "◌" : "◉", "cc-panel-row-btn", (e) => {
@@ -890,7 +1227,7 @@
         e.preventDefault();
         if (!id) return;
         if (a.selected().indexOf(id) < 0) fileSelect(tl, a, id, false);
-        openLayerMenu(tl, a, e.clientX, e.clientY);
+        openMenu(tl, itemMenuItems(tl, a, id), e.clientX, e.clientY);
       });
       row.addEventListener("dragstart", (e) => {
         if (id) e.dataTransfer.setData("text/plain", id);
@@ -898,106 +1235,32 @@
       row.addEventListener("dragover", (e) => e.preventDefault());
       row.addEventListener("drop", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const draggedId = e.dataTransfer.getData("text/plain");
         if (!draggedId || draggedId === id) return;
         const rect = row.getBoundingClientRect();
         const offset = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
-        const parentId = fileParentId(node);
         // state: index counted with the dragged element out of the list.
-        const sibs = node.parentElement
-          ? fileNonHostChildren(tl, node.parentElement).filter((n) => fileNodeId(n) !== draggedId)
+        const free = parent
+          ? fileNonHostChildren(tl, parent).filter((n) => fileNodeId(n) !== draggedId)
           : [];
-        const at = Math.max(0, sibs.indexOf(node));
-        if (offset < 0.25) a.move(draggedId, parentId, at);
-        else if (offset > 0.75) a.move(draggedId, parentId, at + 1);
+        const at = Math.max(0, free.indexOf(node));
+        // the panel draws siblings reversed; the top edge is the later slot.
+        if (offset < 0.25) a.move(draggedId, parentId, at + 1);
+        else if (offset > 0.75) a.move(draggedId, parentId, at);
         else a.move(draggedId, id, fileChildCount(tl, node));
       });
 
       host.appendChild(row);
-      for (const child of fileLayerChildren(tl, node)) renderRow(child, depth + 1);
+      const kids = fileLayerChildren(tl, node);
+      for (let i = kids.length - 1; i >= 0; i--) renderItemRow(kids[i], depth + 1, locked);
     }
 
-    const top = fileLayerChildren(tl, body);
-    if (!top.length) { empty(host, "This page is empty."); return; }
-    for (const node of top) renderRow(node, 0);
+    // layer rows: first is bottom in the DOM, drawn top is front.
+    for (let i = stack.length - 1; i >= 0; i--) renderLayerRow(stack[i]);
   }
 
-  function renderLibrary(tl, host) {
-    const groups = tl.core.kit.byTaxonomy();
-    const names = Object.keys(groups);
-    if (!names.length) { empty(host, "The kit is empty."); return; }
-    if (names.indexOf(tl.libTab) < 0) tl.libTab = names[0];
-
-    host.appendChild(el("h2", "cc-nav-title", "Widget library"));
-    const tabs = el("div", "cc-nav-tabs");
-    for (const n of names) {
-      tabs.appendChild(mkBtn(n, "cc-nav-tab" + (n === tl.libTab ? " cc-nav-tab-on" : ""),
-        () => { tl.libTab = n; render(tl); }));
-    }
-    host.appendChild(tabs);
-
-    const cards = el("div", "cc-nav-cards");
-    for (const w of groups[tl.libTab]) {
-      const c = el("div", "cc-nav-card");
-      c.appendChild(document.createTextNode(w.label || w.type));
-      c.appendChild(el("span", "cc-nav-card-type", w.type));
-      c.draggable = true;
-      c.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", w.type);
-        e.dataTransfer.effectAllowed = "copy";
-      });
-      cards.appendChild(c);
-    }
-    host.appendChild(cards);
-  }
-
-  function renderPageSection(tl, host, a) {
-    const bf = boundFrame(tl);
-    if (!a.state || !bf) { empty(host, "Page options need a doc canvas."); return; }
-    const state = a.state;
-    const snap = state.get();
-    const s = snap.settings;
-
-    const box = el("div", "cc-panel-tool");
-    box.appendChild(el("div", "cc-panel-tool-title", "Page options"));
-    box.appendChild(numberField(tl, "Grid size", s.grid, "grid",
-      (v) => state.setSetting("grid", v)));
-    box.appendChild(selectField("Grid style", GRID_STYLES, s.gridStyle,
-      (v) => state.setSetting("gridStyle", v)));
-    const width = s.width || { mode: "fixed", px: 1280 };
-    box.appendChild(selectField("Width mode", WIDTH_MODES, width.mode,
-      (v) => state.setSetting("width", { mode: v, px: width.px })));
-    box.appendChild(numberField(tl, "Fixed px", width.px, "widthpx",
-      (v) => state.setSetting("width", { mode: width.mode, px: v })));
-
-    const names = Object.keys(tl.core.kit.palettes);
-    for (const n of Object.keys(s.palettes || {})) if (names.indexOf(n) < 0) names.push(n);
-    box.appendChild(selectField("Palette", names, s.palette,
-      (v) => state.setSetting("palette", v)));
-    host.appendChild(box);
-
-    const pages = el("div", "cc-panel-tool");
-    pages.appendChild(el("div", "cc-panel-tool-title", "Pages"));
-    const list = el("div", "cc-nav-pages");
-    for (const p of snap.pages) {
-      const on = p.id === snap.page;
-      const t = mkBtn(p.name, "cc-nav-tab" + (on ? " cc-nav-tab-on" : ""),
-        () => bf.setOption("page", p.id));
-      t.addEventListener("dblclick", () => {
-        const next = window.prompt("Page name", p.name);
-        if (next) state.renamePage(p.id, next);
-      });
-      list.appendChild(t);
-    }
-    list.appendChild(mkBtn("+ Page", "cc-nav-tab", () => {
-      const id = state.addPage("Page " + (state.get().pages.length + 1));
-      if (id) bf.setOption("page", id);
-    }));
-    pages.appendChild(list);
-    host.appendChild(pages);
-  }
-
-  // ---------- file mode inspector ----------
+  // ---------- inspector ----------
 
   function isTextLeaf(node) {
     if (!node.children || node.children.length) return false;
@@ -1034,7 +1297,7 @@
     a.patchSource({ id: id, kind: "replace-outer-html", html: clone.outerHTML });
   }
 
-  function renderInspector(tl, host, a) {
+  function renderTools(tl, host, a) {
     const ids = a.selected();
     if (!ids.length) { empty(host, "Nothing selected"); return; }
     const idoc = a.doc ? a.doc() : null;
@@ -1086,55 +1349,10 @@
     }
   }
 
-  // ---------- drop into the canvas iframe ----------
-
-  function unbindDrop(tl) {
-    if (!tl.drop) return;
-    try {
-      tl.drop.doc.removeEventListener("dragover", tl.drop.over);
-      tl.drop.doc.removeEventListener("drop", tl.drop.drop);
-    } catch (e) { /* the iframe document may be gone */ }
-    tl.drop = null;
-  }
-
-  // function: HTML5 DnD crosses a same-origin iframe. The listener lives on
-  // the bound canvas's iframe document and calls its place.
-  function bindDrop(tl) {
-    const a = api(tl);
-    const idoc = (a && a.doc) ? a.doc() : null;
-    if (!idoc) { unbindDrop(tl); return; }
-    if (tl.drop && tl.drop.doc === idoc) return;
-    unbindDrop(tl);
-    const over = (e) => {
-      e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
-    };
-    const drop = (e) => {
-      e.preventDefault();
-      const type = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
-      if (!type) return;
-      const cur = api(tl);
-      if (!cur) return;
-      cur.place(type, { x: e.clientX, y: e.clientY });
-    };
-    idoc.addEventListener("dragover", over);
-    idoc.addEventListener("drop", drop);
-    tl.drop = { doc: idoc, over: over, drop: drop };
-  }
-
   // ---------- render ----------
 
-  // function: file mode has no library or page; those tabs hide.
+  // function: the tab row. All four sections live in file mode.
   function renderTabs(tl) {
-    const a = api(tl);
-    const fileMode = !!a && !a.state;
-    for (const name of ["library", "page"]) {
-      const b = tl.tabs[name];
-      if (b) b.hidden = fileMode;
-    }
-    if (fileMode && (tl.section === "library" || tl.section === "page")) {
-      tl.section = "tools";
-    }
     for (const name of SECTIONS) {
       const b = tl.tabs[name];
       if (b) b.classList.toggle("mxtl-on", name === tl.section);
@@ -1155,14 +1373,9 @@
     const a = api(tl);
     if (!a) { empty(tl.bodyEl, "No canvas on this target."); return; }
     if (tl.section === "layers") renderLayers(tl, tl.bodyEl, a);
-    else if (tl.section === "library") renderLibrary(tl, tl.bodyEl);
-    else if (tl.section === "page") renderPageSection(tl, tl.bodyEl, a);
+    else if (tl.section === "snippets") renderSnippets(tl, tl.bodyEl, a);
+    else if (tl.section === "page") renderPage(tl, tl.bodyEl, a);
     else renderTools(tl, tl.bodyEl, a);
-  }
-
-  function focusNotes(tl) {
-    const ta = tl.bodyEl ? tl.bodyEl.querySelector(".cc-panel-notes-field") : null;
-    if (ta) ta.focus();
   }
 
   // ---------- module ----------
@@ -1179,15 +1392,16 @@
       ensureStyles();
 
       const tl = frame._toolsState = {
-        frame: frame, live: true, core: null, tools: null,
+        frame: frame, live: true, core: null,
         canvasOpt: frame.options.canvas || "focused",
         section: SECTIONS.indexOf(frame.options.section) >= 0 ? frame.options.section : "tools",
-        focusedInst: "", libTab: "", showContent: false,
+        focusedInst: "",
         timers: Object.create(null),
-        mirrors: null, followMirror: null, offLayout: null, drop: null,
-        resolve: null, resolveOf: null,
+        mirrors: null, followMirror: null, offLayout: null,
         menu: null, menuOutside: null, menuEsc: null,
-        tabs: {}, bodyEl: null, whoEl: null
+        tabs: {}, bodyEl: null, whoEl: null,
+        pageMarginLink: false, drop: null,
+        layersEnsured: null, renamingLayer: "", activeLayerLocal: ""
       };
 
       // a canvas added or closed changes what this widget can bind to
@@ -1217,18 +1431,8 @@
       MX.canvasCore().then((core) => {
         if (!tl.live) return;
         tl.core = core;
-        tl.tools = toolTable(tl);
         tl.mirrors = core.mirrors(frame, {
-          select: (payload) => {
-            if (payload.notes) {
-              tl.section = "tools";
-              markDirty(tl);
-              render(tl);
-              focusNotes(tl);
-              return;
-            }
-            render(tl);
-          },
+          select: () => render(tl),
           focus: (payload) => {
             tl.focusedInst = payload.inst || "";
             if (tl.canvasOpt === "focused") render(tl);
@@ -1262,7 +1466,6 @@
       if (key === "target") { unbindDrop(tl); render(tl); return; }
       if (key === "canvas") {
         tl.canvasOpt = value || "focused";
-        unbindDrop(tl);
         // a pinned instance brings its own target along
         const pinned = tl.canvasOpt === "focused" ? null : targetOfInst(tl.canvasOpt);
         if (pinned !== null && pinned !== (frame.options.target || "")) {

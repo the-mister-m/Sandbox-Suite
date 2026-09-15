@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "name": "Canvas, Tools and Targets mount on the copy. File mode loads. Tools shows four tabs. frame._canvas keeps the 3.4 stay list.",
+      "pass": true,
+      "shot": "01-mounted.png",
+      "note": "docMode='file' bodyKids=4 sourceLen=5939 status='loaded' tools_tabs=['tools', 'layers', 'snippets', 'pages', '\u2699'] missing_from_api=[] still_on_api=[]"
+    },
+    {
+      "n": 2,
+      "name": "Canvas mode.",
+      "pass": true,
+      "shot": "02-canvas-mode.png",
+      "note": "mode='canvas'"
+    },
+    {
+      "n": 3,
+      "name": "Click an element. It selects.",
+      "pass": true,
+      "shot": "03-click.png",
+      "note": "pair=div+div in section; selection=['path-0-1']"
+    },
+    {
+      "n": 4,
+      "name": "Shift-click a sibling. Both are selected.",
+      "pass": true,
+      "shot": "04-shift-click.png",
+      "note": "selection=['path-0-1', 'path-0-2']"
+    },
+    {
+      "n": 5,
+      "name": "Cmd-G. A group row shows in layers.",
+      "pass": true,
+      "shot": "05-group.png",
+      "note": "group_id='grp_4topng' layer_rows=20 rows_tagged_group=['div']"
+    },
+    {
+      "n": 6,
+      "name": "Cmd-[ sends the group backward one slot.",
+      "pass": true,
+      "shot": "06-send-backward.png",
+      "note": "slot_before={'live': 1, 'source': 1} slot_after={'live': 0, 'source': 0}"
+    },
+    {
+      "n": 7,
+      "name": "Cmd-Z twice. The order move and the group are both undone.",
+      "pass": true,
+      "shot": "07-undo-twice.png",
+      "note": "group_still_in_source=False canUndo=False canRedo=True sourceLen=5939"
+    },
+    {
+      "n": 8,
+      "name": "Double-click a text leaf, type, Enter. The edit is in the source.",
+      "pass": true,
+      "shot": "08-text-edit.png",
+      "note": "leaf=p was='The archive begins where the filing cabi' typed_in_source=True dirty=True"
+    },
+    {
+      "n": 9,
+      "name": "Save. Status reads saved and the edit is on disk.",
+      "pass": true,
+      "shot": "09-save.png",
+      "note": "status_reached_saved=True text_on_disk=True file_bytes=5440"
+    },
+    {
+      "n": 10,
+      "name": "Reload. The edit persists.",
+      "pass": true,
+      "shot": "10-after-reload.png",
+      "note": "file_ready=True edit_back_in_source=True bodyKids=4 path=phase35-01-copy.html"
+    },
+    {
+      "n": 11,
+      "name": "A .json target is refused with 'target must be .html'.",
+      "pass": true,
+      "shot": "11-json-refused.png",
+      "note": "status='target must be .html' docMode=''"
+    },
+    {
+      "n": 12,
+      "name": "Console clean the whole way, nothing 404s.",
+      "pass": true,
+      "shot": "12-final.png",
+      "note": "pageerrors=0 error_warning_404_lines=0 total_console_lines=4"
+    }
+  ],
+  "findings": [],
+  "surface_left": []
+}

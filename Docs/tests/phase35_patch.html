@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>phase3.5 01b patch kinds test</title></head>
+<body>
+<pre id="results">running…</pre>
+<script src="/static/js/widgets/codecanvas/shared/patch.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.MX.canvasPatch();
+  var out = [];
+  var fails = 0;
+
+  function ok(name, cond, detail) {
+    if (cond) { out.push("PASS " + name); }
+    else { fails++; out.push("FAIL " + name + (detail ? " — " + detail : "")); }
+  }
+
+  // fixture: full document, one text layer, one svg layer, a styles
+  // block with one rule and one custom-property token.
+  var FIXTURE = '<!doctype html>\n<html><head><meta charset="utf-8">'
+    + '<style data-cc="styles">:root { --cc-page-w: 816px; }\n'
+    + '.cc-style-body { font-size: 12px; }</style></head><body>'
+    + '<section data-od-id="ly_a1" class="box">'
+    + '<div data-od-id="el_a1">hello</div>'
+    + '<div data-od-id="el_a2"><span data-od-id="el_a3">x</span></div>'
+    + '</section>'
+    + '<section data-od-id="ly_svg">'
+    + '<svg data-od-id="el_svg1" viewBox="0 0 100 100"></svg>'
+    + '</section>'
+    + '</body></html>';
+
+  // baseline: FIXTURE after one DOM parse+serialize round trip, so
+  // every round-trip check below compares against text apply() itself
+  // would produce, not hand-typed source formatting.
+  var BASELINE = P.normalize(FIXTURE).text;
+
+  function roundTrip(name, patch) {
+    var r1 = P.apply(BASELINE, patch);
+    if (!r1.inverse) { ok(name, false, "patch refused"); return; }
+    var r2 = P.apply(r1.text, r1.inverse);
+    var pass = r2.text === BASELINE;
+    if (!pass) console.log(name, "BASELINE:", BASELINE, "GOT:", r2.text);
+    ok(name, pass, "did not restore baseline");
+  }
+
+  function refused(name, patch) {
+    var r = P.apply(BASELINE, patch);
+    ok(name, r.inverse === null && r.text === BASELINE, "expected refusal");
+  }
+
+  // KINDS
+  ok("KINDS has thirteen entries", P.KINDS.length === 13, "got " + P.KINDS.length);
+
+  // ten original kinds, unchanged
+  roundTrip("set-style round trip", { kind: "set-style", id: "el_a1", styles: { color: "red" } });
+  roundTrip("set-text round trip", { kind: "set-text", id: "el_a1", value: "bye" });
+  roundTrip("replace-outer-html round trip", { kind: "replace-outer-html", id: "el_a1", html: '<div data-od-id="el_a1">replaced</div>' });
+  roundTrip("set-css-token round trip", { kind: "set-css-token", token: "--cc-page-w", value: "620px" });
+  roundTrip("wrap+unwrap round trip", { kind: "wrap", ids: ["el_a1", "el_a2"], id: "wrap_1" });
+  roundTrip("wrap with tag round trip, no group stamp", { kind: "wrap", ids: ["el_a1", "el_a2"], id: "wrap_2", tag: "section" });
+  roundTrip("move round trip", { kind: "move", id: "el_a3", parent: "ly_a1", index: 0 });
+  roundTrip("remove+insert round trip", { kind: "remove", id: "el_a2" });
+  (function () {
+    var r1 = P.apply(BASELINE, { kind: "set-full-source", source: "<!doctype html><html><body>x</body></html>" });
+    var r2 = P.apply(r1.text, r1.inverse);
+    ok("set-full-source round trip", r2.text === BASELINE, "did not restore baseline");
+    var doc = P.parse(BASELINE);
+    var refusedResult = P.applyToDoc(doc, { kind: "set-full-source", source: "x" });
+    ok("set-full-source refused in applyToDoc", refusedResult.ok === false);
+  })();
+
+  // set-attr
+  roundTrip("set-attr add new", { kind: "set-attr", id: "el_a1", name: "data-x", value: "1" });
+  roundTrip("set-attr change existing", { kind: "set-attr", id: "ly_a1", name: "class", value: "box2" });
+  roundTrip("set-attr remove (null)", { kind: "set-attr", id: "ly_a1", name: "class", value: null });
+  refused("set-attr refuses data-od- name", { kind: "set-attr", id: "el_a1", name: "data-od-id", value: "zzz" });
+  refused("set-attr refuses missing target", { kind: "set-attr", id: "nope", name: "class", value: "x" });
+
+  // set-css-rule / remove-css-rule
+  roundTrip("set-css-rule creates missing block", { kind: "set-css-rule", block: "page", selector: ":root", declarations: "--cc-page-h: 1056px" });
+  roundTrip("set-css-rule modifies existing rule", { kind: "set-css-rule", block: "styles", selector: ".cc-style-body", declarations: "font-size: 14px" });
+  roundTrip("remove-css-rule removes existing rule", { kind: "remove-css-rule", block: "styles", selector: ".cc-style-body" });
+  refused("remove-css-rule refuses missing rule", { kind: "remove-css-rule", block: "styles", selector: ".cc-style-missing" });
+
+  // insert with ns
+  roundTrip("insert ns=svg round trip", { kind: "insert", parent: "el_svg1", index: 0, html: '<rect x="0" y="0" width="10" height="10"/>', ns: "svg" });
+  (function () {
+    var doc = P.parse(BASELINE);
+    var r = P.applyToDoc(doc, { kind: "insert", parent: "el_svg1", index: 0, html: '<rect x="0" y="0" width="10" height="10"/>', ns: "svg" });
+    var inserted = r.ok ? P.find(doc, r.inverse.id) : null;
+    ok("insert ns=svg namespaceURI", !!inserted && inserted.namespaceURI === "http://www.w3.org/2000/svg",
+      inserted ? inserted.namespaceURI : "no element");
+  })();
+  (function () {
+    var doc = P.parse(BASELINE);
+    var r = P.applyToDoc(doc, { kind: "insert", parent: "el_svg1", index: 0, html: '<rect x="0" y="0"/><rect x="5" y="5"/>', ns: "svg" });
+    ok("insert ns=svg refuses more than one root", r.ok === false);
+  })();
+
+  var summary = "RESULT total=" + out.length + " fail=" + fails;
+  out.push(summary);
+  document.getElementById("results").textContent = out.join("\n");
+  console.log(summary);
+})();
+</script>
+</body>
+</html>

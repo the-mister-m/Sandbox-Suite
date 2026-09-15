@@ -1,12 +1,10 @@
-// canvas widget — one iframe per frame, doc mode and file mode
+// canvas widget — one iframe per frame, file mode
 //
 // Frames: "open" (ask for the target), "file" (its text), "save" (write it),
 // "saved" (the gate outcome), "tree_dirty" (someone else wrote).
 //
-// State: doc mode holds a canvas document in a per-instance State and draws
-// it with the core's render into the iframe. File mode holds the file's
-// source string and patches it. No module-level state: two canvases in one
-// grid share nothing.
+// State: the file's source string, patched in place. No module-level state:
+// two canvases in one grid share nothing.
 
 (function () {
   "use strict";
@@ -15,9 +13,24 @@
 
   const DRAG_THRESHOLD = 4;
   const MODES = ["code", "canvas", "preview"];
-  const ASSET_MODES = ["data", "raw", "folder"];
   const SNAPSHOT_MODES = ["raster", "playwright", "none"];
-  const BACK_LINK = "code-canvas-source";
+  const ZOOM_MIN = 25;
+  const ZOOM_MAX = 400;
+  const ZOOM_STOPS = [25, 50, 75, 100, 125, 150, 200, 300, 400];
+  const SNAP_TO = ["grid", "guides", "objects"];
+  const SNAP_PX = 6;
+  const RULER_PX = 20;
+  const PAGE_TOKENS = {
+    w: "--cc-page-w", h: "--cc-page-h",
+    marginTop: "--cc-margin-top", marginRight: "--cc-margin-right",
+    marginBottom: "--cc-margin-bottom", marginLeft: "--cc-margin-left",
+    columns: "--cc-columns", gutter: "--cc-gutter",
+    bleed: "--cc-bleed", grid: "--cc-grid"
+  };
+  const PAGE_FALLBACK = {
+    w: 816, h: 1056, marginTop: 48, marginRight: 48, marginBottom: 48,
+    marginLeft: 48, columns: 3, gutter: 16, bleed: 0, grid: 8
+  };
 
   function ensureStyles() {
     if (document.getElementById("mxcv-style")) return;
@@ -28,8 +41,6 @@
       .mxcv-wrap [hidden] { display: none !important; }
       .mxcv-bar { display: flex; align-items: center; gap: 4px; padding: 4px 6px;
         border-bottom: 1px solid var(--border, #333); flex: 0 0 auto; flex-wrap: wrap; }
-      .mxcv-tabs { display: flex; gap: 2px; padding: 2px 6px; flex: 0 0 auto;
-        overflow-x: auto; border-bottom: 1px solid var(--border, #333); }
       .mxcv-targets { display: flex; gap: 2px; padding: 2px 6px; flex: 0 0 auto;
         overflow-x: auto; border-bottom: 1px solid var(--border, #333); }
       .mxcv-tab { padding: 2px 6px; font-size: 11px; cursor: pointer;
@@ -39,9 +50,6 @@
       .mxcv-path { flex: 1 1 auto; font-size: 11px; color: var(--text-2, #aaa);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .mxcv-status { font-size: 11px; color: var(--text-3, #888); min-width: 3em; text-align: right; }
-      .mxcv-from { font-size: 11px; color: var(--text-3, #888); }
-      .mxcv-zoom { display: flex; align-items: center; gap: 2px; }
-      .mxcv-readout { font-size: 11px; color: var(--text-2, #aaa); min-width: 3em; text-align: center; }
       .mxcv-btn-on { border-color: #2a6df4; color: var(--text-1, #ddd); box-shadow: inset 0 -2px 0 #2a6df4; }
       .mxcv-body { flex: 1 1 auto; min-height: 0; display: flex; position: relative; }
       .mxcv-frame { flex: 1 1 auto; border: 0; width: 100%; height: 100%; background: #ffffff; }
@@ -81,9 +89,8 @@
     if (MX.grid && MX.grid.markDirty) MX.grid.markDirty(cv.frame);
   }
 
-  // function: doc mode for a .json target, file mode for .html.
+  // function: file mode for .html, nothing else.
   function modeForTarget(target) {
-    if (/\.json$/i.test(target)) return "doc";
     if (/\.html?$/i.test(target)) return "file";
     return "";
   }
@@ -108,335 +115,24 @@
     if (cv.iframe) cv.iframe.srcdoc = "<!doctype html><html><head></head><body></body></html>";
   }
 
-  // ---------- doc mode geometry, ported from Code Canvas canvas.js ----------
-
-  function matrixEl(cv) {
-    return cv.idoc ? cv.idoc.getElementById("matrix") : null;
-  }
-
-  function settings(cv) {
-    return cv.state.get().settings;
-  }
-
-  function paperColor(cv, s) {
-    return cv.resolve.palette(s).paper || "#ffffff";
-  }
-
-  function widgetOf(cv, id) {
-    const s = cv.state.get();
-    for (let p = 0; p < s.pages.length; p++) {
-      const list = s.pages[p].widgets;
-      for (let w = 0; w < list.length; w++) {
-        if (list[w].id === id) return list[w];
-      }
-    }
-    return null;
-  }
-
-  function isFluid(s) { return !!(s.width && s.width.mode === "fluid"); }
-
-  function pageWidth(cv, s) {
-    const m = matrixEl(cv);
-    if (isFluid(s)) return (m && m.clientWidth) || 1;
-    return (s.width && s.width.px) || 1280;
-  }
-
-  function snapPx(v, s) {
-    const g = s.grid || 8;
-    return Math.round(v / g) * g;
-  }
-
-  // function: pixel width of the space a widget's box lives in.
-  function spaceWidth(cv, id, s) {
-    const w = widgetOf(cv, id);
-    if (!w || !w.parent) return pageWidth(cv, s);
-    const wrap = wrapOf(cv, id);
-    const host = wrap && wrap.parentNode;
-    if (host && host.offsetWidth) return host.offsetWidth;
-    return pageWidth(cv, s);
-  }
-
-  // function: snap a horizontal value. Percent in fluid mode.
-  function snapH(cv, v, s, width) {
-    if (!isFluid(s)) return snapPx(v, s);
-    const w = width || pageWidth(cv, s);
-    return snapPx(v / 100 * w, s) / w * 100;
-  }
-
-  function gridH(cv, s, width) {
-    if (!isFluid(s)) return s.grid || 8;
-    return (s.grid || 8) / (width || pageWidth(cv, s)) * 100;
-  }
-
-  // function: clamp a box inside its space. Fixed mode only.
-  function clampBox(cv, box, s, width) {
-    if (isFluid(s)) return box;
-    const max = width || pageWidth(cv, s);
-    if (box.w > max) box.w = max;
-    if (box.x < 0) box.x = 0;
-    if (box.y < 0) box.y = 0;
-    if (box.x + box.w > max) box.x = max - box.w;
-    return box;
-  }
-
-  // function: viewport wrapper for the page. Created once, wraps #matrix.
-  function viewport(cv) {
-    const el = matrixEl(cv);
-    if (!el) return null;
-    let vp = el.parentNode;
-    if (vp && vp.classList && vp.classList.contains("cc-canvas-viewport")) return vp;
-    vp = cv.idoc.createElement("div");
-    vp.className = "cc-canvas-viewport";
-    el.parentNode.insertBefore(vp, el);
-    vp.appendChild(el);
-    return vp;
-  }
-
-  function clampZoom(p) {
-    p = Math.round(p);
-    if (p < 25) return 25;
-    if (p > 200) return 200;
-    return p;
-  }
-
-  function updateReadout(cv) {
-    if (cv.readoutEl) cv.readoutEl.textContent = cv.zoomPct + "%";
-  }
-
-  // function: apply the current zoom. Scale the page, center it.
-  function applyZoom(cv) {
-    updateReadout(cv);
-    const page = matrixEl(cv);
-    const vp = viewport(cv);
-    if (!page || !vp) return;
-    const scale = cv.zoomPct / 100;
-    page.style.transformOrigin = "0 0";
-    page.style.transform = "scale(" + scale + ")";
-    const pw = page.offsetWidth, ph = page.offsetHeight;
-    const vw = vp.clientWidth, vh = vp.clientHeight;
-    page.style.marginLeft = Math.max(0, (vw - pw * scale) / 2) + "px";
-    page.style.marginTop = Math.max(0, (vh - ph * scale) / 2) + "px";
-  }
-
-  // function: set zoom. aroundClient keeps that point fixed under the pointer.
-  function setZoom(cv, p, aroundClient) {
-    const newPct = clampZoom(p);
-    const vp = viewport(cv);
-    const page = matrixEl(cv);
-    if (!vp || !page) { cv.zoomPct = newPct; updateReadout(cv); return; }
-    const beforeScale = cv.zoomPct / 100;
-    let rect, localX, localY;
-    if (aroundClient) {
-      rect = vp.getBoundingClientRect();
-      const mx0 = parseFloat(page.style.marginLeft) || 0;
-      const my0 = parseFloat(page.style.marginTop) || 0;
-      localX = (aroundClient.x - rect.left + vp.scrollLeft - mx0) / beforeScale;
-      localY = (aroundClient.y - rect.top + vp.scrollTop - my0) / beforeScale;
-    }
-    cv.zoomPct = newPct;
-    applyZoom(cv);
-    if (aroundClient) {
-      const scale = cv.zoomPct / 100;
-      const mx1 = parseFloat(page.style.marginLeft) || 0;
-      const my1 = parseFloat(page.style.marginTop) || 0;
-      vp.scrollLeft = localX * scale + mx1 - (aroundClient.x - rect.left);
-      vp.scrollTop = localY * scale + my1 - (aroundClient.y - rect.top);
-    }
-    markDirty(cv);
-  }
-
-  function fitZoom(cv) {
-    const page = matrixEl(cv);
-    const vp = viewport(cv);
-    if (!page || !vp) return;
-    const pw = page.offsetWidth, ph = page.offsetHeight;
-    const vw = vp.clientWidth, vh = vp.clientHeight;
-    if (!pw || !ph || !vw || !vh) return;
-    const scale = Math.min(vw / pw, vh / ph);
-    cv.zoomPct = clampZoom(Math.floor(scale * 100));
-    applyZoom(cv);
-    markDirty(cv);
-  }
-
-  // function: paint the grid. Bright lines while a gesture runs. Preview
-  // mode paints paper only.
-  function drawGrid(cv, active) {
-    const m = matrixEl(cv);
-    if (!m) return;
-    const s = settings(cv);
-    const g = s.grid || 8;
-    const style = s.gridStyle || "dynamic";
-    const faint = "rgba(0,0,0,0.08)";
-    const bright = "rgba(42,109,244,0.35)";
-    m.classList.add("cc-canvas-matrix");
-    if (cv.mode === "preview") {
-      m.style.backgroundImage = "none";
-    } else {
-      const lines = (style === "lines") || (style === "dynamic" && active);
-      const c = (style === "dynamic" && active) ? bright : faint;
-      if (lines) {
-        m.style.backgroundImage =
-          "linear-gradient(to right, " + c + " 1px, transparent 1px)," +
-          "linear-gradient(to bottom, " + c + " 1px, transparent 1px)";
-      } else {
-        m.style.backgroundImage = "radial-gradient(" + faint + " 1px, transparent 1px)";
-      }
-    }
-    m.style.backgroundSize = g + "px " + g + "px";
-    m.style.backgroundColor = paperColor(cv, s);
-    m.style.width = isFluid(s) ? "100%" : pageWidth(cv, s) + "px";
-  }
-
-  function wrapOf(cv, id) {
-    const m = matrixEl(cv);
-    if (!m) return null;
-    return m.querySelector('[data-widget-id="' + id + '"]');
-  }
-
-  // function: paint outlines and handles for the selection.
-  function paintSelection(cv) {
-    const m = matrixEl(cv);
-    if (!m) return;
-    const old = m.querySelectorAll(".cc-canvas-selected");
-    for (let i = 0; i < old.length; i++) old[i].classList.remove("cc-canvas-selected");
-    const handles = m.querySelectorAll(".cc-canvas-handle");
-    for (let h = 0; h < handles.length; h++) handles[h].parentNode.removeChild(handles[h]);
-    if (cv.mode === "preview") return;
-    const dirs = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
-    for (let j = 0; j < cv.selection.length; j++) {
-      const wrap = wrapOf(cv, cv.selection[j]);
-      if (!wrap) continue;
-      wrap.classList.add("cc-canvas-selected");
-      for (let d = 0; d < dirs.length; d++) {
-        const el = cv.idoc.createElement("div");
-        el.className = "cc-canvas-handle cc-canvas-handle-" + dirs[d];
-        el.setAttribute("data-handle", dirs[d]);
-        wrap.appendChild(el);
-      }
-    }
-  }
+  // ---------- selection ----------
 
   // function: set the selection and announce it on the mirror.
   function setSelection(cv, ids) {
     cv.selection = ids.slice();
-    if (cv.docMode === "file") paintFileSelection(cv);
-    else paintSelection(cv);
+    paintFileSelection(cv);
     if (cv.mirrors) cv.mirrors.select.emit({ ids: cv.selection.slice() });
     markDirty(cv);
   }
 
   // function: selection from a sibling. Painted, never re-emitted.
-  function applySelection(cv, ids) {
+  // state: isolate absent leaves isolate as it is.
+  function applySelection(cv, ids, isolate) {
     cv.selection = Array.isArray(ids) ? ids.slice() : [];
-    if (cv.docMode === "doc") paintSelection(cv);
-    else paintFileSelection(cv);
-  }
-
-  function pruneSelection(cv) {
-    const kept = [];
-    for (let i = 0; i < cv.selection.length; i++) {
-      if (widgetOf(cv, cv.selection[i])) kept.push(cv.selection[i]);
+    if (isolate !== undefined) {
+      cv.isolate = isolate && cv.selection.length ? cv.selection.slice() : null;
     }
-    if (kept.length !== cv.selection.length) cv.selection = kept;
-  }
-
-  // function: ids whose widget record changed since the last draw. null when
-  // the page, settings, render mode or widget order moved.
-  function changedIds(cv, s, pid) {
-    const pg = s.pages.filter((p) => p.id === pid)[0];
-    const sig = { page: pid, mode: renderMode(cv), byId: {}, order: [] };
-    if (pg) {
-      for (const w of pg.widgets) {
-        sig.order.push(w.id);
-        sig.byId[w.id] = JSON.stringify(w);
-      }
-    }
-    sig.settings = JSON.stringify(s.settings);
-    const old = cv.drawSig;
-    cv.drawSig = sig;
-    if (!old || old.page !== sig.page || old.mode !== sig.mode) return null;
-    if (old.settings !== sig.settings) return null;
-    if (old.order.join("|") !== sig.order.join("|")) return null;
-    const out = sig.order.filter((id) => old.byId[id] !== sig.byId[id]);
-    return out.length ? out : null;
-  }
-
-  // function: full redraw. Grid, widgets, selection, zoom transform.
-  function redraw(cv) {
-    if (cv.docMode !== "doc" || !cv.render || !cv.idoc) return;
-    const s = cv.state.get();
-    const pid = cv.pageId || s.page;
-    viewport(cv);
-    drawGrid(cv, !!cv.gesture);
-    cv.render.setMode(renderMode(cv));
-    cv.render.page(pid, {
-      play: cv.mode === "preview", only: changedIds(cv, s, pid),
-      links: cv.mode === "preview" || !!cv.linksLive
-    });
-    pruneSelection(cv);
-    paintSelection(cv);
-    applyZoom(cv);
-  }
-
-  function renderMode(cv) {
-    return (cv.schematic || cv.mode === "code") ? "schematic" : "preview";
-  }
-
-  // function: new widget on the current page, snapped.
-  function place(cv, type, at) {
-    if (cv.docMode !== "doc" || !cv.state) return null;
-    const pid = cv.pageId || cv.state.get().page;
-    if (!pid) return null;
-    const s = settings(cv);
-    const scale = cv.zoomPct / 100;
-    const box = {
-      x: snapH(cv, ((at && at.x) || 0) / scale, s),
-      y: snapPx(((at && at.y) || 0) / scale, s)
-    };
-    const kit = cv.core && cv.core.kit;
-    const list = (kit && kit.widgets) || [];
-    for (let i = 0; i < list.length; i++) {
-      if (list[i].type === type && list[i].box) {
-        box.w = list[i].box.w;
-        box.h = list[i].box.h;
-      }
-    }
-    return cv.state.addWidget(pid, type, box);
-  }
-
-  // function: copy a widget one grid unit down and right. New id.
-  function duplicate(cv, id) {
-    const w = widgetOf(cv, id);
-    const pid = cv.pageId || cv.state.get().page;
-    if (!w || !pid) return null;
-    const s = settings(cv);
-    const sw = spaceWidth(cv, id, s);
-    const box = {
-      x: w.box.x + gridH(cv, s, sw), y: w.box.y + (s.grid || 8),
-      w: w.box.w, h: w.box.h
-    };
-    let nid = null;
-    cv.state.batch(function () {
-      nid = cv.state.duplicateWidget(id);
-      if (nid) cv.state.moveWidget(nid, clampBox(cv, box, s, sw));
-    });
-    return nid;
-  }
-
-  // function: move a widget one step in the widget array.
-  function shiftOrder(cv, id, step) {
-    const s = cv.state.get();
-    for (let p = 0; p < s.pages.length; p++) {
-      const list = s.pages[p].widgets;
-      for (let i = 0; i < list.length; i++) {
-        if (list[i].id === id) {
-          const next = i + step;
-          if (next < 0 || next >= list.length) return;
-          cv.state.reorder(id, next);
-          return;
-        }
-      }
-    }
+    paintFileSelection(cv);
   }
 
   function closeMenu(cv) {
@@ -456,261 +152,67 @@
       + "font: 13px system-ui, sans-serif; padding: 4px 0;";
     menu.style.left = x + "px";
     menu.style.top = y + "px";
-    for (let i = 0; i < items.length; i++) {
-      const fn = items[i][1];
-      const row = cv.idoc.createElement("div");
-      row.textContent = items[i][0];
-      row.style.cssText = "padding: 4px 16px; cursor: default;";
-      row.addEventListener("mousedown", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        closeMenu(cv);
-        fn();
-      });
-      menu.appendChild(row);
-    }
+    menuRows(cv, menu, items);
     cv.idoc.body.appendChild(menu);
     cv.menu = menu;
   }
 
-  // function: [label, fn] rows for the current selection and docMode. Shared
-  // by the canvas's own menus and the Layers panel's right-click.
+  // function: one menu level. [label, fn] is a leaf, [label, items] opens
+  // a submenu on hover.
+  function menuRows(cv, host, items) {
+    for (let i = 0; i < items.length; i++) {
+      const label = items[i][0];
+      const body = items[i][1];
+      const row = cv.idoc.createElement("div");
+      row.style.cssText = "padding: 4px 16px; cursor: default; position: relative;";
+      if (Array.isArray(body)) {
+        row.textContent = label + " ▸";
+        const sub = cv.idoc.createElement("div");
+        sub.setAttribute("data-cc-submenu", label);
+        sub.style.cssText = "position: absolute; left: 100%; top: -4px; display: none; "
+          + "background: #ffffff; border: 1px solid #d0d0d0; min-width: 9em; "
+          + "box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 4px 0;";
+        menuRows(cv, sub, body);
+        row.appendChild(sub);
+        row.addEventListener("mouseenter", () => { sub.style.display = "block"; });
+        row.addEventListener("mouseleave", () => { sub.style.display = "none"; });
+      } else {
+        row.textContent = label;
+        row.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeMenu(cv);
+          body();
+        });
+      }
+      host.appendChild(row);
+    }
+  }
+
+  // function: menu rows for the current selection. Shared by the canvas's
+  // own menus and the Layers panel's right-click.
   function menuItems(cv) {
-    if (cv.docMode === "file") {
-      return [
-        ["Group", () => fileGroup(cv, cv.selection.slice())],
-        ["Ungroup", () => fileUngroup(cv, cv.selection[0])],
-        ["Bring forward", () => fileOrder(cv, cv.selection.slice(), "forward")],
-        ["Send backward", () => fileOrder(cv, cv.selection.slice(), "back")],
-        ["Bring to front", () => fileOrder(cv, cv.selection.slice(), "front")],
-        ["Send to back", () => fileOrder(cv, cv.selection.slice(), "toBack")],
-        ["Duplicate", () => fileDuplicate(cv, cv.selection.slice())],
-        ["Delete", () => fileRemove(cv, cv.selection.slice())]
-      ];
-    }
-    // state: the doc list's Lock label reads the first selected widget.
-    const id = cv.selection[0];
-    const w = id ? widgetOf(cv, id) : null;
+    const sel = () => cv.selection.slice();
+    const layerRows = layerList(cv).map((ly) =>
+      [ly.name || ly.id, () => moveToLayer(cv, sel(), ly.id)]);
     return [
-      ["Duplicate", function () {
-        for (let i = 0; i < cv.selection.length; i++) duplicate(cv, cv.selection[i]);
-      }],
-      ["Delete", function () {
-        const ids = cv.selection.slice();
-        setSelection(cv, []);
-        cv.state.batch(function () {
-          for (let i = 0; i < ids.length; i++) cv.state.removeWidget(ids[i]);
-        });
-      }],
-      ["Notes", function () {
-        if (cv.mirrors && id) cv.mirrors.select.emit({ ids: [id], notes: true });
-      }],
-      ["Bring forward", function () {
-        cv.state.batch(function () {
-          for (let i = 0; i < cv.selection.length; i++) shiftOrder(cv, cv.selection[i], 1);
-        });
-      }],
-      ["Send back", function () {
-        cv.state.batch(function () {
-          for (let i = 0; i < cv.selection.length; i++) shiftOrder(cv, cv.selection[i], -1);
-        });
-      }],
-      [w && w.locked ? "Unlock position" : "Lock position", function () {
-        if (id) cv.state.setLocked(id, !(w && w.locked));
-      }]
+      ["Group", () => fileGroup(cv, sel())],
+      ["Ungroup", () => fileUngroup(cv, cv.selection[0])],
+      ["Isolate", () => setIsolate(cv, sel())],
+      ["Arrange", [
+        ["Bring to front", () => fileOrder(cv, sel(), "front")],
+        ["Bring forward", () => fileOrder(cv, sel(), "forward")],
+        ["Send backward", () => fileOrder(cv, sel(), "back")],
+        ["Send to back", () => fileOrder(cv, sel(), "toBack")]
+      ]],
+      ["Lock", () => lockSelection(cv)],
+      ["Unlock all", () => unlockAll(cv)],
+      ["Hide", () => hideSelection(cv)],
+      ["Show all", () => showAll(cv)],
+      ["Move to layer", layerRows],
+      ["Duplicate", () => fileDuplicate(cv, sel())],
+      ["Delete", () => fileRemove(cv, sel())]
     ];
-  }
-
-  // function: context menu at a point for the current selection.
-  function openMenu(cv, x, y) {
-    openMenuItems(cv, x, y, menuItems(cv));
-  }
-
-  // function: box for a resize direction, from the start box and deltas.
-  function resizeBox(start, dir, dx, dy) {
-    const box = { x: start.x, y: start.y, w: start.w, h: start.h };
-    if (dir.indexOf("e") !== -1) box.w = start.w + dx;
-    if (dir.indexOf("s") !== -1) box.h = start.h + dy;
-    if (dir.indexOf("w") !== -1) { box.x = start.x + dx; box.w = start.w - dx; }
-    if (dir.indexOf("n") !== -1) { box.y = start.y + dy; box.h = start.h - dy; }
-    return box;
-  }
-
-  // ---------- doc mode listeners ----------
-
-  function onMouseDown(cv, e) {
-    if (cv.mirrors) cv.mirrors.focus.emit({});
-    if (cv.frozen || cv.mode === "preview") return;
-    closeMenu(cv);
-    if (cv.spaceDown) {
-      const vp = viewport(cv);
-      if (vp && vp.contains(e.target)) {
-        e.preventDefault();
-        cv.gesture = {
-          kind: "pan", sx: e.clientX, sy: e.clientY,
-          sl: vp.scrollLeft, st: vp.scrollTop
-        };
-        return;
-      }
-    }
-    const m = matrixEl(cv);
-    if (!m || !m.contains(e.target)) return;
-    if (e.button !== 0) return;
-    const s = settings(cv);
-
-    const handle = e.target.getAttribute ? e.target.getAttribute("data-handle") : null;
-    const wrap = e.target.closest ? e.target.closest("[data-widget-id]") : null;
-
-    if (!wrap) {
-      const rect = m.getBoundingClientRect();
-      cv.gesture = { kind: "marquee", x0: e.clientX - rect.left, y0: e.clientY - rect.top };
-      cv.marquee = cv.idoc.createElement("div");
-      cv.marquee.className = "cc-canvas-marquee";
-      m.appendChild(cv.marquee);
-      if (!e.shiftKey) setSelection(cv, []);
-      return;
-    }
-
-    const id = wrap.getAttribute("data-widget-id");
-    const w = widgetOf(cv, id);
-    if (!w) return;
-
-    if (e.shiftKey) {
-      if (cv.selection.indexOf(id) === -1) setSelection(cv, cv.selection.concat([id]));
-    } else if (cv.selection.indexOf(id) === -1) {
-      setSelection(cv, [id]);
-    } else if (cv.mirrors) {
-      // state: already selected, clicked id announced first, selection unchanged
-      cv.mirrors.select.emit({
-        ids: [id].concat(cv.selection.filter((x) => x !== id))
-      });
-    }
-
-    if (w.locked) return;
-
-    e.preventDefault();
-    cv.gesture = {
-      kind: handle ? "resize" : "move",
-      id: id, dir: handle,
-      start: { x: w.box.x, y: w.box.y, w: w.box.w, h: w.box.h },
-      sw: spaceWidth(cv, id, s),
-      cx: e.clientX, cy: e.clientY
-    };
-    drawGrid(cv, true);
-  }
-
-  function onMouseMove(cv, e) {
-    if (cv.frozen || cv.mode === "preview" || !cv.gesture) return;
-    const g = cv.gesture;
-    if (g.kind === "pan") {
-      const vpPan = viewport(cv);
-      if (vpPan) {
-        vpPan.scrollLeft = g.sl - (e.clientX - g.sx);
-        vpPan.scrollTop = g.st - (e.clientY - g.sy);
-      }
-      return;
-    }
-    const m = matrixEl(cv);
-    if (!m) return;
-    const s = settings(cv);
-    const zscale = cv.zoomPct / 100;
-
-    if (g.kind === "marquee") {
-      const rect = m.getBoundingClientRect();
-      const x1 = e.clientX - rect.left, y1 = e.clientY - rect.top;
-      cv.marquee.style.left = Math.min(g.x0, x1) + "px";
-      cv.marquee.style.top = Math.min(g.y0, y1) + "px";
-      cv.marquee.style.width = Math.abs(x1 - g.x0) + "px";
-      cv.marquee.style.height = Math.abs(y1 - g.y0) + "px";
-      return;
-    }
-
-    const wrap = wrapOf(cv, g.id);
-    if (!wrap) return;
-    const dx = (e.clientX - g.cx) / zscale, dy = (e.clientY - g.cy) / zscale;
-    const pw = g.sw || pageWidth(cv, s);
-    const fluid = isFluid(s);
-
-    if (g.kind === "move") {
-      const nx = g.start.x + (fluid ? dx / pw * 100 : dx);
-      wrap.style.left = fluid ? nx + "%" : nx + "px";
-      wrap.style.top = (g.start.y + dy) + "px";
-      return;
-    }
-
-    const box = resizeBox(g.start, g.dir, fluid ? dx / pw * 100 : dx, dy);
-    wrap.style.left = fluid ? box.x + "%" : box.x + "px";
-    wrap.style.width = fluid ? box.w + "%" : box.w + "px";
-    wrap.style.top = box.y + "px";
-    wrap.style.height = box.h + "px";
-  }
-
-  function onMouseUp(cv, e) {
-    if (cv.frozen || cv.mode === "preview" || !cv.gesture) return;
-    const g = cv.gesture;
-    const s = settings(cv);
-    cv.gesture = null;
-
-    if (g.kind === "pan") return;
-
-    if (g.kind === "marquee") {
-      if (cv.marquee && cv.marquee.parentNode) cv.marquee.parentNode.removeChild(cv.marquee);
-      cv.marquee = null;
-      const m = matrixEl(cv);
-      const rect = m.getBoundingClientRect();
-      const x1 = e.clientX - rect.left, y1 = e.clientY - rect.top;
-      const lo = { x: Math.min(g.x0, x1), y: Math.min(g.y0, y1) };
-      const hi = { x: Math.max(g.x0, x1), y: Math.max(g.y0, y1) };
-      const hits = e.shiftKey ? cv.selection.slice() : [];
-      const wraps = m.querySelectorAll("[data-widget-id]");
-      for (let i = 0; i < wraps.length; i++) {
-        const r = wraps[i].getBoundingClientRect();
-        const wx = r.left - rect.left, wy = r.top - rect.top;
-        // containment: only widgets fully inside the marquee.
-        if (wx >= lo.x && wx + r.width <= hi.x && wy >= lo.y && wy + r.height <= hi.y) {
-          const wid = wraps[i].getAttribute("data-widget-id");
-          if (hits.indexOf(wid) === -1) hits.push(wid);
-        }
-      }
-      setSelection(cv, hits);
-      drawGrid(cv, false);
-      return;
-    }
-
-    const zscale = cv.zoomPct / 100;
-    const dx = (e.clientX - g.cx) / zscale, dy = (e.clientY - g.cy) / zscale;
-    // a nested box is parent-relative: its space, not the page.
-    const pw = g.sw || pageWidth(cv, s);
-    const fluid = isFluid(s);
-    let box;
-    if (g.kind === "move") {
-      box = {
-        x: g.start.x + (fluid ? dx / pw * 100 : dx),
-        y: g.start.y + dy, w: g.start.w, h: g.start.h
-      };
-    } else {
-      box = resizeBox(g.start, g.dir, fluid ? dx / pw * 100 : dx, dy);
-    }
-    box.x = snapH(cv, box.x, s, pw);
-    box.w = snapH(cv, box.w, s, pw);
-    box.y = snapPx(box.y, s);
-    box.h = snapPx(box.h, s);
-    if (box.w < (s.grid || 8)) box.w = gridH(cv, s, pw);
-    if (box.h < (s.grid || 8)) box.h = s.grid || 8;
-    cv.state.moveWidget(g.id, clampBox(cv, box, s, pw));
-    drawGrid(cv, false);
-  }
-
-  function onContextMenu(cv, e) {
-    if (cv.frozen || cv.mode === "preview") return;
-    const m = matrixEl(cv);
-    if (!m || !m.contains(e.target)) return;
-    e.preventDefault();
-    const wrap = e.target.closest ? e.target.closest("[data-widget-id]") : null;
-    if (!wrap) { closeMenu(cv); return; }
-    const id = wrap.getAttribute("data-widget-id");
-    if (cv.selection.indexOf(id) === -1) setSelection(cv, [id]);
-    openMenu(cv, e.clientX, e.clientY, id);
   }
 
   // function: true when the key belongs to a text field.
@@ -718,108 +220,6 @@
     if (!target || !target.tagName) return false;
     const tag = target.tagName.toLowerCase();
     return tag === "input" || tag === "textarea" || target.isContentEditable;
-  }
-
-  function onKeyDown(cv, e) {
-    if (cv.frozen || editingTarget(e.target)) return;
-    if (e.key === " " || e.code === "Space") {
-      e.preventDefault();
-      cv.spaceDown = true;
-      return;
-    }
-    const mod = e.metaKey || e.ctrlKey;
-    const s = settings(cv);
-    let i;
-
-    if (mod && (e.key === "=" || e.key === "+")) {
-      e.preventDefault();
-      setZoom(cv, cv.zoomPct + 10, null);
-      return;
-    }
-    if (mod && e.key === "-") {
-      e.preventDefault();
-      setZoom(cv, cv.zoomPct - 10, null);
-      return;
-    }
-    if (mod && e.key === "0") {
-      e.preventDefault();
-      fitZoom(cv);
-      return;
-    }
-    if (mod && e.key.toLowerCase() === "s") {
-      e.preventDefault();
-      doSave(cv);
-      return;
-    }
-    if (mod && e.key.toLowerCase() === "z") {
-      e.preventDefault();
-      if (e.shiftKey) cv.state.redo(); else cv.state.undo();
-      return;
-    }
-    if (mod && e.key.toLowerCase() === "d") {
-      e.preventDefault();
-      for (i = 0; i < cv.selection.length; i++) duplicate(cv, cv.selection[i]);
-      return;
-    }
-    if (!cv.selection.length) return;
-    if (e.key === "Delete" || e.key === "Backspace") {
-      e.preventDefault();
-      const ids = cv.selection.slice();
-      setSelection(cv, []);
-      cv.state.batch(function () {
-        for (i = 0; i < ids.length; i++) cv.state.removeWidget(ids[i]);
-      });
-      return;
-    }
-    let dx = 0, dy = 0;
-    if (e.key === "ArrowLeft") dx = -1;
-    else if (e.key === "ArrowRight") dx = 1;
-    else if (e.key === "ArrowUp") dy = -1;
-    else if (e.key === "ArrowDown") dy = 1;
-    else return;
-    e.preventDefault();
-    cv.state.batch(function () {
-      for (i = 0; i < cv.selection.length; i++) {
-        const w = widgetOf(cv, cv.selection[i]);
-        if (!w || w.locked) continue;
-        const sw = spaceWidth(cv, cv.selection[i], s);
-        const box = {
-          x: w.box.x + dx * gridH(cv, s, sw), y: w.box.y + dy * (s.grid || 8),
-          w: w.box.w, h: w.box.h
-        };
-        cv.state.moveWidget(cv.selection[i], clampBox(cv, box, s, sw));
-      }
-    });
-  }
-
-  function onKeyUp(cv, e) {
-    if (e.key === " " || e.code === "Space") cv.spaceDown = false;
-  }
-
-  // function: Cmd-wheel zooms around the pointer. Plain wheel pans natively.
-  function onWheel(cv, e) {
-    if (cv.frozen) return;
-    const vp = viewport(cv);
-    if (!vp || !vp.contains(e.target)) return;
-    if (!(e.metaKey || e.ctrlKey)) return;
-    e.preventDefault();
-    const dir = e.deltaY > 0 ? -10 : 10;
-    setZoom(cv, cv.zoomPct + dir, { x: e.clientX, y: e.clientY });
-  }
-
-  function bindDocListeners(cv) {
-    const d = cv.idoc, w = cv.iwin;
-    const on = (el, type, fn, opts) => {
-      el.addEventListener(type, fn, opts);
-      cv.listeners.push([el, type, fn, opts]);
-    };
-    on(d, "mousedown", (e) => onMouseDown(cv, e), true);
-    on(d, "mousemove", (e) => onMouseMove(cv, e), true);
-    on(d, "mouseup", (e) => onMouseUp(cv, e), true);
-    on(d, "contextmenu", (e) => onContextMenu(cv, e), true);
-    on(w, "keydown", (e) => onKeyDown(cv, e), true);
-    on(w, "keyup", (e) => onKeyUp(cv, e), true);
-    on(d, "wheel", (e) => onWheel(cv, e), { passive: false, capture: true });
   }
 
   function detachListeners(cv) {
@@ -839,15 +239,57 @@
   // function: true for the port's own chrome inside the iframe.
   function inChrome(target) {
     return !!(target && target.closest
-      && target.closest(".cc-canvas-menu, [data-od-edit-guides-layer]"));
+      && target.closest(".cc-canvas-menu, [data-od-edit-guides-layer], [data-od-edit-bridge=\"rulers\"]"));
+  }
+
+  // function: true for a layer section, empty click passes through it.
+  function isLayerSection(el) {
+    return !!(el && el.matches && el.matches("[data-cc-layer]"));
+  }
+
+  // function: true for an svg layer's own root, empty click passes through it.
+  function isSvgLayerRoot(el) {
+    return !!(el && el.tagName && el.tagName.toLowerCase() === "svg"
+      && el.parentElement && isLayerSection(el.parentElement));
+  }
+
+  // function: elements under the point, next one after a section/svg root.
+  function elementBelow(cv, e) {
+    if (!cv.idoc.elementsFromPoint) return null;
+    const stack = cv.idoc.elementsFromPoint(e.clientX, e.clientY);
+    for (let i = 0; i < stack.length; i++) {
+      const el = stack[i];
+      if (el === cv.idoc.body || el === cv.idoc.documentElement) return null;
+      if (isHostNode(cv, el)) continue;
+      if (isLayerSection(el) || isSvgLayerRoot(el)) continue;
+      return el;
+    }
+    return null;
+  }
+
+  // function: true inside a locked layer or a locked element.
+  function isLocked(el) {
+    return !!(el && el.closest && el.closest("[data-cc-locked]"));
+  }
+
+  // function: the hit, or null. state: locked stops it, isolate narrows it.
+  function hitGate(cv, el) {
+    if (!el || isLocked(el)) return null;
+    if (!cv.isolate || !cv.isolate.length) return el;
+    for (let i = 0; i < cv.isolate.length; i++) {
+      const root = cv.patch.find(cv.idoc, cv.isolate[i]);
+      if (root && (root === el || root.contains(el))) return el;
+    }
+    return null;
   }
 
   function closestTarget(cv, e) {
     let el = e.target;
     while (el && el.nodeType === 1) {
       if (el === cv.idoc.body || el === cv.idoc.documentElement) return null;
-      if (!isHostNode(cv, el)) return el;
-      el = el.parentElement;
+      if (isHostNode(cv, el)) { el = el.parentElement; continue; }
+      if (isLayerSection(el) || isSvgLayerRoot(el)) return hitGate(cv, elementBelow(cv, e));
+      return hitGate(cv, el);
     }
     return null;
   }
@@ -859,6 +301,514 @@
       x: Math.round(r.x), y: Math.round(r.y),
       width: Math.round(r.width), height: Math.round(r.height)
     };
+  }
+
+  // ---------- page geometry, zoom ----------
+
+  // function: the page tokens off :root. Falls back to the 3.1 defaults.
+  function pageMetrics(cv) {
+    const out = Object.assign({}, PAGE_FALLBACK);
+    if (!cv.idoc || !cv.iwin || !cv.idoc.documentElement) return out;
+    let style = null;
+    try { style = cv.iwin.getComputedStyle(cv.idoc.documentElement); } catch (err) { return out; }
+    Object.keys(PAGE_TOKENS).forEach((key) => {
+      const raw = (style.getPropertyValue(PAGE_TOKENS[key]) || "").trim();
+      if (!raw) return;
+      const n = parseFloat(raw);
+      if (!isNaN(n)) out[key] = n;
+    });
+    if (!(out.grid > 0)) out.grid = PAGE_FALLBACK.grid;
+    return out;
+  }
+
+  function clampZoom(pct) {
+    const n = Math.round(Number(pct) || 100);
+    if (!n) return 100;
+    return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, n));
+  }
+
+  // function: the snapTo option, unknown names dropped.
+  function cleanSnapTo(value) {
+    if (!Array.isArray(value)) return SNAP_TO.slice();
+    const out = value.filter((v) => SNAP_TO.indexOf(v) >= 0);
+    return out;
+  }
+
+  function zoomScale(cv) {
+    const pct = Number(cv.zoomPct) || 100;
+    return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pct)) / 100;
+  }
+
+  // function: the page's top-left in viewport px.
+  function pageOrigin(cv) {
+    if (!cv.idoc || !cv.idoc.body) return { x: 0, y: 0 };
+    const r = cv.idoc.body.getBoundingClientRect();
+    return { x: r.left, y: r.top };
+  }
+
+  // function: viewport point to page px.
+  function toPage(cv, clientX, clientY) {
+    const o = pageOrigin(cv);
+    const s = zoomScale(cv);
+    return { x: (clientX - o.x) / s, y: (clientY - o.y) / s };
+  }
+
+  // function: page px to viewport point.
+  function toView(cv, pageX, pageY) {
+    const o = pageOrigin(cv);
+    const s = zoomScale(cv);
+    return { x: o.x + pageX * s, y: o.y + pageY * s };
+  }
+
+  // function: an element's rect in page px.
+  function pageRectFor(cv, el) {
+    const r = rectFor(el);
+    if (!r) return null;
+    const o = pageOrigin(cv);
+    const s = zoomScale(cv);
+    return {
+      x: (r.x - o.x) / s, y: (r.y - o.y) / s,
+      width: r.width / s, height: r.height / s
+    };
+  }
+
+  // function: scale on body, scroll room on html. state: origin 0 0.
+  function applyZoom(cv) {
+    if (!cv.idoc || !cv.idoc.body) return;
+    const s = zoomScale(cv);
+    const body = cv.idoc.body;
+    const html = cv.idoc.documentElement;
+    body.style.transformOrigin = "0 0";
+    body.style.transform = s === 1 ? "" : "scale(" + s + ")";
+    const page = pageMetrics(cv);
+    const offset = body.offsetLeft || 0;
+    html.style.minWidth = Math.ceil(offset + page.w * s) + "px";
+    html.style.minHeight = Math.ceil(page.h * s) + "px";
+    if (cv.zoomEl) cv.zoomEl.textContent = Math.round(s * 100) + "%";
+  }
+
+  function setZoom(cv, pct, anchor) {
+    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(Number(pct) || 100)));
+    if (next === cv.zoomPct) return;
+    const before = anchor ? toPage(cv, anchor.x, anchor.y) : null;
+    cv.zoomPct = next;
+    applyZoom(cv);
+    if (before && cv.iwin) {
+      const after = toView(cv, before.x, before.y);
+      cv.iwin.scrollBy(after.x - anchor.x, after.y - anchor.y);
+    }
+    cv.frame.setOption("zoomPct", next);
+    paintChrome(cv);
+  }
+
+  // function: the next stop up or down from the current zoom.
+  function zoomStep(cv, dir) {
+    const cur = cv.zoomPct;
+    if (dir > 0) {
+      for (let i = 0; i < ZOOM_STOPS.length; i++) if (ZOOM_STOPS[i] > cur) return ZOOM_STOPS[i];
+      return ZOOM_MAX;
+    }
+    for (let i = ZOOM_STOPS.length - 1; i >= 0; i--) if (ZOOM_STOPS[i] < cur) return ZOOM_STOPS[i];
+    return ZOOM_MIN;
+  }
+
+  function zoomFit(cv) {
+    if (!cv.iwin || !cv.idoc) return;
+    const page = pageMetrics(cv);
+    const w = cv.iwin.innerWidth - RULER_PX - 16;
+    const h = cv.iwin.innerHeight - RULER_PX - 16;
+    if (!(page.w > 0) || !(page.h > 0)) return;
+    const s = Math.min(w / page.w, h / page.h);
+    setZoom(cv, s * 100);
+  }
+
+  // ---------- rulers, page chrome ----------
+
+  const CHROME_CSS = `
+[data-od-edit-bridge="rulers"] { position: fixed; inset: 0; z-index: 2147483645;
+  pointer-events: none; font: 9px/1 Inter, system-ui, sans-serif; }
+[data-od-edit-bridge="rulers"] .cc-ruler { position: fixed; background: #16181c;
+  color: #8b929c; pointer-events: auto; overflow: hidden; }
+[data-od-edit-bridge="rulers"] .cc-ruler-top { top: 0; left: 20px; right: 0;
+  height: 20px; border-bottom: 1px solid #2b3038; cursor: row-resize; }
+[data-od-edit-bridge="rulers"] .cc-ruler-left { top: 20px; left: 0; bottom: 0;
+  width: 20px; border-right: 1px solid #2b3038; cursor: col-resize; }
+[data-od-edit-bridge="rulers"] .cc-ruler-corner { position: fixed; top: 0; left: 0;
+  width: 20px; height: 20px; background: #16181c; border-right: 1px solid #2b3038;
+  border-bottom: 1px solid #2b3038; }
+[data-od-edit-bridge="rulers"] .cc-tick { position: absolute; background: #3d444e; }
+[data-od-edit-bridge="rulers"] .cc-tick-v { width: 1px; top: 13px; bottom: 0; }
+[data-od-edit-bridge="rulers"] .cc-tick-h { height: 1px; left: 13px; right: 0; }
+[data-od-edit-bridge="rulers"] .cc-tick-major { background: #6d7684; }
+[data-od-edit-bridge="rulers"] .cc-tick-major.cc-tick-v { top: 6px; }
+[data-od-edit-bridge="rulers"] .cc-tick-major.cc-tick-h { left: 6px; }
+[data-od-edit-bridge="rulers"] .cc-num { position: absolute; color: #9aa3ae; }
+[data-od-edit-bridge="rulers"] .cc-num-v { top: 2px; margin-left: 2px; }
+[data-od-edit-bridge="rulers"] .cc-num-h { left: 2px; margin-top: 2px;
+  writing-mode: vertical-rl; }
+[data-od-edit-guides-layer] .cc-line { position: fixed; }
+[data-od-edit-guides-layer] .cc-line-v { width: 1px; }
+[data-od-edit-guides-layer] .cc-line-h { height: 1px; }
+[data-od-edit-guides-layer] .cc-line-margin { background: rgba(255, 0, 170, 0.55); }
+[data-od-edit-guides-layer] .cc-line-column { background: rgba(140, 90, 255, 0.45); }
+[data-od-edit-guides-layer] .cc-line-guide { background: rgba(0, 200, 255, 0.85); }
+[data-od-edit-guides-layer] .cc-line-snap { background: #ffd23f; }
+`;
+
+  // function: the chrome stylesheet inside the iframe. state: a host node.
+  function ensureChromeStyles(cv) {
+    if (!cv.idoc) return;
+    const head = cv.idoc.head || cv.idoc.documentElement;
+    if (cv.idoc.querySelector("style[data-cc-chrome]")) return;
+    const style = cv.idoc.createElement("style");
+    style.setAttribute("data-cc-chrome", "1");
+    style.setAttribute("data-od-edit-bridge-style", "");
+    style.textContent = CHROME_CSS;
+    head.appendChild(style);
+  }
+
+  // function: the ruler host, outside body so zoom never scales it.
+  function ensureRulerHost(cv) {
+    let host = cv.idoc.querySelector('[data-od-edit-bridge="rulers"]');
+    if (host) return host;
+    host = cv.idoc.createElement("div");
+    host.setAttribute("data-od-edit-bridge", "rulers");
+    host.setAttribute("aria-hidden", "true");
+    cv.idoc.documentElement.appendChild(host);
+    return host;
+  }
+
+  // function: a tick step that stays at least 4 viewport px apart.
+  function tickStep(grid, scale) {
+    let step = grid > 0 ? grid : PAGE_FALLBACK.grid;
+    while (step * scale < 4) step *= 2;
+    return step;
+  }
+
+  function addNode(doc, parent, className, style, text) {
+    const node = doc.createElement("div");
+    node.className = className;
+    Object.keys(style || {}).forEach((key) => { node.style[key] = style[key]; });
+    if (text) node.textContent = text;
+    parent.appendChild(node);
+    return node;
+  }
+
+  // function: both ruler strips in page px. state: rebuilt only when the
+  // view changed.
+  function renderRulers(cv) {
+    if (!cv.idoc || !cv.iwin) return;
+    if (!cv.rulers || cv.mode !== "canvas" || cv.docMode !== "file") {
+      const gone = cv.idoc.querySelector('[data-od-edit-bridge="rulers"]');
+      if (gone && gone.parentNode) gone.parentNode.removeChild(gone);
+      cv.rulerSig = "";
+      return;
+    }
+    const o = pageOrigin(cv);
+    const s = zoomScale(cv);
+    const sig = [o.x, o.y, s, cv.iwin.innerWidth, cv.iwin.innerHeight].join(":");
+    const host = ensureRulerHost(cv);
+    if (sig === cv.rulerSig && host.firstChild) return;
+    cv.rulerSig = sig;
+    host.replaceChildren();
+    addNode(cv.idoc, host, "cc-ruler-corner", {});
+    const top = addNode(cv.idoc, host, "cc-ruler cc-ruler-top", {});
+    const left = addNode(cv.idoc, host, "cc-ruler cc-ruler-left", {});
+    top.setAttribute("data-cc-ruler", "h");
+    left.setAttribute("data-cc-ruler", "v");
+
+    const page = pageMetrics(cv);
+    const step = tickStep(page.grid, s);
+    const major = 100;
+
+    const firstX = Math.floor((RULER_PX - o.x) / s / step) * step;
+    const lastX = (cv.iwin.innerWidth - o.x) / s;
+    for (let x = firstX; x <= lastX; x += step) {
+      const vx = o.x + x * s - RULER_PX;
+      if (vx < 0) continue;
+      const isMajor = Math.abs(x % major) < 0.001;
+      const tick = addNode(cv.idoc, top, "cc-tick cc-tick-v" + (isMajor ? " cc-tick-major" : ""),
+        { left: Math.round(vx) + "px" });
+      tick.setAttribute("data-cc-px", String(Math.round(x)));
+      if (isMajor) {
+        addNode(cv.idoc, top, "cc-num cc-num-v", { left: Math.round(vx) + "px" }, String(Math.round(x)));
+      }
+    }
+
+    const firstY = Math.floor((RULER_PX - o.y) / s / step) * step;
+    const lastY = (cv.iwin.innerHeight - o.y) / s;
+    for (let y = firstY; y <= lastY; y += step) {
+      const vy = o.y + y * s - RULER_PX;
+      if (vy < 0) continue;
+      const isMajor = Math.abs(y % major) < 0.001;
+      const tick = addNode(cv.idoc, left, "cc-tick cc-tick-h" + (isMajor ? " cc-tick-major" : ""),
+        { top: Math.round(vy) + "px" });
+      tick.setAttribute("data-cc-px", String(Math.round(y)));
+      if (isMajor) {
+        addNode(cv.idoc, left, "cc-num cc-num-h", { top: Math.round(vy) + "px" }, String(Math.round(y)));
+      }
+    }
+  }
+
+  // function: one full-height or full-width line at a page coordinate.
+  function drawPageLine(cv, layer, axis, px, className) {
+    const v = toView(cv, px, px);
+    if (axis === "v") {
+      addNode(cv.idoc, layer, "cc-line cc-line-v " + className,
+        { left: Math.round(v.x) + "px", top: "0px", height: "100%" });
+    } else {
+      addNode(cv.idoc, layer, "cc-line cc-line-h " + className,
+        { top: Math.round(v.y) + "px", left: "0px", width: "100%" });
+    }
+  }
+
+  // function: margins, columns and guides, in page px.
+  function drawPageChrome(cv, layer) {
+    if (cv.mode !== "canvas") return;
+    const page = pageMetrics(cv);
+    if (cv.showMargins) {
+      drawPageLine(cv, layer, "v", page.marginLeft, "cc-line-margin");
+      drawPageLine(cv, layer, "v", page.w - page.marginRight, "cc-line-margin");
+      drawPageLine(cv, layer, "h", page.marginTop, "cc-line-margin");
+      drawPageLine(cv, layer, "h", page.h - page.marginBottom, "cc-line-margin");
+    }
+    if (cv.showColumns) {
+      const cols = Math.max(1, Math.round(page.columns));
+      const inner = page.w - page.marginLeft - page.marginRight;
+      const colW = (inner - page.gutter * (cols - 1)) / cols;
+      for (let i = 0; i < cols; i++) {
+        const x0 = page.marginLeft + i * (colW + page.gutter);
+        if (i > 0) drawPageLine(cv, layer, "v", x0, "cc-line-column");
+        if (i < cols - 1) drawPageLine(cv, layer, "v", x0 + colW, "cc-line-column");
+      }
+    }
+    if (cv.showGuides) {
+      for (const px of cv.guides.v) drawPageLine(cv, layer, "v", px, "cc-line-guide");
+      for (const px of cv.guides.h) drawPageLine(cv, layer, "h", px, "cc-line-guide");
+    }
+  }
+
+  // ---------- guides ----------
+
+  // function: "v:120;h:300" to {v:[…], h:[…]}.
+  function parseGuides(text) {
+    const out = { v: [], h: [] };
+    String(text || "").split(";").forEach((part) => {
+      const bits = part.split(":");
+      const axis = (bits[0] || "").trim();
+      const px = Math.round(parseFloat(bits[1]));
+      if ((axis !== "v" && axis !== "h") || isNaN(px)) return;
+      if (out[axis].indexOf(px) === -1) out[axis].push(px);
+    });
+    out.v.sort((a, b) => a - b);
+    out.h.sort((a, b) => a - b);
+    return out;
+  }
+
+  function formatGuides(g) {
+    const parts = [];
+    for (const px of g.v) parts.push("v:" + px);
+    for (const px of g.h) parts.push("h:" + px);
+    return parts.join(";");
+  }
+
+  // function: cv.guides from body's data-cc-guides.
+  function readGuides(cv) {
+    if (!cv.idoc || !cv.idoc.body) return;
+    cv.guides = parseGuides(cv.idoc.body.getAttribute("data-cc-guides"));
+  }
+
+  // function: the guide set onto body through set-attr. state: undoable.
+  function writeGuides(cv, next) {
+    const text = formatGuides(next);
+    cv.guides = next;
+    return patchSource(cv, {
+      kind: "set-attr", id: "__body__",
+      name: "data-cc-guides", value: text || null
+    });
+  }
+
+  function addGuide(cv, axis, px) {
+    if (axis !== "v" && axis !== "h") return false;
+    const value = Math.round(Number(px));
+    if (isNaN(value)) return false;
+    const next = { v: cv.guides.v.slice(), h: cv.guides.h.slice() };
+    if (next[axis].indexOf(value) >= 0) return false;
+    next[axis].push(value);
+    next[axis].sort((a, b) => a - b);
+    return writeGuides(cv, next);
+  }
+
+  function removeGuide(cv, axis, px) {
+    if (axis !== "v" && axis !== "h") return false;
+    const value = Math.round(Number(px));
+    const next = { v: cv.guides.v.slice(), h: cv.guides.h.slice() };
+    const at = next[axis].indexOf(value);
+    if (at === -1) return false;
+    next[axis].splice(at, 1);
+    return writeGuides(cv, next);
+  }
+
+  // function: the ruler a press landed on, or "".
+  function rulerAt(target) {
+    const strip = target && target.closest && target.closest("[data-cc-ruler]");
+    return strip ? strip.getAttribute("data-cc-ruler") : "";
+  }
+
+  // function: an existing guide within 4 viewport px of the press.
+  function guideAt(cv, e) {
+    const s = zoomScale(cv);
+    const o = pageOrigin(cv);
+    for (const px of cv.guides.v) {
+      if (Math.abs(o.x + px * s - e.clientX) <= 4) return { axis: "v", px: px };
+    }
+    for (const px of cv.guides.h) {
+      if (Math.abs(o.y + px * s - e.clientY) <= 4) return { axis: "h", px: px };
+    }
+    return null;
+  }
+
+  // function: a press that makes or moves a guide. true when claimed.
+  function startGuideDrag(cv, e) {
+    if (cv.mode !== "canvas" || cv.docMode !== "file") return false;
+    const strip = rulerAt(e.target);
+    if (strip) {
+      cv.guideDrag = { axis: strip === "h" ? "h" : "v", from: null, px: null };
+      e.preventDefault();
+      return true;
+    }
+    if (!cv.showGuides || inChrome(e.target)) return false;
+    const hit = guideAt(cv, e);
+    if (!hit) return false;
+    cv.guideDrag = { axis: hit.axis, from: hit.px, px: hit.px };
+    e.preventDefault();
+    return true;
+  }
+
+  function moveGuideDrag(cv, e) {
+    const gd = cv.guideDrag;
+    if (!gd) return;
+    const pt = toPage(cv, e.clientX, e.clientY);
+    gd.px = Math.round(gd.axis === "v" ? pt.x : pt.y);
+    gd.overRuler = gd.axis === "v" ? e.clientX < RULER_PX : e.clientY < RULER_PX;
+    const layer = ensureGuidesLayer(cv);
+    layer.replaceChildren();
+    renderRulers(cv);
+    drawPageChrome(cv, layer);
+    if (!gd.overRuler) drawPageLine(cv, layer, gd.axis, gd.px, "cc-line-snap");
+    drawSelection(cv, layer);
+    e.preventDefault();
+  }
+
+  function endGuideDrag(cv, e) {
+    const gd = cv.guideDrag;
+    cv.guideDrag = null;
+    if (!gd) return;
+    const onRuler = gd.axis === "v" ? e.clientX < RULER_PX : e.clientY < RULER_PX;
+    if (gd.from === null) {
+      if (!onRuler && gd.px !== null) addGuide(cv, gd.axis, gd.px);
+    } else if (onRuler) {
+      removeGuide(cv, gd.axis, gd.from);
+    } else if (gd.px !== null && gd.px !== gd.from) {
+      const next = { v: cv.guides.v.slice(), h: cv.guides.h.slice() };
+      const at = next[gd.axis].indexOf(gd.from);
+      if (at >= 0) next[gd.axis].splice(at, 1);
+      if (next[gd.axis].indexOf(gd.px) === -1) next[gd.axis].push(gd.px);
+      next[gd.axis].sort((a, b) => a - b);
+      writeGuides(cv, next);
+    }
+    paintChrome(cv);
+  }
+
+  // ---------- snap ----------
+
+  // function: every item element in the page, host nodes and the dragged
+  // set left out.
+  function snapObjects(cv, exclude) {
+    const out = [];
+    if (!cv.idoc || !cv.idoc.body) return out;
+    const all = cv.idoc.body.querySelectorAll("[data-od-id]");
+    for (let i = 0; i < all.length && out.length < 200; i++) {
+      const el = all[i];
+      if (isHostNode(cv, el) || isLayerSection(el)) continue;
+      if (exclude && exclude.indexOf(el.getAttribute("data-od-id")) >= 0) continue;
+      const r = pageRectFor(cv, el);
+      if (r && r.width >= 0) out.push(r);
+    }
+    return out;
+  }
+
+  // function: snap targets on one axis, in page px.
+  function snapTargets(cv, axis, exclude) {
+    const list = [];
+    if (cv.snapTo.indexOf("guides") >= 0) {
+      const set = axis === "x" ? cv.guides.v : cv.guides.h;
+      for (const px of set) list.push(px);
+    }
+    if (cv.snapTo.indexOf("objects") >= 0) {
+      for (const r of snapObjects(cv, exclude)) {
+        const lo = axis === "x" ? r.x : r.y;
+        const size = axis === "x" ? r.width : r.height;
+        list.push(lo, lo + size / 2, lo + size);
+      }
+    }
+    return list;
+  }
+
+  // function: one axis snapped. {value, line} — line is null when nothing hit.
+  function snapAxis(cv, axis, value, exclude, cached) {
+    if (!cv.snap) return { value: value, line: null };
+    let best = null;
+    let bestGap = SNAP_PX + 0.001;
+    if (cv.snapTo.indexOf("grid") >= 0) {
+      const page = pageMetrics(cv);
+      const step = page.grid > 0 ? page.grid : PAGE_FALLBACK.grid;
+      const at = Math.round(value / step) * step;
+      const gap = Math.abs(at - value);
+      if (gap < bestGap) { best = at; bestGap = gap; }
+    }
+    const targets = cached || snapTargets(cv, axis, exclude);
+    for (let i = 0; i < targets.length; i++) {
+      const gap = Math.abs(targets[i] - value);
+      if (gap < bestGap) { best = targets[i]; bestGap = gap; }
+    }
+    if (best === null) return { value: value, line: null };
+    return { value: best, line: best };
+  }
+
+  // function: a page point snapped on both axes.
+  function snapPoint(cv, pt) {
+    const x = Number(pt && pt.x) || 0;
+    const y = Number(pt && pt.y) || 0;
+    return {
+      x: snapAxis(cv, "x", x, cv.selection).value,
+      y: snapAxis(cv, "y", y, cv.selection).value
+    };
+  }
+
+  // function: the drag delta snapped so the lead's left/top edge lands on a
+  // target. state: page px in, page px out.
+  function snapDrag(cv, drag, dx, dy) {
+    const lines = [];
+    if (!cv.snap || !drag.items.length) return { dx: dx, dy: dy, lines: lines };
+    if (!drag.startRect) {
+      drag.startRect = pageRectFor(cv, drag.items[0].el);
+      drag.targetsX = snapTargets(cv, "x", drag.ids);
+      drag.targetsY = snapTargets(cv, "y", drag.ids);
+    }
+    const start = drag.startRect;
+    if (!start) return { dx: dx, dy: dy, lines: lines };
+    const sx = snapAxis(cv, "x", start.x + dx, drag.ids, drag.targetsX);
+    const sy = snapAxis(cv, "y", start.y + dy, drag.ids, drag.targetsY);
+    if (sx.line !== null) lines.push({ axis: "v", px: sx.line });
+    if (sy.line !== null) lines.push({ axis: "h", px: sy.line });
+    return { dx: sx.value - start.x, dy: sy.value - start.y, lines: lines };
+  }
+
+  function drawSnapLines(cv, layer, lines) {
+    for (const line of lines || []) {
+      drawPageLine(cv, layer, line.axis, line.px, "cc-line-snap");
+    }
   }
 
   function siblingRectsFor(cv, el) {
@@ -924,7 +874,8 @@
     // state: a host node, so patch.js skips it when it counts children.
     layer.setAttribute("data-od-edit-bridge", "guides");
     layer.setAttribute("aria-hidden", "true");
-    cv.idoc.body.appendChild(layer);
+    // state: outside body, so the zoom transform never scales the chrome.
+    cv.idoc.documentElement.appendChild(layer);
     return layer;
   }
 
@@ -993,17 +944,72 @@
     }
   }
 
-  // function: chrome for every selected id.
-  function paintFileSelection(cv) {
-    if (!cv.idoc || cv.docMode !== "file" || !cv.patch) return;
-    if (cv.mode === "preview") { clearGuides(cv); return; }
-    if (!cv.selection.length) { clearGuides(cv); return; }
-    const layer = ensureGuidesLayer(cv);
-    layer.replaceChildren();
+  // function: chrome for every selected id. No clear of its own.
+  // function: isolate the given ids. No ids leaves isolate.
+  function setIsolate(cv, ids) {
+    if (!cv.patch || !cv.idoc) return false;
+    const next = Array.isArray(ids)
+      ? ids.filter((id) => !!cv.patch.find(cv.idoc, id)) : [];
+    cv.isolate = next.length ? next : null;
+    paintChrome(cv);
+    return !!cv.isolate;
+  }
+
+  // function: the dim outside the isolated union. Four bands, viewport px.
+  function drawIsolate(cv, layer) {
+    if (!cv.isolate || !cv.isolate.length || !cv.iwin) return;
+    let box = null;
+    for (let i = 0; i < cv.isolate.length; i++) {
+      const el = cv.patch.find(cv.idoc, cv.isolate[i]);
+      const r = el ? rectFor(el) : null;
+      if (!r) continue;
+      if (!box) { box = { x: r.x, y: r.y, r: r.x + r.width, b: r.y + r.height }; continue; }
+      box.x = Math.min(box.x, r.x);
+      box.y = Math.min(box.y, r.y);
+      box.r = Math.max(box.r, r.x + r.width);
+      box.b = Math.max(box.b, r.y + r.height);
+    }
+    if (!box) return;
+    const w = cv.iwin.innerWidth;
+    const h = cv.iwin.innerHeight;
+    const bands = [
+      { left: 0, top: 0, width: w, height: Math.max(0, box.y) },
+      { left: 0, top: box.b, width: w, height: Math.max(0, h - box.b) },
+      { left: 0, top: box.y, width: Math.max(0, box.x), height: Math.max(0, box.b - box.y) },
+      { left: box.r, top: box.y, width: Math.max(0, w - box.r), height: Math.max(0, box.b - box.y) }
+    ];
+    for (let j = 0; j < bands.length; j++) {
+      addGuideNode(cv, layer, "cc-isolate-dim", {
+        position: "absolute", pointerEvents: "none",
+        background: "rgba(255, 255, 255, 0.72)",
+        left: bands[j].left + "px", top: bands[j].top + "px",
+        width: bands[j].width + "px", height: bands[j].height + "px"
+      });
+    }
+  }
+
+  function drawSelection(cv, layer) {
     for (let i = 0; i < cv.selection.length; i++) {
       const el = cv.patch.find(cv.idoc, cv.selection[i]);
       if (el) renderSelectedChrome(cv, layer, rectFor(el));
     }
+  }
+
+  // function: one repaint — rulers, page chrome, then the selection.
+  function paintChrome(cv) {
+    if (!cv.idoc || cv.docMode !== "file" || !cv.patch) return;
+    if (cv.mode === "preview") { clearGuides(cv); renderRulers(cv); return; }
+    if (!cv.guideDrag) readGuides(cv);
+    const layer = ensureGuidesLayer(cv);
+    layer.replaceChildren();
+    renderRulers(cv);
+    drawPageChrome(cv, layer);
+    drawIsolate(cv, layer);
+    drawSelection(cv, layer);
+  }
+
+  function paintFileSelection(cv) {
+    paintChrome(cv);
   }
 
   // function: split an inline transform into the prefix we keep and the
@@ -1022,6 +1028,19 @@
     return base;
   }
 
+  // function: an absolutely positioned element's used left/top in px.
+  // state: null for anything that is not position absolute.
+  function absPlacement(cv, el) {
+    if (!cv.iwin || !el) return null;
+    let cs = null;
+    try { cs = cv.iwin.getComputedStyle(el); } catch (err) { return null; }
+    if (!cs || cs.position !== "absolute") return null;
+    const left = parseFloat(cs.left);
+    const top = parseFloat(cs.top);
+    if (isNaN(left) || isNaN(top)) return null;
+    return { left: left, top: top };
+  }
+
   function composeTransform(prefix, tx, ty) {
     const t = "translate(" + Math.round(tx) + "px, " + Math.round(ty) + "px)";
     return prefix ? (prefix + " " + t) : t;
@@ -1031,6 +1050,28 @@
   function isTextLeaf(el) {
     if (!el || el.children.length) return false;
     return !!(el.textContent || "").trim();
+  }
+
+  // function: true for el, or el wrapping one child down to a text leaf —
+  // the snippet frame shape. False past a fork or an empty shape.
+  function wrapsTextLeaf(el) {
+    let node = el;
+    while (node && !isTextLeaf(node)) {
+      if (node.children.length !== 1) return false;
+      node = node.children[0];
+    }
+    return !!node;
+  }
+
+  // function: el, or its nearest ancestor already carrying a tracked id.
+  // state: load stamps every element; a drop stamps only its own root,
+  // so an inner node the drop added (unstamped) climbs to that root.
+  function trackedAncestor(el) {
+    let node = el;
+    while (node && !node.hasAttribute("data-od-id")) {
+      node = node.parentElement;
+    }
+    return node;
   }
 
   function finishTextEdit(cv, commit) {
@@ -1195,6 +1236,11 @@
   // function: one patch from a sibling widget. Routes into applyPatches.
   function patchSource(cv, patch) {
     if (cv.docMode !== "file" || !patch) return cv.source;
+    // state: an array of patches is one undo entry.
+    if (Array.isArray(patch)) {
+      if (patch.length) applyPatches(cv, patch);
+      return cv.source;
+    }
     const kind = patch.kind === "set-outer-html" ? "replace-outer-html" : patch.kind;
     if (kind === "set-full-source") return setFullSource(cv, patch);
     applyPatches(cv, [patch]);
@@ -1223,6 +1269,9 @@
       const el = all[i];
       if (isHostNode(cv, el)) continue;
       if (el.closest && el.closest("[data-od-edit-guides-layer]")) continue;
+      // state: locked and hidden subtrees are not marquee fodder.
+      if (el.closest && el.closest("[data-cc-locked], [data-cc-hidden]")) continue;
+      if (!hitGate(cv, el)) continue;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
       if (r.left >= lo.x && r.right <= hi.x && r.top >= lo.y && r.bottom <= hi.y) inside.push(el);
@@ -1259,6 +1308,7 @@
     return {
       el: el, id: cv.patch.stableId(el),
       prefix: base.prefix, baseTx: base.tx, baseTy: base.ty,
+      abs: absPlacement(cv, el),
       startTransform: (el.style && el.style.transform) || "",
       startDisplay: (el.style && el.style.display) || "",
       bumpedDisplay: false
@@ -1303,6 +1353,12 @@
     if (cv.textEdit) finishTextEdit(cv, true);
     if (cv.frozen || cv.mode === "preview") { cancelDrag(cv); cancelFileMarquee(cv); return; }
     if (e.button !== undefined && e.button !== 0) return;
+    if (cv.spaceDown) {
+      cv.pan = { x: e.clientX, y: e.clientY };
+      e.preventDefault();
+      return;
+    }
+    if (startGuideDrag(cv, e)) return;
     if (inChrome(e.target)) return;
     // state: no gesture outlives the press that starts the next one.
     cancelDrag(cv);
@@ -1340,8 +1396,16 @@
     const down = e.buttons === undefined || (e.buttons & 1) === 1;
     if (!down || cv.frozen || cv.mode === "preview") {
       if (cv.drag || cv.fileMarquee) { cancelDrag(cv); cancelFileMarquee(cv); }
+      cv.pan = null;
       return;
     }
+    if (cv.pan) {
+      cv.iwin.scrollBy(cv.pan.x - e.clientX, cv.pan.y - e.clientY);
+      cv.pan = { x: e.clientX, y: e.clientY };
+      e.preventDefault();
+      return;
+    }
+    if (cv.guideDrag) { moveGuideDrag(cv, e); return; }
     if (cv.fileMarquee) {
       cv.fileMarquee.moved = true;
       drawFileMarquee(cv, cv.fileMarquee, e.clientX, e.clientY);
@@ -1367,12 +1431,18 @@
       if (cv.selection.indexOf(drag.id) === -1) setSelection(cv, drag.ids.slice());
     }
     if (!drag.started) return;
+    // state: pointer px are viewport px; the translate is page px.
+    const s = zoomScale(cv);
+    const snapped = snapDrag(cv, drag, dx / s, dy / s);
     for (let j = 0; j < drag.items.length; j++) {
       const moved = drag.items[j];
-      moved.el.style.transform = composeTransform(moved.prefix, moved.baseTx + dx, moved.baseTy + dy);
+      moved.el.style.transform = composeTransform(moved.prefix,
+        moved.baseTx + snapped.dx, moved.baseTy + snapped.dy);
     }
     const layer = ensureGuidesLayer(cv);
     layer.replaceChildren();
+    renderRulers(cv);
+    drawPageChrome(cv, layer);
     const lead = drag.items[0];
     if (lead) {
       renderReferenceGuides(cv, layer, lead.el);
@@ -1380,10 +1450,13 @@
         renderSelectedChrome(cv, layer, rectFor(drag.items[k].el));
       }
     }
+    drawSnapLines(cv, layer, snapped.lines);
     e.preventDefault();
   }
 
   function onFilePointerUp(cv, e) {
+    if (cv.pan) { cv.pan = null; return; }
+    if (cv.guideDrag) { endGuideDrag(cv, e); return; }
     if (cv.fileMarquee) endFileMarquee(cv, e);
     const drag = cv.drag;
     if (!drag) return;
@@ -1397,6 +1470,14 @@
     for (let i = 0; i < drag.items.length; i++) {
       const item = drag.items[i];
       const styles = { transform: item.el.style.transform || "" };
+      // state: an absolute element lands on left/top, the translate goes
+      // back to what the press started from.
+      if (item.abs) {
+        const now = readTranslateBase(item.el);
+        styles.left = Math.round(item.abs.left + (now.tx - item.baseTx)) + "px";
+        styles.top = Math.round(item.abs.top + (now.ty - item.baseTy)) + "px";
+        styles.transform = item.startTransform;
+      }
       if (item.bumpedDisplay) styles.display = "inline-block";
       // state: rewound to the pressed state, so the patch's inverse reads
       // the value the drag started from.
@@ -1446,8 +1527,9 @@
 
   function onFileDblClick(cv, e) {
     if (cv.frozen || cv.mode === "preview") return;
-    const el = closestTarget(cv, e);
-    if (!el || !isTextLeaf(el)) return;
+    const hit = closestTarget(cv, e);
+    const el = hit && trackedAncestor(hit);
+    if (!el || !wrapsTextLeaf(el)) return;
     e.preventDefault();
     makeEditable(cv, el);
   }
@@ -1605,6 +1687,14 @@
     for (let i = 0; i < cv.selection.length; i++) {
       const el = cv.patch.find(cv.idoc, cv.selection[i]);
       if (!el) continue;
+      const abs = absPlacement(cv, el);
+      if (abs) {
+        patches.push({
+          kind: "set-style", id: cv.selection[i],
+          styles: { left: Math.round(abs.left + dx) + "px", top: Math.round(abs.top + dy) + "px" }
+        });
+        continue;
+      }
       const base = readTranslateBase(el);
       patches.push({
         kind: "set-style", id: cv.selection[i],
@@ -1613,6 +1703,328 @@
     }
     if (!patches.length) return false;
     return applyPatches(cv, patches);
+  }
+
+  // ---------- layers ----------
+
+  function escAttr(text) {
+    return String(text == null ? "" : text)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+
+  // function: body's layer sections, DOM order, first is bottom.
+  function layerNodes(cv) {
+    if (!cv.idoc || !cv.idoc.body) return [];
+    return fileChildren(cv, cv.idoc.body).filter((el) => isLayerSection(el));
+  }
+
+  // function: one layers() record.
+  function layerRecord(cv, el) {
+    return {
+      id: cv.patch.stableId(el),
+      name: el.getAttribute("data-cc-name") || "",
+      plugin: el.getAttribute("data-cc-plugin") || "html",
+      locked: el.hasAttribute("data-cc-locked"),
+      hidden: el.hasAttribute("data-cc-hidden")
+    };
+  }
+
+  function layerList(cv) {
+    if (!cv.patch) return [];
+    return layerNodes(cv).map((el) => layerRecord(cv, el));
+  }
+
+  function layerById(cv, id) {
+    if (!id || !cv.patch || !cv.idoc) return null;
+    const el = cv.patch.find(cv.idoc, id);
+    return el && isLayerSection(el) ? el : null;
+  }
+
+  // function: the layer an element sits in. "" when none.
+  function layerOf(cv, id) {
+    const el = id && cv.patch && cv.idoc ? cv.patch.find(cv.idoc, id) : null;
+    const layer = el && el.closest ? el.closest("[data-cc-layer]") : null;
+    return layer ? cv.patch.stableId(layer) : "";
+  }
+
+  // function: the option's layer, else the topmost unlocked one.
+  // state: a set-but-missing activeLayer resolves to nothing.
+  function activeLayerEl(cv) {
+    const nodes = layerNodes(cv);
+    if (!nodes.length) return null;
+    if (cv.activeLayer) return layerById(cv, cv.activeLayer);
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      if (!nodes[i].hasAttribute("data-cc-locked")) return nodes[i];
+    }
+    return null;
+  }
+
+  function setActiveLayer(cv, id) {
+    const next = id ? String(id) : "";
+    if (next && !layerById(cv, next)) return false;
+    cv.activeLayer = next;
+    cv.frame.setOption("activeLayer", next);
+    return true;
+  }
+
+  // function: a new layer above the rest. An svg plugin gets its one <svg>.
+  function addLayer(cv, name, plugin) {
+    if (cv.docMode !== "file" || !cv.idoc || !cv.idoc.body) return "";
+    const nodes = layerNodes(cv);
+    const id = cv.patch.newId("ly");
+    const p = plugin === "svg" ? "svg" : "html";
+    const page = pageMetrics(cv);
+    const inner = p === "svg"
+      ? '<svg viewBox="0 0 ' + page.w + " " + page.h + '" width="100%" height="100%"></svg>'
+      : "";
+    const html = '<section data-cc-layer data-cc-name="'
+      + escAttr(name || ("Layer " + (nodes.length + 1)))
+      + '" data-cc-plugin="' + p + '" data-od-id="' + id + '">' + inner + "</section>";
+    const index = fileChildren(cv, cv.idoc.body).length;
+    if (!applyPatches(cv, [{ kind: "insert", parent: "__body__", index: index, html: html }])) return "";
+    return id;
+  }
+
+  function removeLayer(cv, id) {
+    const el = layerById(cv, id);
+    if (!el) return false;
+    if (cv.activeLayer === id) setActiveLayer(cv, "");
+    return applyPatches(cv, [{ kind: "remove", id: cv.patch.stableId(el) }]);
+  }
+
+  function renameLayer(cv, id, name) {
+    const el = layerById(cv, id);
+    if (!el) return false;
+    return applyPatches(cv, [{ kind: "set-attr", id: cv.patch.stableId(el),
+      name: "data-cc-name", value: String(name || "") }]);
+  }
+
+  // function: locked or hidden on a layer. state: "1" or gone.
+  function setLayerFlag(cv, id, flag, on) {
+    const el = layerById(cv, id);
+    if (!el || (flag !== "locked" && flag !== "hidden")) return false;
+    return applyPatches(cv, [{ kind: "set-attr", id: cv.patch.stableId(el),
+      name: "data-cc-" + flag, value: on ? "1" : null }]);
+  }
+
+  function moveLayer(cv, id, index) {
+    const el = layerById(cv, id);
+    if (!el) return false;
+    return applyPatches(cv, [{ kind: "move", id: cv.patch.stableId(el),
+      parent: "__body__", index: Math.max(0, Number(index) || 0) }]);
+  }
+
+  // function: a layer's children into the layer below, then the layer goes.
+  function mergeDown(cv, id) {
+    const el = layerById(cv, id);
+    if (!el) return false;
+    const nodes = layerNodes(cv);
+    const at = nodes.indexOf(el);
+    if (at <= 0) { setStatus(cv, "no layer below", true); return false; }
+    const below = nodes[at - 1];
+    const key = parentKeyOf(cv, below);
+    const kids = fileChildren(cv, el);
+    let index = fileChildren(cv, below).length;
+    const patches = [];
+    for (let i = 0; i < kids.length; i++) {
+      patches.push({ kind: "move", id: cv.patch.stableId(kids[i]), parent: key, index: index });
+      index++;
+    }
+    patches.push({ kind: "remove", id: cv.patch.stableId(el) });
+    return applyPatches(cv, patches);
+  }
+
+  function moveToLayer(cv, ids, layerId) {
+    const layer = layerById(cv, layerId);
+    if (!layer || !ids || !ids.length) return false;
+    if (layer.hasAttribute("data-cc-locked")) { setStatus(cv, "layer locked", true); return false; }
+    const key = parentKeyOf(cv, layer);
+    let index = fileChildren(cv, layer).length;
+    const patches = [];
+    for (let i = 0; i < ids.length; i++) {
+      if (!cv.patch.find(cv.idoc, ids[i])) continue;
+      patches.push({ kind: "move", id: ids[i], parent: key, index: index });
+      index++;
+    }
+    if (!patches.length) return false;
+    return applyPatches(cv, patches);
+  }
+
+  // function: the snippet's root placed at page x,y, stamped with id.
+  function placeHtmlAt(cv, html, pt, ns, id) {
+    const tpl = cv.idoc.createElement("template");
+    let root = null;
+    if (ns === "svg") {
+      tpl.innerHTML = "<svg>" + html + "</svg>";
+      const host = tpl.content.firstElementChild;
+      root = host ? host.firstElementChild : null;
+      if (!root) return "";
+      if (root.hasAttribute("x") || root.hasAttribute("y")) {
+        root.setAttribute("x", Math.round(pt.x));
+        root.setAttribute("y", Math.round(pt.y));
+      } else {
+        root.setAttribute("transform",
+          "translate(" + Math.round(pt.x) + ", " + Math.round(pt.y) + ")");
+      }
+    } else {
+      tpl.innerHTML = html;
+      root = tpl.content.firstElementChild;
+      if (!root) return "";
+      root.style.position = "absolute";
+      root.style.left = Math.round(pt.x) + "px";
+      root.style.top = Math.round(pt.y) + "px";
+    }
+    root.setAttribute("data-od-id", id);
+    return root.outerHTML;
+  }
+
+  // function: activeLayer if its plugin fits ns, else the topmost
+  // unlocked layer of that plugin. Null when none exists.
+  function insertLayer(cv, wantPlugin) {
+    if (cv.activeLayer) {
+      const active = layerById(cv, cv.activeLayer);
+      if (active && active.getAttribute("data-cc-plugin") === wantPlugin) return active;
+    }
+    const nodes = layerNodes(cv);
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      if (!nodes[i].hasAttribute("data-cc-locked")
+        && nodes[i].getAttribute("data-cc-plugin") === wantPlugin) return nodes[i];
+    }
+    return null;
+  }
+
+  // function: a snippet into a layer of matching plugin, at page
+  // coordinates. state: no matching layer, one is created in the same
+  // patch set, so undo removes both in one step.
+  function insertAt(cv, html, pt, ns) {
+    if (cv.docMode !== "file" || !cv.idoc || !html) return "";
+    const wantPlugin = ns === "svg" ? "svg" : "html";
+    const layer = insertLayer(cv, wantPlugin);
+    const patches = [];
+    let parentKey = "";
+    let index = 0;
+    if (layer) {
+      if (layer.hasAttribute("data-cc-locked")) {
+        setStatus(cv, "layer locked", true);
+        return "";
+      }
+      let parent = layer;
+      const svg = layer.querySelector("svg");
+      if (wantPlugin === "svg" && svg && svg.parentElement === layer) parent = svg;
+      parentKey = parentKeyOf(cv, parent);
+      index = fileChildren(cv, parent).length;
+    } else {
+      const nodes = layerNodes(cv);
+      const layerId = cv.patch.newId("ly");
+      const svgId = wantPlugin === "svg" ? cv.patch.newId("el") : "";
+      const page = pageMetrics(cv);
+      const inner = wantPlugin === "svg"
+        ? '<svg data-od-id="' + svgId + '" viewBox="0 0 ' + page.w + " " + page.h
+          + '" width="100%" height="100%"></svg>'
+        : "";
+      const layerHtml = '<section data-cc-layer data-cc-name="'
+        + escAttr("Layer " + (nodes.length + 1))
+        + '" data-cc-plugin="' + wantPlugin + '" data-od-id="' + layerId + '">' + inner + "</section>";
+      patches.push({ kind: "insert", parent: "__body__",
+        index: fileChildren(cv, cv.idoc.body).length, html: layerHtml });
+      parentKey = wantPlugin === "svg" ? svgId : layerId;
+      index = 0;
+    }
+    const id = cv.patch.newId("el");
+    const placed = placeHtmlAt(cv, html,
+      { x: Number(pt && pt.x) || 0, y: Number(pt && pt.y) || 0 }, ns, id);
+    if (!placed) return "";
+    const insertPatch = { kind: "insert", parent: parentKey, index: index, html: placed };
+    if (ns === "svg") insertPatch.ns = "svg";
+    patches.push(insertPatch);
+    if (!applyPatches(cv, patches)) return "";
+    setSelection(cv, [id]);
+    return id;
+  }
+
+  function selectAllOnLayer(cv, id) {
+    const layer = id ? layerById(cv, id) : activeLayerEl(cv);
+    if (!layer) return false;
+    const kids = fileChildren(cv, layer);
+    const ids = [];
+    for (let i = 0; i < kids.length; i++) ids.push(cv.patch.stableId(kids[i]));
+    setSelection(cv, ids);
+    return true;
+  }
+
+  // function: data-cc-locked on every selected element.
+  function lockSelection(cv) {
+    if (cv.docMode !== "file" || !cv.selection.length) return false;
+    const patches = [];
+    for (let i = 0; i < cv.selection.length; i++) {
+      if (!cv.patch.find(cv.idoc, cv.selection[i])) continue;
+      patches.push({ kind: "set-attr", id: cv.selection[i], name: "data-cc-locked", value: "1" });
+    }
+    if (!patches.length) return false;
+    if (!applyPatches(cv, patches)) return false;
+    setSelection(cv, []);
+    return true;
+  }
+
+  // function: data-cc-locked off every element and layer carrying it.
+  function unlockAll(cv) {
+    if (cv.docMode !== "file" || !cv.idoc || !cv.idoc.body) return false;
+    const all = cv.idoc.body.querySelectorAll("[data-cc-locked]");
+    const patches = [];
+    for (let i = 0; i < all.length; i++) {
+      patches.push({ kind: "set-attr", id: cv.patch.stableId(all[i]),
+        name: "data-cc-locked", value: null });
+    }
+    if (!patches.length) return false;
+    return applyPatches(cv, patches);
+  }
+
+  // function: data-cc-hidden plus display none on every selected element.
+  function hideSelection(cv) {
+    if (cv.docMode !== "file" || !cv.selection.length) return false;
+    const patches = [];
+    for (let i = 0; i < cv.selection.length; i++) {
+      if (!cv.patch.find(cv.idoc, cv.selection[i])) continue;
+      patches.push({ kind: "set-attr", id: cv.selection[i], name: "data-cc-hidden", value: "1" });
+      patches.push({ kind: "set-style", id: cv.selection[i], styles: { display: "none" } });
+    }
+    if (!patches.length) return false;
+    if (!applyPatches(cv, patches)) return false;
+    setSelection(cv, []);
+    return true;
+  }
+
+  // function: data-cc-hidden off everything. A layer reads display from the
+  // page block, an element from its own inline style.
+  function showAll(cv) {
+    if (cv.docMode !== "file" || !cv.idoc || !cv.idoc.body) return false;
+    const all = cv.idoc.body.querySelectorAll("[data-cc-hidden]");
+    const patches = [];
+    for (let i = 0; i < all.length; i++) {
+      const id = cv.patch.stableId(all[i]);
+      patches.push({ kind: "set-attr", id: id, name: "data-cc-hidden", value: null });
+      if (!isLayerSection(all[i])) {
+        patches.push({ kind: "set-style", id: id, styles: { display: "" } });
+      }
+    }
+    if (!patches.length) return false;
+    return applyPatches(cv, patches);
+  }
+
+  // function: one page token, rewritten as the whole :root rule.
+  function setPage(cv, key, value) {
+    if (cv.docMode !== "file" || !PAGE_TOKENS[key]) return false;
+    const n = Number(value);
+    if (isNaN(n)) return false;
+    const page = pageMetrics(cv);
+    page[key] = n;
+    const decls = Object.keys(PAGE_TOKENS).map((k) =>
+      PAGE_TOKENS[k] + ": " + page[k] + (k === "columns" ? "" : "px") + ";").join(" ");
+    if (!applyPatches(cv, [{ kind: "set-css-rule", block: "page",
+      selector: ":root", declarations: decls }])) return false;
+    applyZoom(cv);
+    paintChrome(cv);
+    return true;
   }
 
   // function: true while file-mode edit gestures are allowed.
@@ -1638,10 +2050,23 @@
     if (e.key === "Escape") {
       e.preventDefault();
       closeMenu(cv);
+      if (cv.isolate) { setIsolate(cv, []); return; }
       setSelection(cv, []);
       return;
     }
     if (mod && key === "s") { e.preventDefault(); doSave(cv); return; }
+    if (mod && (e.key === "=" || e.key === "+")) {
+      e.preventDefault(); setZoom(cv, zoomStep(cv, 1)); return;
+    }
+    if (mod && (e.key === "-" || e.key === "_")) {
+      e.preventDefault(); setZoom(cv, zoomStep(cv, -1)); return;
+    }
+    if (mod && e.key === "0") { e.preventDefault(); setZoom(cv, 100); return; }
+    if (e.code === "Space") {
+      e.preventDefault();
+      cv.spaceDown = true;
+      return;
+    }
     if (mod && key === "z") {
       e.preventDefault();
       if (e.shiftKey) fileRedo(cv); else fileUndo(cv);
@@ -1656,6 +2081,22 @@
     if (mod && key === "d") {
       e.preventDefault();
       fileDuplicate(cv, cv.selection.slice());
+      return;
+    }
+    // state: Option rewrites e.key on mac, so e.code carries the digit.
+    if (mod && (e.code === "Digit2" || e.key === "2")) {
+      e.preventDefault();
+      if (e.altKey) unlockAll(cv); else lockSelection(cv);
+      return;
+    }
+    if (mod && (e.code === "Digit3" || e.key === "3")) {
+      e.preventDefault();
+      if (e.altKey) showAll(cv); else hideSelection(cv);
+      return;
+    }
+    if (mod && (e.code === "KeyA" || key === "a")) {
+      e.preventDefault();
+      if (e.shiftKey) setSelection(cv, []); else selectAllOnLayer(cv, "");
       return;
     }
     if (mod && (e.code === "BracketRight" || e.key === "]" || e.key === "}")) {
@@ -1687,6 +2128,16 @@
 
   function onFileKeyUp(cv, e) {
     if (e.key === "Escape" && cv.menu) closeMenu(cv);
+    if (e.code === "Space") { cv.spaceDown = false; cv.pan = null; }
+  }
+
+  // function: cmd-wheel zooms around the pointer.
+  function onFileWheel(cv, e) {
+    if (cv.docMode !== "file" || cv.mode !== "canvas") return;
+    if (!(e.metaKey || e.ctrlKey)) return;
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(cv, cv.zoomPct * factor, { x: e.clientX, y: e.clientY });
   }
 
   function bindFileListeners(cv) {
@@ -1705,16 +2156,17 @@
     on(d, "contextmenu", (e) => onFileContextMenu(cv, e), true);
     on(w, "keydown", (e) => onFileKeyDown(cv, e), true);
     on(w, "keyup", (e) => onFileKeyUp(cv, e), true);
+    on(w, "wheel", (e) => onFileWheel(cv, e), { capture: true, passive: false });
+    on(w, "scroll", () => paintChrome(cv), true);
+    on(w, "resize", () => paintChrome(cv), true);
   }
 
-  // ---------- load, save, export ----------
+  // ---------- load, save ----------
 
-  // function: the element that scrolls. The doc-mode viewport, else the
-  // iframe document.
+  // function: the element that scrolls. The iframe document.
   function scrollerFor(cv) {
     if (!cv.idoc) return null;
-    const vp = cv.docMode === "doc" ? viewport(cv) : null;
-    return vp || cv.idoc.scrollingElement;
+    return cv.idoc.scrollingElement;
   }
 
   // function: hold the active tab's text, dirty flag, selection, scroll and
@@ -1723,7 +2175,7 @@
     if (!cv.path) return;
     const sc = scrollerFor(cv);
     cv.tabs[cv.path] = {
-      text: docText(cv),
+      text: cv.source || "",
       dirty: !!cv.dirty,
       selection: cv.selection.slice(),
       scroll: { left: sc ? sc.scrollLeft : 0, top: sc ? sc.scrollTop : 0 },
@@ -1741,14 +2193,14 @@
       sc.scrollLeft = rec.scroll.left || 0;
       sc.scrollTop = rec.scroll.top || 0;
     }
-    cv.history = (rec.history && docText(cv) === rec.text) ? rec.history : null;
+    cv.history = (rec.history && (cv.source || "") === rec.text) ? rec.history : null;
     cv.dirty = !!rec.dirty;
   }
 
   function loadTarget(cv) {
     const frame = cv.frame;
     const target = frame.options.target || "";
-    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
+    if (cv.idoc) endGestures(cv, true);
     if (cv.path && cv.path !== target) stash(cv);
     detachListeners(cv);
     closeMenu(cv);
@@ -1756,15 +2208,10 @@
     cv.docMode = modeForTarget(target);
     cv.dirty = false;
     cv.history = null;
-    cv.gesture = null;
     cv.drag = null;
     cv.fileMarquee = null;
     cv.textEdit = null;
-    cv.state = null;
-    cv.render = null;
-    cv.resolve = null;
     cv.source = "";
-    cv.fromDoc = "";
     if (!target) {
       blankIframe(cv);
       renderBar(cv);
@@ -1774,60 +2221,17 @@
     if (!cv.docMode) {
       blankIframe(cv);
       renderBar(cv);
-      setStatus(cv, "target must be .json or .html", true);
+      setStatus(cv, "target must be .html", true);
       return;
     }
     setStatus(cv, "loading…", true);
     renderBar(cv);
     const rec = cv.tabs[target];
     if (rec && rec.dirty) {
-      if (cv.docMode === "doc") loadDocMode(cv, rec.text);
-      else loadFileMode(cv, rec.text);
+      loadFileMode(cv, rec.text);
       return;
     }
     frame.send({ type: "open", path: target, inst: frame.id });
-  }
-
-  function loadDocMode(cv, text) {
-    const core = cv.core;
-    let parsed;
-    try {
-      parsed = JSON.parse(text || "");
-    } catch (e) {
-      setStatus(cv, "bad json", true);
-      return;
-    }
-    cv.state = core.makeState(core.kit);
-    cv.resolve = core.makeResolve(core.kit, cv.state);
-    cv.loading = true;
-    cv.state.load(parsed);
-    cv.state.setDocPath(cv.path);
-    cv.state.setAssetMode(cv.assetMode);
-    cv.state.on(function () { onStateChange(cv); });
-    loadIframe(cv, core.baseDocument("doc")).then((idoc) => {
-      if (!cv.live) return;
-      cv.idoc = idoc;
-      cv.iwin = cv.iframe.contentWindow;
-      cv.render = core.makeRender(cv.state, cv.resolve, idoc);
-      bindDocListeners(cv);
-      const s = cv.state.get();
-      const known = s.pages.some((p) => p.id === cv.pageId);
-      const pid = known ? cv.pageId : (s.page || (s.pages[0] && s.pages[0].id) || "");
-      cv.pageId = pid;
-      if (pid && pid !== s.page) cv.state.setPage(pid);
-      redraw(cv);
-      cv.loading = false;
-      cv.dirty = false;
-      restoreTab(cv, cv.tabs[cv.path]);
-      renderBar(cv);
-      setStatus(cv, cv.dirty ? "dirty" : "loaded", cv.dirty);
-      // state: focus first, so a sibling on the old tab re-targets before the
-      // doc frame it filters by target arrives.
-      if (cv.mirrors) {
-        cv.mirrors.focus.emit({});
-        cv.mirrors.doc.emit({ mode: "doc", path: cv.path });
-      }
-    });
   }
 
   function loadFileMode(cv, text) {
@@ -1842,13 +2246,14 @@
       cv.idoc = idoc;
       cv.iwin = cv.iframe.contentWindow;
       bindFileListeners(cv);
-      const meta = idoc.querySelector('meta[name="' + BACK_LINK + '"]');
-      cv.fromDoc = meta ? (meta.getAttribute("content") || "") : "";
       cv.dirty = false;
       restoreTab(cv, cv.tabs[cv.path]);
       ensureHistory(cv);
+      ensureChromeStyles(cv);
+      readGuides(cv);
+      applyZoom(cv);
       renderBar(cv);
-      paintFileSelection(cv);
+      paintChrome(cv);
       setStatus(cv, cv.dirty ? "dirty" : "loaded", cv.dirty);
       if (cv.mirrors) {
         cv.mirrors.focus.emit({});
@@ -1857,26 +2262,9 @@
     });
   }
 
-  // function: a State commit. Redraw, announce, mark dirty.
-  function onStateChange(cv) {
-    if (!cv.live) return;
-    redraw(cv);
-    renderTabs(cv);
-    if (cv.loading) return;
-    cv.dirty = true;
-    setStatus(cv, "dirty", true);
-    if (cv.mirrors) cv.mirrors.change.emit({});
-    markDirty(cv);
-  }
-
-  function docText(cv) {
-    if (cv.docMode === "doc" && cv.state) return JSON.stringify(cv.state.get(), null, 2);
-    return cv.source || "";
-  }
-
   function doSave(cv) {
     if (!cv.path || !cv.docMode) return Promise.resolve(false);
-    const content = docText(cv);
+    const content = cv.source || "";
     return new Promise((resolve) => {
       cv.pending[cv.path] = { content: content, resolve: resolve };
       setStatus(cv, "saving…", true);
@@ -1915,74 +2303,7 @@
     return out;
   }
 
-  function exportPath(cv) {
-    return String(cv.path).replace(/\.json$/i, "") + ".html";
-  }
-
-  // function: the current page as a standalone html string. The back-link
-  // meta names the doc it came from.
-  function exportHtml(cv) {
-    const m = matrixEl(cv);
-    if (!m) return "";
-    const clone = m.cloneNode(true);
-    const handles = clone.querySelectorAll(".cc-canvas-handle");
-    for (let i = 0; i < handles.length; i++) handles[i].parentNode.removeChild(handles[i]);
-    const sel = clone.querySelectorAll(".cc-canvas-selected");
-    for (let i = 0; i < sel.length; i++) sel[i].classList.remove("cc-canvas-selected");
-    const mq = clone.querySelectorAll(".cc-canvas-marquee");
-    for (let i = 0; i < mq.length; i++) mq[i].parentNode.removeChild(mq[i]);
-    clone.classList.remove("cc-canvas-matrix");
-    clone.removeAttribute("id");
-    const s = settings(cv);
-    clone.setAttribute("style", "position: relative; margin: 0 auto; "
-      + "background-color: " + paperColor(cv, s) + "; "
-      + "width: " + (isFluid(s) ? "100%" : pageWidth(cv, s) + "px") + "; "
-      + "min-height: 600px;");
-    const styleEl = cv.idoc.getElementById("cc-render-style");
-    const css = styleEl ? styleEl.textContent : "";
-    const meta = cv.backLink
-      ? '<meta name="' + BACK_LINK + '" content="' + cv.path.replace(/"/g, "&quot;") + '">\n'
-      : "";
-    return "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n"
-      + meta
-      + "<style>\n"
-      + "html, body { margin: 0; }\n"
-      + ".cc-canvas-widget { position: absolute; box-sizing: border-box; }\n"
-      + css + "\n</style>\n</head>\n<body>\n"
-      + clone.outerHTML
-      + "\n</body>\n</html>\n";
-  }
-
-  function doExport(cv) {
-    if (cv.docMode !== "doc" || !cv.idoc) return;
-    const html = exportHtml(cv);
-    if (!html) return;
-    const path = exportPath(cv);
-    cv.pending[path] = { content: html, resolve: () => {} };
-    setStatus(cv, "exporting…", true);
-    cv.frame.send({ type: "save", path: path, content: html, inst: cv.frame.id });
-  }
-
   // ---------- bar ----------
-
-  function renderTabs(cv) {
-    const host = cv.tabBar;
-    if (!host) return;
-    host.textContent = "";
-    if (cv.docMode !== "doc" || !cv.state) { host.hidden = true; return; }
-    const s = cv.state.get();
-    if (!s.pages || s.pages.length < 2) { host.hidden = true; return; }
-    host.hidden = false;
-    for (const p of s.pages) {
-      const on = p.id === (cv.pageId || s.page);
-      const t = document.createElement("button");
-      t.type = "button";
-      t.className = "mxcv-tab" + (on ? " mxcv-on" : "");
-      t.textContent = p.name;
-      t.addEventListener("click", () => setPage(cv, p.id));
-      host.appendChild(t);
-    }
-  }
 
   // function: one button per open target. Hidden while the list is empty.
   function renderTargetTabs(cv) {
@@ -2005,54 +2326,26 @@
 
   // function: leave the active tab for another. The record is kept.
   function switchTab(cv, path) {
-    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
+    if (cv.idoc) endGestures(cv, true);
     stash(cv);
     cv.frame.setOption("target", path);
   }
 
-  function setPage(cv, pid) {
-    if (cv.docMode !== "doc" || !cv.state) return;
-    cv.pageId = pid;
-    cv.state.setPage(pid);
-    redraw(cv);
-    renderTabs(cv);
-    markDirty(cv);
-  }
-
   function setMode(cv, mode) {
     if (MODES.indexOf(mode) < 0) return;
-    if (cv.docMode === "file" && cv.idoc) endGestures(cv, true);
+    if (cv.idoc) endGestures(cv, true);
     cv.mode = mode;
     for (const key of Object.keys(cv.modeBtns)) {
       cv.modeBtns[key].classList.toggle("mxcv-btn-on", key === mode);
     }
-    if (cv.docMode === "doc") redraw(cv);
-    else paintFileSelection(cv);
+    paintFileSelection(cv);
     if (cv.mirrors) cv.mirrors.mode.emit({ mode: mode });
     markDirty(cv);
   }
 
   function renderBar(cv) {
     if (cv.pathEl) cv.pathEl.textContent = cv.path || "no target";
-    if (cv.fromEl) {
-      const has = cv.docMode === "file" && cv.fromDoc;
-      cv.fromEl.hidden = !has;
-      cv.fromBtn.hidden = !has;
-      if (has) cv.fromEl.textContent = "from " + cv.fromDoc;
-    }
-    if (cv.exportBtn) cv.exportBtn.hidden = cv.docMode !== "doc";
-    if (cv.schemBtn) {
-      cv.schemBtn.hidden = cv.docMode !== "doc";
-      cv.schemBtn.classList.toggle("mxcv-btn-on", !!cv.schematic);
-    }
-    if (cv.linksBtn) {
-      cv.linksBtn.hidden = cv.docMode !== "doc";
-      cv.linksBtn.classList.toggle("mxcv-btn-on", !!cv.linksLive);
-    }
-    if (cv.zoomBar) cv.zoomBar.hidden = cv.docMode !== "doc";
-    updateReadout(cv);
     renderTargetTabs(cv);
-    renderTabs(cv);
   }
 
   function buildBar(cv, frame) {
@@ -2067,52 +2360,23 @@
       bar.appendChild(b);
     }
 
-    cv.schemBtn = mkBtn("schematic", () => {
-      cv.schematic = !cv.schematic;
-      cv.schemBtn.classList.toggle("mxcv-btn-on", cv.schematic);
-      redraw(cv);
-      markDirty(cv);
-    });
-    bar.appendChild(cv.schemBtn);
-
-    cv.linksBtn = mkBtn("links", () => {
-      cv.linksLive = !cv.linksLive;
-      cv.linksBtn.classList.toggle("mxcv-btn-on", cv.linksLive);
-      redraw(cv);
-      markDirty(cv);
-    });
-    bar.appendChild(cv.linksBtn);
-
-    const zoom = document.createElement("span");
-    zoom.className = "mxcv-zoom";
-    zoom.appendChild(mkBtn("−", () => setZoom(cv, cv.zoomPct - 10, null)));
-    cv.readoutEl = document.createElement("span");
-    cv.readoutEl.className = "mxcv-readout";
-    zoom.appendChild(cv.readoutEl);
-    zoom.appendChild(mkBtn("+", () => setZoom(cv, cv.zoomPct + 10, null)));
-    zoom.appendChild(mkBtn("Fit", () => fitZoom(cv)));
-    cv.zoomBar = zoom;
-    bar.appendChild(zoom);
-
     cv.pathEl = document.createElement("span");
     cv.pathEl.className = "mxcv-path";
     bar.appendChild(cv.pathEl);
 
-    cv.fromEl = document.createElement("span");
-    cv.fromEl.className = "mxcv-from";
-    cv.fromEl.hidden = true;
-    bar.appendChild(cv.fromEl);
-
-    cv.fromBtn = mkBtn("Open doc", () => {
-      if (cv.fromDoc) frame.setOption("target", cv.fromDoc);
-    });
-    cv.fromBtn.hidden = true;
-    bar.appendChild(cv.fromBtn);
-
     bar.appendChild(mkBtn("Save", () => doSave(cv)));
 
-    cv.exportBtn = mkBtn("Export", () => doExport(cv));
-    bar.appendChild(cv.exportBtn);
+    bar.appendChild(mkBtn("−", () => setZoom(cv, zoomStep(cv, -1))));
+    cv.zoomEl = document.createElement("span");
+    cv.zoomEl.className = "mxcv-status";
+    cv.zoomEl.textContent = cv.zoomPct + "%";
+    bar.appendChild(cv.zoomEl);
+    bar.appendChild(mkBtn("+", () => setZoom(cv, zoomStep(cv, 1))));
+    bar.appendChild(mkBtn("Fit", () => zoomFit(cv)));
+
+    cv.snapBtn = mkBtn("snap", () => setSnap(cv, !cv.snap));
+    if (cv.snap) cv.snapBtn.classList.add("mxcv-btn-on");
+    bar.appendChild(cv.snapBtn);
 
     cv.annBtn = mkBtn("Annotate", () => setAnnotate(cv, !cv.annotateOn));
     bar.appendChild(cv.annBtn);
@@ -2130,15 +2394,16 @@
 
   const MOD = {
     defaults: {
-      target: "", targets: [], mode: "preview", zoom: 100, selection: [],
-      schematic: false, linksLive: false, page: "", assetMode: "data", backLink: true,
-      annotate: false, snapshot: "raster", annotateTrack: ""
+      target: "", targets: [], mode: "preview", selection: [],
+      annotate: false, snapshot: "raster", annotateTrack: "",
+      zoomPct: 100, snap: true, snapTo: SNAP_TO.slice(),
+      rulers: true, showGuides: true, showMargins: true, showColumns: true,
+      activeLayer: ""
     },
 
     optionControls: {
       target: MX.canvasTargetControl(true),
       mode: { kind: "select", values: () => MODES.slice() },
-      assetMode: { kind: "select", values: () => ASSET_MODES.slice() },
       snapshot: { kind: "select", values: () => SNAPSHOT_MODES.slice() },
       annotateTrack: { kind: "select", values: (f) => trackNamesFor(f) }
     },
@@ -2147,36 +2412,39 @@
       ensureStyles();
 
       const cv = frame._canvasState = {
-        frame: frame, live: true, core: null,
-        state: null, resolve: null, render: null, patch: null,
+        frame: frame, live: true, core: null, patch: null,
         iframe: null, idoc: null, iwin: null,
         mode: "preview",
         targets: Array.isArray(frame.options.targets) ? frame.options.targets.slice() : [],
         tabs: Object.create(null),
         history: null,
-        zoomPct: clampZoom(Number(frame.options.zoom) || 100),
         selection: Array.isArray(frame.options.selection) ? frame.options.selection.slice() : [],
-        schematic: !!frame.options.schematic,
-        linksLive: !!frame.options.linksLive,
-        pageId: frame.options.page || "",
-        assetMode: ASSET_MODES.indexOf(frame.options.assetMode) >= 0 ? frame.options.assetMode : "data",
-        backLink: frame.options.backLink !== false,
         annotateOn: false,
         snapshotMethod: SNAPSHOT_MODES.indexOf(frame.options.snapshot) >= 0 ? frame.options.snapshot : "raster",
         annotateTrack: frame.options.annotateTrack || "",
         trackNames: [],
         ann: null, annBtn: null,
-        path: "", docMode: "", source: "", fromDoc: "",
-        dirty: false, loading: false, frozen: false,
-        gesture: null, marquee: null, menu: null, spaceDown: false,
+        path: "", docMode: "", source: "",
+        dirty: false, frozen: false,
+        menu: null,
         drag: null, fileMarquee: null, textEdit: null,
         justDragged: false, selfSavedAt: 0,
-        listeners: [], mirrors: null, ro: null,
-        pending: Object.create(null), drawSig: null,
+        listeners: [], mirrors: null,
+        pending: Object.create(null),
         modeBtns: {}, statusEl: null, statusTimer: null, pathEl: null,
-        tabBar: null, targetsEl: null,
-        readoutEl: null, zoomBar: null, schemBtn: null, linksBtn: null,
-        exportBtn: null, fromEl: null, fromBtn: null
+        targetsEl: null,
+        zoomPct: clampZoom(frame.options.zoomPct),
+        snap: frame.options.snap !== false,
+        snapTo: cleanSnapTo(frame.options.snapTo),
+        rulers: frame.options.rulers !== false,
+        showGuides: frame.options.showGuides !== false,
+        showMargins: frame.options.showMargins !== false,
+        showColumns: frame.options.showColumns !== false,
+        guides: { v: [], h: [] },
+        rulerSig: "", zoomEl: null, snapBtn: null,
+        spaceDown: false, pan: null, guideDrag: null,
+        activeLayer: frame.options.activeLayer || "",
+        isolate: null
       };
 
       const wrap = document.createElement("div");
@@ -2187,11 +2455,6 @@
       cv.targetsEl.className = "mxcv-targets";
       cv.targetsEl.hidden = true;
       wrap.appendChild(cv.targetsEl);
-
-      cv.tabBar = document.createElement("div");
-      cv.tabBar.className = "mxcv-tabs";
-      cv.tabBar.hidden = true;
-      wrap.appendChild(cv.tabBar);
 
       const body = document.createElement("div");
       body.className = "mxcv-body";
@@ -2213,22 +2476,12 @@
       frame.subscribe(["file", "saved", "tree_dirty", "ade_init", "track_list"]);
       frame.send({ type: "roster", inst: frame.id });
 
-      // fluid width is the iframe's width; a resize rebases the page.
-      if (window.ResizeObserver) {
-        cv.ro = new ResizeObserver(() => {
-          if (cv.docMode === "doc" && cv.render) redraw(cv);
-        });
-        cv.ro.observe(cv.iframe);
-      }
-
       // the sibling-facing handle. 3C to 3E read it.
       frame._canvas = {
-        place: (type, at) => place(cv, type, at),
         selected: () => cv.selection.slice(),
         freeze: (on) => applyFreeze(cv, on),
-        redraw: () => (cv.docMode === "doc" ? redraw(cv) : paintFileSelection(cv)),
-        get state() { return cv.state; },
-        source: () => docText(cv),
+        redraw: () => paintFileSelection(cv),
+        source: () => cv.source || "",
         patchSource: (patch) => patchSource(cv, patch),
         mode: () => cv.mode,
         doc: () => cv.idoc,
@@ -2243,7 +2496,35 @@
         toBack: (ids) => fileOrder(cv, ids || cv.selection.slice(), "toBack"),
         remove: (ids) => fileRemove(cv, ids || cv.selection.slice()),
         duplicate: (ids) => fileDuplicate(cv, ids || cv.selection.slice()),
-        menuItems: () => menuItems(cv)
+        menuItems: () => menuItems(cv),
+        page: () => pageMetrics(cv),
+        setPage: (key, value) => setPage(cv, key, value),
+        guides: () => ({ v: cv.guides.v.slice(), h: cv.guides.h.slice() }),
+        addGuide: (axis, px) => addGuide(cv, axis, px),
+        removeGuide: (axis, px) => removeGuide(cv, axis, px),
+        snapPoint: (pt) => snapPoint(cv, pt),
+        patchMany: (patches) => applyPatches(cv, patches),
+        layers: () => layerList(cv),
+        addLayer: (name, plugin) => addLayer(cv, name, plugin),
+        removeLayer: (id) => removeLayer(cv, id),
+        renameLayer: (id, name) => renameLayer(cv, id, name),
+        setLayerFlag: (id, flag, on) => setLayerFlag(cv, id, flag, on),
+        moveLayer: (id, index) => moveLayer(cv, id, index),
+        mergeDown: (id) => mergeDown(cv, id),
+        moveToLayer: (ids, layerId) => moveToLayer(cv, ids || cv.selection.slice(), layerId),
+        layerOf: (id) => layerOf(cv, id),
+        activeLayer: () => {
+          const el = activeLayerEl(cv);
+          return el ? cv.patch.stableId(el) : "";
+        },
+        setActiveLayer: (id) => setActiveLayer(cv, id),
+        insertAt: (html, pt, ns) => insertAt(cv, html, pt, ns),
+        selectAllOnLayer: (id) => selectAllOnLayer(cv, id),
+        lockSelection: () => lockSelection(cv),
+        unlockAll: () => unlockAll(cv),
+        hideSelection: () => hideSelection(cv),
+        showAll: () => showAll(cv),
+        isolate: (ids) => setIsolate(cv, ids)
       };
 
       MX.canvasCore().then((core) => {
@@ -2251,7 +2532,7 @@
         cv.core = core;
         cv.patch = core.patch;
         cv.mirrors = core.mirrors(frame, {
-          select: (payload) => applySelection(cv, payload.ids),
+          select: (payload) => applySelection(cv, payload.ids, payload.isolate),
           freeze: (payload) => applyFreeze(cv, payload.on)
         });
         loadTarget(cv);
@@ -2278,13 +2559,12 @@
     unmount(frame) {
       const cv = frame._canvasState;
       if (!cv) return;
-      if (cv.docMode === "file" && cv.idoc) endGestures(cv, false);
+      if (cv.idoc) endGestures(cv, false);
       cv.live = false;
       if (cv.statusTimer) { clearTimeout(cv.statusTimer); cv.statusTimer = null; }
       detachListeners(cv);
       closeMenu(cv);
       if (cv.mirrors) cv.mirrors.off();
-      if (cv.ro) { try { cv.ro.disconnect(); } catch (e) { /* teardown best effort */ } }
       blankIframe(cv);
       frame._canvas = null;
       frame._canvasState = null;
@@ -2306,8 +2586,7 @@
       if (msg.type === "file") {
         if (msg.inst !== frame.id) return;
         if (msg.path !== cv.path) return;
-        if (cv.docMode === "doc") loadDocMode(cv, msg.content || "");
-        else loadFileMode(cv, msg.content || "");
+        loadFileMode(cv, msg.content || "");
         return;
       }
 
@@ -2358,41 +2637,26 @@
         return;
       }
       if (key === "mode") { setMode(cv, value); return; }
-      if (key === "zoom") {
-        cv.zoomPct = clampZoom(Number(value) || 100);
-        applyZoom(cv);
-        return;
-      }
       if (key === "selection") { applySelection(cv, value); return; }
-      if (key === "schematic") {
-        cv.schematic = !!value;
-        if (cv.schemBtn) cv.schemBtn.classList.toggle("mxcv-btn-on", cv.schematic);
-        redraw(cv);
-        return;
-      }
-      if (key === "linksLive") {
-        cv.linksLive = !!value;
-        if (cv.linksBtn) cv.linksBtn.classList.toggle("mxcv-btn-on", cv.linksLive);
-        redraw(cv);
-        return;
-      }
-      if (key === "page") {
-        if (value && value !== cv.pageId) setPage(cv, value);
-        return;
-      }
-      if (key === "assetMode") {
-        cv.assetMode = ASSET_MODES.indexOf(value) >= 0 ? value : "data";
-        if (cv.state) cv.state.setAssetMode(cv.assetMode);
-        redraw(cv);
-        return;
-      }
-      if (key === "backLink") { cv.backLink = value !== false; return; }
       if (key === "annotate") { setAnnotate(cv, !!value); return; }
       if (key === "snapshot") {
         cv.snapshotMethod = SNAPSHOT_MODES.indexOf(value) >= 0 ? value : "raster";
         return;
       }
-      if (key === "annotateTrack") { cv.annotateTrack = value || ""; }
+      if (key === "annotateTrack") { cv.annotateTrack = value || ""; return; }
+      if (key === "zoomPct") {
+        cv.zoomPct = clampZoom(value);
+        applyZoom(cv);
+        paintChrome(cv);
+        return;
+      }
+      if (key === "snap") { setSnap(cv, value !== false); return; }
+      if (key === "snapTo") { cv.snapTo = cleanSnapTo(value); return; }
+      if (key === "rulers" || key === "showGuides"
+        || key === "showMargins" || key === "showColumns") {
+        cv[key] = value !== false;
+        paintChrome(cv);
+      }
     },
 
     getOptions(frame) {
@@ -2402,16 +2666,18 @@
         target: frame.options.target || "",
         targets: cv.targets.slice(),
         mode: cv.mode,
-        zoom: cv.zoomPct,
         selection: cv.selection.slice(),
-        schematic: !!cv.schematic,
-        linksLive: !!cv.linksLive,
-        page: cv.pageId || "",
-        assetMode: cv.assetMode,
-        backLink: !!cv.backLink,
         annotate: false,
         snapshot: cv.snapshotMethod,
-        annotateTrack: cv.annotateTrack
+        annotateTrack: cv.annotateTrack,
+        zoomPct: cv.zoomPct,
+        snap: cv.snap,
+        snapTo: cv.snapTo.slice(),
+        rulers: cv.rulers,
+        showGuides: cv.showGuides,
+        showMargins: cv.showMargins,
+        showColumns: cv.showColumns,
+        activeLayer: cv.activeLayer
       };
     }
   };
@@ -2424,6 +2690,13 @@
     if (cv.annBtn) cv.annBtn.classList.toggle("mxcv-btn-on", on);
   }
 
+  // function: toggle snapping. The bar button mirrors it.
+  function setSnap(cv, on) {
+    cv.snap = !!on;
+    if (cv.snapBtn) cv.snapBtn.classList.toggle("mxcv-btn-on", cv.snap);
+    if (cv.frame.options.snap !== cv.snap) cv.frame.setOption("snap", cv.snap);
+  }
+
   // function: cached track ids for the annotateTrack select.
   function trackNamesFor(frame) {
     const cv = frame._canvasState;
@@ -2433,8 +2706,6 @@
   // function: freeze from a sibling. Gestures are refused, the view stays.
   function applyFreeze(cv, on) {
     cv.frozen = !!on;
-    const m = matrixEl(cv);
-    if (m) m.classList.toggle("cc-canvas-frozen", cv.frozen);
     if (cv.frozen) closeMenu(cv);
   }
 
@@ -2442,7 +2713,7 @@
   // instance holds nothing unsaved and no gesture is live.
   function reopenIfClean(cv) {
     if (!cv.path || !cv.docMode) return;
-    if (cv.dirty || cv.gesture || cv.drag || cv.textEdit) return;
+    if (cv.dirty || cv.drag || cv.textEdit) return;
     // our own save echoes back as tree_dirty; the copy on disk is ours
     if (cv.selfSavedAt && Date.now() - cv.selfSavedAt < 2000) return;
     cv.frame.send({ type: "open", path: cv.path, inst: cv.frame.id });
